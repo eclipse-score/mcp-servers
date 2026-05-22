@@ -1,0 +1,6 @@
+{
+    "name": "eclipse-s-core",
+    "image": "ghcr.io/eclipse-score/devcontainer:v1.5.0",
+    "postCreateCommand": "uv sync --all-groups && uv run pre-commit install --install-hooks",
+    "postStartCommand": "ssh-keygen -f '/home/vscode/.ssh/known_hosts' -R '[localhost]:2222' || true"
+}

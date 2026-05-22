@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "repository": {
+    "name": "mcp-servers",
+    "language": "Python",
+    "visibility": "public"
+  },
+  "bootstrap": {
+    "contract_version": "v0.1.0",
+    "template_source": "https://github.com/eclipse-score/.github"
+  },
+  "execution": {
+    "build": {
+      "command": "uv build"
+    },
+    "test": {
+      "command": "uv run pytest"
+    },
+    "lint": {
+      "command": "uv run ruff check src/ tests/"
+    }
+  }
+}
