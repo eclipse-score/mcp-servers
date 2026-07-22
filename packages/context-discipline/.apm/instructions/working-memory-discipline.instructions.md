@@ -14,6 +14,7 @@
 ---
 name: working-memory-discipline
 description: Track working memory, decisions, and intersession context
+applyTo: "**"
 ---
 
 # Working Memory Discipline

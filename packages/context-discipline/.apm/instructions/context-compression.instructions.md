@@ -14,6 +14,7 @@
 ---
 name: context-compression
 description: Guidelines for compressing and summarizing information before returning to context
+applyTo: "**"
 ---
 
 # Context Compression Guidelines

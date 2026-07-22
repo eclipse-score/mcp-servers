@@ -46,13 +46,15 @@ wm.initialize_session(
     ],
     assumptions=["auth.py is the only auth module"],
 )
+# Returns {"session_id": "...", "setup": {"ok": ..., ...}}
 ```
 
 ### Record compressed findings
 
 ```python
 # After each tool call, record (COMPRESS to 1-2 sentences)
-wm.query_graph("All functions in lib/auth.py")
+graph_result = wm.query_graph("All functions in lib/auth.py")
+# Returns {"query": "...", "matches": [...], "setup": {...}}
 ```
 
 ### Track assumptions

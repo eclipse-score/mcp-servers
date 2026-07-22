@@ -48,7 +48,7 @@ context-discipline MCP
     ↓
 Reads existing graphify-out/graph.json
     ↓
-Returns: matching nodes from your code structure
+Returns: {"query": "...", "matches": [...], "setup": {...}}
 ```
 
 **Key point:** The MCP queries a **pre-generated graph**. You generate it once per repo, then agents query it repeatedly without re-parsing.
@@ -79,7 +79,7 @@ Now your agent can query the graph:
 auth_structure = wm.query_graph("Where is authentication logic?")
 # ↓ Queries the generated local graph
 # ↓ Reads graphify-out/graph.json
-# ↓ Returns: Files, classes, functions related to auth
+# ↓ The matches entry contains files, classes, and functions related to auth
 ```
 
 Or explore manually:

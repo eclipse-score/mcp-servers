@@ -105,7 +105,7 @@ class ContextDisciplineMCP:
         subgoals: list[str],
         assumptions: list[str] | dict[str, str] | None = None,
         agent: str = "unknown",
-    ) -> str:
+    ) -> dict[str, Any]:
         """
         Initialize a working memory session.
 
@@ -115,7 +115,7 @@ class ContextDisciplineMCP:
             assumptions: List of assumptions or dict of assumption -> confidence level
 
         Returns:
-            session_id
+            Session identifier and graph setup status.
         """
         self.session_log.prune(self.policy.privacy.retention_days)
         self.session_log.append(
@@ -169,9 +169,22 @@ class ContextDisciplineMCP:
                         )
                     )
 
-        return self.session_id
+        return {
+            "session_id": self.session_id,
+            "setup": self._graph_setup_status(),
+        }
 
-    def query_graph(self, query: str) -> str:
+    def _graph_setup_status(self) -> dict[str, Any]:
+        graph_path = self.repo_path / "graphify-out" / "graph.json"
+        if graph_path.exists():
+            return {"ok": True, "graph_path": str(graph_path)}
+        return {
+            "ok": False,
+            "graph_path": str(graph_path),
+            "next": "Call setup_graphify with install_graphify=true.",
+        }
+
+    def query_graph(self, query: str) -> dict[str, Any]:
         """
         Query the generated local Graphify code graph.
 
@@ -179,9 +192,8 @@ class ContextDisciplineMCP:
             query: Natural language query (e.g., "all functions in auth.py")
 
         Returns:
-            Query result as string
+            Query matches and graph setup status.
         """
-        graph_path = self.repo_path / "graphify-out" / "graph.json"
         graph = MergedGraph.build(self.repo_path)
         terms = [term.lower() for term in query.split() if term.strip()]
         nodes = tuple(graph.nodes.values())
@@ -204,15 +216,12 @@ class ContextDisciplineMCP:
             for node, serialized in serialized_nodes
             if all(term in serialized for term in terms)
         ]
-        if not graph_path.exists():
-            finding = (
-                f"Graph query: {query}\n"
-                f"No graph found at {graph_path}. Run setup_graphify first."
-            )
-        else:
-            finding = json.dumps(
-                {"query": query, "matches": matched_nodes}, sort_keys=True
-            )
+        result = {
+            "query": query,
+            "matches": matched_nodes,
+            "setup": self._graph_setup_status(),
+        }
+        finding = json.dumps(result, sort_keys=True)
         self.session_log.append(
             RetrievalRecord(
                 session_id=self.session_id,
@@ -229,7 +238,7 @@ class ContextDisciplineMCP:
                 metadata={"source": "graph"},
             )
         )
-        return finding
+        return result
 
     def record_decision(
         self,

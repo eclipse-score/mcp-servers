@@ -38,9 +38,28 @@ Provides an MCP server with these tools:
 ### Install
 
 ```bash
-apm install context-discipline --trust-transitive-mcp
-# Auto-installs graphify-codegraph
+apm init --yes --target copilot
+apm install <path>/packages/context-discipline \
+  --target copilot \
+  --trust-transitive-mcp
+apm compile -t copilot
 ```
+
+The `--trust-transitive-mcp` flag is required for the dependent
+`apm-setup` and `graphify-codegraph` MCP servers to be registered. Without it,
+`apm install` still exits successfully but registers only `context-discipline`.
+
+After installation, call the `apm-setup` MCP tool once:
+
+```text
+setup_graphify(repo_path="<your-repository>", install_graphify=true)
+```
+
+This installs the `graphify` CLI and writes
+`graphify-out/graph.json` in the target repository. The
+`setup_context_discipline` tool is optional for writes because `.score-local/`
+is created lazily; its remaining purpose is adding `.score-local/` to
+`.gitignore`.
 
 ### Use from Your Agent
 
@@ -51,9 +70,11 @@ wm.initialize_session(
     subgoals=["Understand current flow", "Identify dependencies"],
     assumptions={"Password hashing uses bcrypt": "high", "No 2FA": "low"},
 )
+# Returns {"session_id": "...", "setup": {"ok": ..., ...}}
 
 # Agent explores code
 auth_structure = wm.query_graph("Show me auth.py structure")
+# Returns {"query": "...", "matches": [...], "setup": {...}}
 
 # Agent records findings
 wm.record_decision(

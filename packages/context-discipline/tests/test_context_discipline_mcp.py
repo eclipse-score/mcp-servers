@@ -23,7 +23,8 @@ from context_discipline_mcp import (
 
 def test_initialize_session_writes_one_session_record(tmp_path: Path) -> None:
     manager = ContextDisciplineMCP(str(tmp_path))
-    session_id = manager.initialize_session("Goal", ["Subgoal"], agent="alice")
+    result = manager.initialize_session("Goal", ["Subgoal"], agent="alice")
+    session_id = result["session_id"]
 
     records = manager.session_log.read_all()
     raw_log = manager.session_log.path.read_text(encoding="utf-8")
@@ -33,6 +34,48 @@ def test_initialize_session_writes_one_session_record(tmp_path: Path) -> None:
     assert sessions[0].goal == "Goal"
     assert "alice" not in raw_log
     assert manager.local_store.joinpath("agent-salt").stat().st_mode & 0o777 == 0o600
+
+
+def test_initialize_session_reports_missing_graph_setup(tmp_path: Path) -> None:
+    manager = ContextDisciplineMCP(str(tmp_path))
+
+    result = manager.initialize_session("Goal", [])
+
+    assert result["setup"] == {
+        "ok": False,
+        "graph_path": str(tmp_path / "graphify-out" / "graph.json"),
+        "next": "Call setup_graphify with install_graphify=true.",
+    }
+
+
+def test_initialize_session_reports_existing_graph_setup(tmp_path: Path) -> None:
+    graph_path = tmp_path / "graphify-out" / "graph.json"
+    graph_path.parent.mkdir()
+    graph_path.write_text("{}", encoding="utf-8")
+    manager = ContextDisciplineMCP(str(tmp_path))
+
+    result = manager.initialize_session("Goal", [])
+
+    assert result["setup"] == {
+        "ok": True,
+        "graph_path": str(graph_path),
+    }
+
+
+def test_query_graph_reports_missing_graph_setup(tmp_path: Path) -> None:
+    manager = ContextDisciplineMCP(str(tmp_path))
+
+    result = manager.query_graph("Show me the repository")
+
+    assert result == {
+        "query": "Show me the repository",
+        "matches": [],
+        "setup": {
+            "ok": False,
+            "graph_path": str(tmp_path / "graphify-out" / "graph.json"),
+            "next": "Call setup_graphify with install_graphify=true.",
+        },
+    }
 
 
 def test_get_prior_context_returns_items_and_untrusted_rendered_block(
