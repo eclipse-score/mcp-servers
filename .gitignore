@@ -15,7 +15,8 @@ apm.lock.yaml
 .claude/
 .claude-plugin/
 .agents/
-.github/
+.github/plugin/
+**/.github/plugin/
 .codex/
 .copilot/
 .cursor/
