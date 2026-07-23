@@ -9,9 +9,13 @@ __pycache__/
 dist/
 build/
 apm_modules/
+apm.lock.yaml
 
 # Compiled agent output
 .claude/
+.claude-plugin/
+.agents/
+.github/
 .codex/
 .copilot/
 .cursor/
