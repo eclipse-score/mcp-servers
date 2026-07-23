@@ -26,4 +26,3 @@ uv run ruff format --check .
 uv run pyright
 uv run pytest
 ```
-Repository for MCP servers
