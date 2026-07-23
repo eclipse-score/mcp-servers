@@ -1,4 +1,5 @@
-# Generated context fragments
+# Generated attention context
 
-Phase 0 placeholder. Generated, task-scoped attention context fragments will
-land in this directory in Phase 1 and later.
+This directory contains a tracked context fragment produced by a real Phase 1
+`get_context` run. Future adapters can replace or extend it with issue-scoped
+fragments while preserving stable node IDs.

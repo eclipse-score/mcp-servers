@@ -16,7 +16,7 @@ name = "score-context"
 version = "0.1.0"
 description = "MCP-free context schema and delta models for Eclipse S-CORE"
 requires-python = ">=3.12"
-dependencies = ["pydantic>=2"]
+dependencies = ["jsonschema>=4.25.0", "pydantic>=2"]
 
 [build-system]
 requires = ["hatchling"]

@@ -1,0 +1,12 @@
+{
+  "id": "task_001_contract_change",
+  "issue_id": 1,
+  "description": "A contract change must surface its decision and affected contract.",
+  "seed_node_ids": ["pr__mcp_servers__42"],
+  "expected_node_ids": [
+    "pr__mcp_servers__42",
+    "contract__score_context__v1",
+    "dec_rec__strat__agent_context_attention_layer"
+  ],
+  "top_n": 5
+}

@@ -11,29 +11,23 @@
 # SPDX-License-Identifier: Apache-2.0
 # *******************************************************************************
 
-[tool.uv.workspace]
-members = ["libs/score-context"]
+from __future__ import annotations
 
-[dependency-groups]
-dev = [
-  "pyright>=1.1.390",
-  "pytest>=8.3",
-  "ruff>=0.9",
-]
+import argparse
+import json
+from pathlib import Path
 
-[tool.ruff]
-line-length = 88
-target-version = "py312"
+from score_context.harness.adapter import execute
 
-[tool.ruff.lint]
-select = ["E", "F", "I", "UP", "B", "SIM"]
 
-[tool.pyright]
-include = [
-  "harness",
-  "libs/score-context/src",
-  "libs/score-context/tests",
-]
-pythonVersion = "3.12"
-typeCheckingMode = "strict"
-reportMissingTypeStubs = false
+def main() -> None:
+    parser = argparse.ArgumentParser(description="Run the context-attention harness.")
+    parser.add_argument("request", type=Path, help="Adapter request JSON path")
+    args = parser.parse_args()
+    request = json.loads(args.request.read_text(encoding="utf-8"))
+    response = execute(request, Path.cwd())
+    print(response.model_dump_json(indent=2))
+
+
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,174 @@
+{
+  "nodes": [
+    {
+      "id": "feat_req__context_attention__001",
+      "type": "feat_req",
+      "title": "Context attention selection is deterministic",
+      "provenance": {
+        "repo": "mcp-servers",
+        "sha": "phase1-seed",
+        "adapter": "seed",
+        "confidence": 1.0,
+        "observed_at": "2026-01-01T00:00:00Z"
+      }
+    },
+    {
+      "id": "comp_req__score_context__001",
+      "type": "comp_req",
+      "title": "The score-context library remains MCP-free",
+      "provenance": {
+        "repo": "mcp-servers",
+        "sha": "phase1-seed",
+        "adapter": "seed",
+        "confidence": 1.0,
+        "observed_at": "2026-01-01T00:00:00Z"
+      }
+    },
+    {
+      "id": "dec_rec__strat__agent_context_attention_layer",
+      "type": "dec_rec",
+      "title": "Organization-Scale Agent Context Attention Layer",
+      "provenance": {
+        "repo": "mcp-servers",
+        "sha": "phase1-seed",
+        "adapter": "seed",
+        "confidence": 1.0,
+        "observed_at": "2026-01-02T00:00:00Z"
+      }
+    },
+    {
+      "id": "pr__mcp_servers__42",
+      "type": "pull_request",
+      "title": "Update context contract",
+      "provenance": {
+        "repo": "mcp-servers",
+        "sha": "phase1-seed",
+        "adapter": "seed",
+        "confidence": 1.0,
+        "observed_at": "2026-01-03T00:00:00Z"
+      }
+    },
+    {
+      "id": "contract__score_context__v1",
+      "type": "contract",
+      "title": "score-context contract v1",
+      "provenance": {
+        "repo": "mcp-servers",
+        "sha": "phase1-seed",
+        "adapter": "seed",
+        "confidence": 1.0,
+        "observed_at": "2026-01-03T00:00:00Z"
+      }
+    },
+    {
+      "id": "repo__mcp_servers",
+      "type": "repo",
+      "title": "eclipse-score/mcp-servers",
+      "provenance": {
+        "repo": "mcp-servers",
+        "sha": "phase1-seed",
+        "adapter": "seed",
+        "confidence": 1.0,
+        "observed_at": "2026-01-01T00:00:00Z"
+      }
+    },
+    {
+      "id": "module__score_context",
+      "type": "module",
+      "title": "libs/score-context",
+      "provenance": {
+        "repo": "mcp-servers",
+        "sha": "phase1-seed",
+        "adapter": "seed",
+        "confidence": 1.0,
+        "observed_at": "2026-01-01T00:00:00Z"
+      }
+    },
+    {
+      "id": "issue__mcp_servers__7",
+      "type": "issue",
+      "title": "Keep the engine MCP-free",
+      "provenance": {
+        "repo": "mcp-servers",
+        "sha": "phase1-seed",
+        "adapter": "seed",
+        "confidence": 1.0,
+        "observed_at": "2026-01-02T00:00:00Z"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "source": "pr__mcp_servers__42",
+      "target": "contract__score_context__v1",
+      "relation": "affects",
+      "provenance": {
+        "repo": "mcp-servers",
+        "sha": "phase1-seed",
+        "adapter": "seed",
+        "confidence": 1.0,
+        "observed_at": "2026-01-03T00:00:00Z"
+      }
+    },
+    {
+      "source": "pr__mcp_servers__42",
+      "target": "dec_rec__strat__agent_context_attention_layer",
+      "relation": "discussed_in",
+      "provenance": {
+        "repo": "mcp-servers",
+        "sha": "phase1-seed",
+        "adapter": "seed",
+        "confidence": 1.0,
+        "observed_at": "2026-01-03T00:00:00Z"
+      }
+    },
+    {
+      "source": "contract__score_context__v1",
+      "target": "feat_req__context_attention__001",
+      "relation": "satisfies",
+      "provenance": {
+        "repo": "mcp-servers",
+        "sha": "phase1-seed",
+        "adapter": "seed",
+        "confidence": 1.0,
+        "observed_at": "2026-01-03T00:00:00Z"
+      }
+    },
+    {
+      "source": "module__score_context",
+      "target": "repo__mcp_servers",
+      "relation": "belongs_to",
+      "provenance": {
+        "repo": "mcp-servers",
+        "sha": "phase1-seed",
+        "adapter": "seed",
+        "confidence": 1.0,
+        "observed_at": "2026-01-01T00:00:00Z"
+      }
+    },
+    {
+      "source": "issue__mcp_servers__7",
+      "target": "module__score_context",
+      "relation": "blocks",
+      "provenance": {
+        "repo": "mcp-servers",
+        "sha": "phase1-seed",
+        "adapter": "seed",
+        "confidence": 1.0,
+        "observed_at": "2026-01-02T00:00:00Z"
+      }
+    },
+    {
+      "source": "module__score_context",
+      "target": "comp_req__score_context__001",
+      "relation": "implements",
+      "provenance": {
+        "repo": "mcp-servers",
+        "sha": "phase1-seed",
+        "adapter": "seed",
+        "confidence": 1.0,
+        "observed_at": "2026-01-01T00:00:00Z"
+      }
+    }
+  ]
+}

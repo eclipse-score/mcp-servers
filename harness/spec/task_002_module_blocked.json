@@ -1,0 +1,12 @@
+{
+  "id": "task_002_module_blocked",
+  "issue_id": 2,
+  "description": "A blocked module task must surface the blocking issue and module.",
+  "seed_node_ids": ["issue__mcp_servers__7"],
+  "expected_node_ids": [
+    "issue__mcp_servers__7",
+    "module__score_context",
+    "repo__mcp_servers"
+  ],
+  "top_n": 5
+}
