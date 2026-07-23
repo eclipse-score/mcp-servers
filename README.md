@@ -10,8 +10,10 @@ manifest and points at local packages, and each package under `packages/` is a
 full, independently installable APM package with its own `apm.yml` and `.apm/`
 tree.
 
-The agent context attention layer is **one package among many** (`packages/context`),
-not the purpose of the repository.
+On top there is a first context attention layer (`packages/context`).
+This is a context distribution mechansim which later on crates an asynch
+knowledge graph of "signals" in score.
+
 
 ## Layout
 
