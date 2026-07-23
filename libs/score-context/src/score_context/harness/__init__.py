@@ -11,29 +11,14 @@
 # SPDX-License-Identifier: Apache-2.0
 # *******************************************************************************
 
-[tool.uv.workspace]
-members = ["libs/score-context"]
+from score_context.harness.base import AssuranceHarness, BaselineHarness
+from score_context.harness.candidate import ContextHarness
+from score_context.harness.gate import GateResult, lane_a_gate
 
-[dependency-groups]
-dev = [
-  "pyright>=1.1.390",
-  "pytest>=8.3",
-  "ruff>=0.9",
+__all__ = [
+    "AssuranceHarness",
+    "BaselineHarness",
+    "ContextHarness",
+    "GateResult",
+    "lane_a_gate",
 ]
-
-[tool.ruff]
-line-length = 88
-target-version = "py312"
-
-[tool.ruff.lint]
-select = ["E", "F", "I", "UP", "B", "SIM"]
-
-[tool.pyright]
-include = [
-  "harness",
-  "libs/score-context/src",
-  "libs/score-context/tests",
-]
-pythonVersion = "3.12"
-typeCheckingMode = "strict"
-reportMissingTypeStubs = false

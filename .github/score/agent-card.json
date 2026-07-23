@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "issue_id": "ISSUE-1",
+  "repository": "mcp-servers",
+  "branch": "context-attention-phase1-walking-skeleton",
+  "goal": "Demonstrate deterministic context selection around a contract change",
+  "status": "completed",
+  "summary": "The walking skeleton selects traceable context from a committed graph fragment.",
+  "findings": [
+    {
+      "title": "Deterministic seam",
+      "detail": "ContextHarness implements get_context(task_spec) without network or LLM calls."
+    }
+  ],
+  "open_questions": [],
+  "touched_files": [
+    "libs/score-context/src/score_context/harness",
+    "harness/contract",
+    "harness/spec"
+  ],
+  "validation": {
+    "status": "not_run",
+    "commands": []
+  },
+  "trajectory": [],
+  "next_action": "Use the adapter contract to run the seeded task through baseline and candidate harnesses."
+}

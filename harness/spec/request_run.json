@@ -1,0 +1,10 @@
+{
+  "contract_version": "v0.1.0",
+  "operation": "run",
+  "issue_id": 1,
+  "task_spec": "harness/spec/task_001_contract_change.json",
+  "candidate_path": "libs/score-context/src/score_context/harness/candidate.py",
+  "artifacts_dir": ".stage/ISSUE-1/harness",
+  "profile": "iso26262",
+  "strict": true
+}
