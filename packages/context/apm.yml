@@ -11,16 +11,18 @@
 # SPDX-License-Identifier: Apache-2.0
 # *******************************************************************************
 
-name: eclipse-score-context-attention
+name: context
 version: 0.1.0
-description: Eclipse S-CORE Agent Context Attention Layer packages
-marketplace:
-  owner:
-    name: eclipse-score
-    url: https://github.com/eclipse-score
-  outputs:
-    claude: {}
-  packages:
-    - name: context
-      source: ./packages/context
-      version: 0.1.0
+description: Generated context attention fragments for Eclipse S-CORE
+license: Apache-2.0
+targets:
+  - copilot
+  - claude
+  - continue
+  - codex
+  - cursor
+  - gemini
+  - opencode
+dependencies:
+  apm: []
+# The get_context MCP dependency will be added in Phase 6 under dependencies.mcp.

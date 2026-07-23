@@ -12,7 +12,7 @@
 # *******************************************************************************
 
 [tool.uv.workspace]
-members = ["packages/score-context"]
+members = ["libs/score-context"]
 
 [dependency-groups]
 dev = [
@@ -29,7 +29,7 @@ target-version = "py312"
 select = ["E", "F", "I", "UP", "B", "SIM"]
 
 [tool.pyright]
-include = ["packages/score-context/src", "packages/score-context/tests"]
+include = ["libs/score-context/src", "libs/score-context/tests"]
 pythonVersion = "3.12"
 typeCheckingMode = "strict"
 reportMissingTypeStubs = false

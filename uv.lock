@@ -224,7 +224,7 @@ wheels = [
 [[package]]
 name = "score-context"
 version = "0.1.0"
-source = { editable = "packages/score-context" }
+source = { editable = "libs/score-context" }
 dependencies = [
     { name = "pydantic" },
 ]

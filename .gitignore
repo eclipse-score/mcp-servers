@@ -8,6 +8,16 @@ __pycache__/
 .venv/
 dist/
 build/
+apm_modules/
+
+# Compiled agent output
+.claude/
+.codex/
+.copilot/
+.cursor/
+.gemini/
+.continue/
+.opencode/
 
 # Local tooling
 .DS_Store

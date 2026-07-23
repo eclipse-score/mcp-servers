@@ -11,16 +11,14 @@
 # SPDX-License-Identifier: Apache-2.0
 # *******************************************************************************
 
-name: eclipse-score-context-attention
+name: my-package
 version: 0.1.0
-description: Eclipse S-CORE Agent Context Attention Layer packages
-marketplace:
-  owner:
-    name: eclipse-score
-    url: https://github.com/eclipse-score
-  outputs:
-    claude: {}
-  packages:
-    - name: context
-      source: ./packages/context
-      version: 0.1.0
+description: APM package description
+license: Apache-2.0
+dependencies:
+  apm: []
+  mcp: []
+# type: instructions
+# targets:
+#   - copilot
+#   - claude
