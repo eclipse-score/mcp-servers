@@ -1,4 +1,6 @@
 {
+  "$schema": "../schema/task_spec_v1.json",
+  "task_version": "v1",
   "id": "task_001_contract_change",
   "issue_id": 1,
   "description": "A contract change must surface its decision and affected contract.",

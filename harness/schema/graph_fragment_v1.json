@@ -1,0 +1,128 @@
+{
+  "$schema": "http://json-schema.org/draft-2020-12/schema",
+  "$id": "https://eclipse-score.github.io/schema/graph_fragment_v1.json",
+  "title": "Context Graph Fragment",
+  "description": "Normalized data structure output by adapters. Immutable, Git-tracked.",
+  "type": "object",
+  "required": ["fragment_version", "nodes", "edges"],
+  "properties": {
+    "fragment_version": {
+      "type": "string",
+      "const": "v1",
+      "description": "Schema version for this fragment"
+    },
+    "adapter": {
+      "type": "object",
+      "description": "Metadata about the adapter that created this fragment",
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[a-z_]+$",
+          "examples": ["github", "adr", "contract", "seed"]
+        },
+        "version": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+\\.\\d+$",
+          "example": "1.0.0"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$",
+          "description": "Hash of adapter code (for reproducibility/trust)"
+        }
+      }
+    },
+    "nodes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "type", "title", "provenance"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "feat_req", "comp_req", "dec_rec", "contract",
+              "pull_request", "issue", "discussion",
+              "repo", "module", "team", "artifact",
+              "experience", "route_observation", "confidence_signal"
+            ]
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1
+          },
+          "provenance": {
+            "$ref": "#/$defs/provenance"
+          },
+          "attributes": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "edges": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["source", "target", "relation", "provenance"],
+        "properties": {
+          "source": {
+            "type": "string",
+            "minLength": 1
+          },
+          "target": {
+            "type": "string",
+            "minLength": 1
+          },
+          "relation": {
+            "type": "string"
+          },
+          "provenance": {
+            "$ref": "#/$defs/provenance"
+          },
+          "attributes": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "provenance": {
+      "type": "object",
+      "required": ["repo", "adapter", "confidence", "observed_at"],
+      "properties": {
+        "repo": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sha": {
+          "type": ["string", "null"]
+        },
+        "adapter": {
+          "type": "string",
+          "minLength": 1
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 1.0
+        },
+        "observed_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    }
+  }
+}

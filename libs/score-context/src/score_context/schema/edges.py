@@ -58,6 +58,12 @@ class EdgeRelation(StrEnum):
     AUTHORED_BY = "authored_by"
     OWNS = "owns"
 
+    # Experience learning relations (Phase 2).
+    PROVED_THROUGH = "proved_through"  # Experience → Edge
+    FAILED_AT = "failed_at"  # Experience → Edge
+    OBSERVES = "observes"  # Experience → RouteObservation
+    UPDATES = "updates"  # RouteObservation → Edge
+
 
 class Edge(BaseModel):
     """A typed, provenance-bearing relation between two natural-key nodes."""

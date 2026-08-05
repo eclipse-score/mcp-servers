@@ -86,6 +86,11 @@ class NodeType(StrEnum):
     ARTIFACT = "artifact"
     CI_RESULT = "ci_result"
 
+    # Experience learning nodes (Phase 2).
+    EXPERIENCE = "experience"
+    ROUTE_OBSERVATION = "route_observation"
+    CONFIDENCE_SIGNAL = "confidence_signal"
+
 
 NEEDS_MODEL_TYPES = frozenset(
     node_type.value
@@ -104,6 +109,9 @@ NEEDS_MODEL_TYPES = frozenset(
         "person",
         "artifact",
         "ci_result",
+        "experience",
+        "route_observation",
+        "confidence_signal",
     }
 )
 

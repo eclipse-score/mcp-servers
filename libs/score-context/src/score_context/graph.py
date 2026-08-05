@@ -17,7 +17,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 from score_context.schema.edges import Edge
 from score_context.schema.nodes import Node
@@ -28,6 +28,12 @@ class GraphFragment(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
+    fragment_version: str | None = Field(
+        default=None, description="Schema version (v1)"
+    )
+    adapter: dict | None = Field(
+        default=None, description="Adapter metadata {name, version, sha256}"
+    )
     nodes: list[Node]
     edges: list[Edge]
 

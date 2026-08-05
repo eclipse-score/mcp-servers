@@ -1,0 +1,52 @@
+{
+  "$schema": "http://json-schema.org/draft-2020-12/schema",
+  "$id": "https://eclipse-score.github.io/schema/task_spec_v1.json",
+  "title": "Task Specification",
+  "description": "Defines a task for context selection evaluation.",
+  "type": "object",
+  "required": ["task_version", "id", "seed_node_ids", "expected_node_ids"],
+  "properties": {
+    "task_version": {
+      "type": "string",
+      "const": "v1",
+      "description": "Schema version for this task spec"
+    },
+    "id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Unique task identifier"
+    },
+    "issue_id": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Associated GitHub issue number"
+    },
+    "description": {
+      "type": "string",
+      "description": "Human-readable task description"
+    },
+    "seed_node_ids": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 1,
+      "description": "Starting nodes for context selection"
+    },
+    "expected_node_ids": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "description": "Nodes that must appear in selected context"
+    },
+    "top_n": {
+      "type": "integer",
+      "default": 5,
+      "minimum": 1,
+      "description": "Number of top candidates to select"
+    }
+  }
+}
