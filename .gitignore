@@ -27,3 +27,4 @@ apm.lock.yaml
 # Local tooling
 .DS_Store
 .stage/
+harness/artifacts/

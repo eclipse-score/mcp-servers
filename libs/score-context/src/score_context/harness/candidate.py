@@ -19,8 +19,8 @@ from score_context.context import ContextEngine, ContextSelection
 from score_context.graph import ContextGraph
 from score_context.harness.base import AssuranceHarness, TaskSpec
 from score_context.harness.gate import GateResult
-from score_context.schema.edges import EdgeRelation
-from score_context.schema.experience import ExperienceNode
+from score_context.policy import Policy
+from score_context.schema.experience import ExperienceNode, RouteHop
 from score_context.schema.provenance import Provenance
 
 
@@ -45,7 +45,8 @@ class ContextHarness(AssuranceHarness):
     def get_context(
         self,
         task_spec: TaskSpec,
-        experience_weights: dict[tuple[str, str, EdgeRelation], float] | None = None,
+        experience_weights: dict[tuple[str, str, str], float] | None = None,
+        policy: Policy | None = None,
     ) -> str:
         top_n = task_spec.get("top_n", 5)
         self.last_selection = self.engine.get_context(
@@ -55,6 +56,7 @@ class ContextHarness(AssuranceHarness):
             top_n,
             track_route=self.track_route,
             experience_weights=experience_weights,
+            policy=policy,
         )
         return self.last_selection.rendered
 
@@ -86,7 +88,13 @@ class ContextHarness(AssuranceHarness):
 
         route = self.last_selection.route
         route_edges = [
-            (t.source_id, t.target_id, t.relation.value)
+            RouteHop(
+                source_id=t.source_id,
+                target_id=t.target_id,
+                relation=t.relation,
+                source_type=t.source_type,
+                target_type=t.target_type,
+            )
             for t in route.traversals
             if t.source_id != "__SEED__"
         ]
@@ -104,7 +112,7 @@ class ContextHarness(AssuranceHarness):
             attempt=0,
             route_edges=route_edges,
             route_node_ids=[t.target_id for t in route.traversals],
-            verdict=verdict,  # type: ignore
+            verdict=verdict,
             surfaced_node_ids=gate_result.surfaced_node_ids,
             missing_node_ids=gate_result.missing_node_ids,
             coverage_ratio=(
@@ -119,7 +127,7 @@ class ContextHarness(AssuranceHarness):
                 confidence=confidence,
                 observed_at=datetime.now(UTC),
             ),
-            seed_node_ids=gate_result.expected_node_ids or [],
+            seed_node_ids=list(task_spec.get("seed_node_ids", [])),
             top_n=task_spec.get("top_n", 5),
             timestamp=datetime.now(UTC),
         )

@@ -16,35 +16,25 @@ from score_context.schema.experience import (
     ConfidenceSignalNode,
     ExperienceNode,
     Route,
+    RouteHop,
     RouteObservationNode,
     Traversal,
 )
 from score_context.schema.nodes import NEEDS_MODEL_TYPES, Node, NodeType
-from score_context.schema.observation import (
-    AgentObservation,
-    DiscoveredNode,
-    ObservationIndex,
-    RouteEdge,
-    RouteNode,
-)
 from score_context.schema.provenance import Provenance, SourceRef
 
 __all__ = [
     "ADR_RELATION_MAPPINGS",
-    "AgentObservation",
     "ConfidenceSignalNode",
-    "DiscoveredNode",
     "Edge",
     "EdgeRelation",
     "ExperienceNode",
     "NEEDS_MODEL_TYPES",
     "Node",
     "NodeType",
-    "ObservationIndex",
     "Provenance",
     "Route",
-    "RouteEdge",
-    "RouteNode",
+    "RouteHop",
     "RouteObservationNode",
     "SourceRef",
     "Traversal",

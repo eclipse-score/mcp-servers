@@ -15,7 +15,9 @@
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
+from typing import cast
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -31,7 +33,7 @@ class GraphFragment(BaseModel):
     fragment_version: str | None = Field(
         default=None, description="Schema version (v1)"
     )
-    adapter: dict | None = Field(
+    adapter: dict[str, str] | None = Field(
         default=None, description="Adapter metadata {name, version, sha256}"
     )
     nodes: list[Node]
@@ -66,7 +68,12 @@ class ContextGraph:
 def load_fragment(path: Path) -> GraphFragment:
     """Load and validate one graph fragment using the Phase 0 models."""
 
-    return GraphFragment.model_validate_json(path.read_text(encoding="utf-8"))
+    raw_json = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(raw_json, dict):
+        raise ValueError("graph fragment must be a JSON object")
+    raw = cast(dict[str, object], raw_json)
+    raw.pop("$schema", None)
+    return GraphFragment.model_validate(raw)
 
 
 def compose_fragments(paths: list[Path]) -> ContextGraph:

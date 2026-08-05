@@ -14,11 +14,12 @@ This repo solves that with an **Attention Layer**: a system that learns what inf
 
 Imagine a **knowledge graph** of everything in your organization: pull requests, architectural decisions (ADRs), contracts, requirements, test cases, etc. These are all connected—PR-42 affects Contract-A, which implements ADR-17.
 
-**Phase 1 (current PR):** Given a task and a starting point (seed), the system intelligently **selects the most relevant nodes** from this graph using proven scoring rules (relation weights, freshness, centrality). This context is delivered to the agent.
+**Phase 1:** Given a task and a starting point (seed), the system deterministically selects the most relevant nodes from this graph.
 
-**Phase 2 (proposed in this design):** Every time the system succeeds or fails at a task, it records the **exact path it took through the graph**. Over time, it learns which paths work best—similar to how ant colonies optimize routes. These learned "good paths" become feedback signals that improve future selections, without changing the core algorithm.
-
-**No online learning. No magic. Git-native.** Every route, every decision, every learning update is captured as a file you can review in a pull request.
+**Phase 2:** Each run appends one experience to `harness/artifacts/experiences.jsonl`.
+`score-ctx aggregate` derives one deterministic `weights.json`; learned keys are
+edge classes `(relation, source_type, target_type)`, so they generalize across
+repositories. All scoring and learning knobs live in `harness/policy.yml`.
 
 ## How It Works
 
@@ -28,11 +29,9 @@ Imagine a **knowledge graph** of everything in your organization: pull requests,
 3. Context selected      → "Here are Contracts A, B, and ADR-17"
 4. Agent acts on it      → Task completes (success or failure)
 5. Route recorded        → "We traversed: PR-42 → Contract-A → ADR-17"
-6. Learning signal sent  → "That path worked! Use it again next time"
-7. Graph updated         → Future tasks benefit from this experience
+6. Aggregate experiences → "Class weights are derived deterministically"
+7. Future selection      → "The scorer reads only weights.json"
 ```
-
-See [EXPERIENCE_LEARNING_DESIGN.md](./EXPERIENCE_LEARNING_DESIGN.md) for the full technical proposal.
 
 ---
 
@@ -54,26 +53,18 @@ This is a Python/uv monorepo using Microsoft's APM **monorepo-hybrid** shape:
 | **ContextHarness** | The evaluator that selects context for a task and checks if it contains everything the task needs |
 | **Route** | The actual path through the graph that the scoring algorithm took to reach selected nodes |
 | **Experience** | A recorded route + outcome (pass/fail) that becomes a learning signal |
-| **Attention Weight** | A confidence boost/dampen applied to edges based on historical success/failure |
+| **Attention Weight** | A class-level boost/dampen from historical success/failure |
 
 ---
 
 ## Quick Start
 
 ```shell
-# Install dependencies
 uv sync
 
-# Run quality checks
-uv run ruff check .
-uv run ruff format --check .
-uv run pyright
-
-# Run tests (Lane A deterministic evaluation)
-uv run pytest
-
-# See test coverage
-uv run pytest --cov=score_context
+uv run score-ctx demo
+uv run score-ctx run --task harness/spec/task_001_contract_change.json
+uv run score-ctx aggregate
 ```
 
 ---
@@ -89,6 +80,6 @@ MCP servers are declared in a package's `apm.yml` under `dependencies.mcp:`; the
 ## Phase Timeline
 
 - **Phase 0 (done):** Core schema and graph engine, no APM/MCP yet
-- **Phase 1 (current PR):** Context selection harness with deterministic evaluation (Lane A)
-- **Phase 2 (proposed):** Experience learning—routes recorded, confidence signals updated, Git-native persistence
+- **Phase 1:** Context selection harness with deterministic evaluation (Lane A)
+- **Phase 2:** Append-only experience learning with class-level derived weights
 - **Phase 3 (future):** Meta-harness for higher-level routing policies learned from experience data

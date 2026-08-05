@@ -11,7 +11,7 @@
 # SPDX-License-Identifier: Apache-2.0
 # *******************************************************************************
 
-"""Experience learning data model: captured routes and confidence signals."""
+"""Experience learning data model: captured routes and class-level signals."""
 
 from __future__ import annotations
 
@@ -24,6 +24,14 @@ from score_context.schema.edges import EdgeRelation
 from score_context.schema.provenance import Provenance
 
 
+def _empty_traversals() -> list[Traversal]:
+    return []
+
+
+def _empty_route_hops() -> list[RouteHop]:
+    return []
+
+
 class Traversal(BaseModel):
     """One step in a route: source → target via relation."""
 
@@ -32,6 +40,8 @@ class Traversal(BaseModel):
     source_id: str = Field(min_length=1)
     target_id: str = Field(min_length=1)
     relation: EdgeRelation
+    source_type: str = Field(min_length=1)
+    target_type: str = Field(min_length=1)
     score_contributed: float
     reason: str = Field(min_length=1)
 
@@ -43,7 +53,19 @@ class Route(BaseModel):
 
     task_id: str = Field(min_length=1)
     attempt: int = Field(ge=0)
-    traversals: list[Traversal] = []
+    traversals: list[Traversal] = Field(default_factory=_empty_traversals)
+
+
+class RouteHop(BaseModel):
+    """One recorded graph hop, including its reusable edge class."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    source_id: str = Field(min_length=1)
+    target_id: str = Field(min_length=1)
+    relation: EdgeRelation
+    source_type: str = Field(min_length=1)
+    target_type: str = Field(min_length=1)
 
 
 class ExperienceNode(BaseModel):
@@ -64,13 +86,13 @@ class ExperienceNode(BaseModel):
     attempt: int = Field(ge=0)
 
     # The actual path taken
-    route_edges: list[tuple[str, str, str]] = []
-    route_node_ids: list[str] = []
+    route_edges: list[RouteHop] = Field(default_factory=_empty_route_hops)
+    route_node_ids: list[str] = Field(default_factory=list)
 
     # Outcome
     verdict: Literal["pass", "fail"]
-    surfaced_node_ids: list[str] = []
-    missing_node_ids: list[str] = []
+    surfaced_node_ids: list[str] = Field(default_factory=list)
+    missing_node_ids: list[str] = Field(default_factory=list)
 
     # Quality signals
     coverage_ratio: float = Field(ge=0.0, le=1.0)
@@ -97,9 +119,9 @@ class RouteObservationNode(BaseModel):
     type: Literal["route_observation"]
 
     # Target
-    source_id: str = Field(min_length=1)
-    target_id: str = Field(min_length=1)
     relation: EdgeRelation
+    source_type: str = Field(min_length=1)
+    target_type: str = Field(min_length=1)
 
     # Aggregated signals
     success_count: int = Field(ge=0)
@@ -113,7 +135,7 @@ class RouteObservationNode(BaseModel):
     # Metadata
     first_observed: datetime
     last_updated: datetime
-    observed_in_experiments: list[str] = []
+    observed_in_experiments: list[str] = Field(default_factory=list)
 
     provenance: Provenance
 
@@ -130,9 +152,9 @@ class ConfidenceSignalNode(BaseModel):
     type: Literal["confidence_signal"]
 
     # Target edge
-    source_id: str = Field(min_length=1)
-    target_id: str = Field(min_length=1)
     relation: EdgeRelation
+    source_type: str = Field(min_length=1)
+    target_type: str = Field(min_length=1)
 
     # Confidence adjustment
     base_weight: float = Field(ge=0.5)

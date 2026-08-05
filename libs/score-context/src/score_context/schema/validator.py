@@ -15,6 +15,7 @@
 
 import json
 from pathlib import Path
+from typing import cast
 
 try:
     import jsonschema
@@ -28,13 +29,13 @@ except ImportError as err:
 SCHEMAS_DIR = Path(__file__).parents[5] / "harness" / "schema"
 
 
-def load_schema(schema_name: str) -> dict:
+def load_schema(schema_name: str) -> dict[str, object]:
     """Load a schema file by name (e.g., 'graph_fragment_v1')."""
     schema_path = SCHEMAS_DIR / f"{schema_name}.json"
     if not schema_path.exists():
         raise FileNotFoundError(f"Schema not found: {schema_path}")
     with open(schema_path) as f:
-        return json.load(f)
+        return cast(dict[str, object], json.load(f))
 
 
 def validate_graph_fragment(path: Path) -> list[str]:
@@ -47,7 +48,7 @@ def validate_graph_fragment(path: Path) -> list[str]:
     Returns:
         List of error messages (empty if valid)
     """
-    errors = []
+    errors: list[str] = []
     try:
         with open(path) as f:
             data = json.load(f)
@@ -77,7 +78,7 @@ def validate_task_spec(path: Path) -> list[str]:
     Returns:
         List of error messages (empty if valid)
     """
-    errors = []
+    errors: list[str] = []
     try:
         with open(path) as f:
             data = json.load(f)
@@ -107,7 +108,7 @@ def validate_experience(path: Path) -> list[str]:
     Returns:
         List of error messages (empty if valid)
     """
-    errors = []
+    errors: list[str] = []
     try:
         with open(path) as f:
             data = json.load(f)

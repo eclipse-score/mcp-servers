@@ -42,13 +42,19 @@
     "route_edges": {
       "type": "array",
       "items": {
-        "type": "array",
-        "minItems": 3,
-        "maxItems": 3,
-        "items": {
-          "type": "string"
+        "type": "object",
+        "required": [
+          "source_id", "target_id", "relation", "source_type", "target_type"
+        ],
+        "properties": {
+          "source_id": {"type": "string", "minLength": 1},
+          "target_id": {"type": "string", "minLength": 1},
+          "relation": {"type": "string", "minLength": 1},
+          "source_type": {"type": "string", "minLength": 1},
+          "target_type": {"type": "string", "minLength": 1}
         },
-        "description": "[source, target, relation]"
+        "additionalProperties": false,
+        "description": "Edges traversed with reusable edge-class types"
       },
       "description": "Edges traversed in order"
     },

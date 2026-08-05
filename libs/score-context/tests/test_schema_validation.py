@@ -71,7 +71,7 @@ class TestTaskSpecValidation:
             "task_002_module_blocked.json",
         ],
     )
-    def test_task_spec_validates(self, task_file):
+    def test_task_spec_validates(self, task_file: str):
         """All task specs must be valid."""
         path = Path(__file__).parent.parent.parent.parent / f"harness/spec/{task_file}"
         errors = validate_task_spec(path)
@@ -84,7 +84,7 @@ class TestTaskSpecValidation:
             "task_002_module_blocked.json",
         ],
     )
-    def test_task_spec_has_version(self, task_file):
+    def test_task_spec_has_version(self, task_file: str):
         """Task specs must have task_version."""
         path = Path(__file__).parent.parent.parent.parent / f"harness/spec/{task_file}"
         import json
@@ -100,7 +100,7 @@ class TestTaskSpecValidation:
             "task_002_module_blocked.json",
         ],
     )
-    def test_task_spec_has_required_fields(self, task_file):
+    def test_task_spec_has_required_fields(self, task_file: str):
         """Task specs must have required fields."""
         path = Path(__file__).parent.parent.parent.parent / f"harness/spec/{task_file}"
         import json

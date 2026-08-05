@@ -22,17 +22,10 @@ from typing import cast
 from pydantic import BaseModel, ConfigDict, Field
 
 from score_context.graph import ContextGraph
+from score_context.policy import Policy, load_policy
 from score_context.schema.edges import EdgeRelation
 from score_context.schema.experience import Route, Traversal
 from score_context.schema.nodes import Node, NodeType
-
-RELATION_WEIGHTS: dict[EdgeRelation, float] = {
-    EdgeRelation.AFFECTS: 3.0,
-    EdgeRelation.BLOCKS: 3.0,
-    EdgeRelation.DISCUSSED_IN: 2.5,
-    EdgeRelation.IMPLEMENTS: 2.0,
-    EdgeRelation.DEPENDS_ON: 2.0,
-}
 
 
 class ContextSelection(BaseModel):
@@ -65,7 +58,8 @@ class ContextEngine:
         role: str,
         top_n: int,
         track_route: bool = False,
-        experience_weights: dict[tuple[str, str, EdgeRelation], float] | None = None,
+        experience_weights: dict[tuple[str, str, str], float] | None = None,
+        policy: Policy | None = None,
     ) -> ContextSelection:
         """Return structured and rendered context for one task."""
 
@@ -77,28 +71,35 @@ class ContextEngine:
             top_n,
             track_route=track_route,
             experience_weights=experience_weights,
+            policy=policy,
         )
 
 
-def _freshness(node: Node, latest: datetime) -> float:
+def _freshness(node: Node, latest: datetime, freshness_years: float) -> float:
     age_days = max(0.0, (latest - node.provenance.observed_at).total_seconds() / 86400)
-    return 1.0 / (1.0 + age_days / 365.0)
+    return 1.0 / (1.0 + age_days / (freshness_years * 365.0))
 
 
 def _experience_weight(
+    graph: ContextGraph,
     source: str,
     target: str,
     relation: EdgeRelation,
-    experience_weights: dict[tuple[str, str, EdgeRelation], float] | None,
+    experience_weights: dict[tuple[str, str, str], float] | None,
+    neutral_multiplier: float,
 ) -> float:
     """
     Look up experience confidence for an edge.
     Returns 1.0 (no adjustment) if no experience data exists.
     """
     if not experience_weights:
-        return 1.0
-    key = (source, target, relation)
-    return experience_weights.get(key, 1.0)
+        return neutral_multiplier
+    key = (
+        relation.value,
+        graph.nodes[source].type.value,
+        graph.nodes[target].type.value,
+    )
+    return experience_weights.get(key, neutral_multiplier)
 
 
 def get_context(
@@ -108,7 +109,8 @@ def get_context(
     role: str,
     top_n: int,
     track_route: bool = False,
-    experience_weights: dict[tuple[str, str, EdgeRelation], float] | None = None,
+    experience_weights: dict[tuple[str, str, str], float] | None = None,
+    policy: Policy | None = None,
 ) -> ContextSelection:
     """Select stable top-N context using seeds, relation weights, freshness.
 
@@ -124,13 +126,14 @@ def get_context(
         role: Role context for rendering.
         top_n: Number of top candidates to select.
         track_route: If True, capture the route taken through the graph.
-        experience_weights: Optional dict mapping (source, target, relation)
-            to confidence multipliers.
+        experience_weights: Optional dict mapping (relation, source_type,
+            target_type) to confidence multipliers.
 
     Returns:
         ContextSelection with optional route field if track_route=True.
     """
 
+    scoring_policy = policy or load_policy()
     task_id = str(task_spec["id"])
     raw_seeds = task_spec.get("seed_node_ids", [])
     if not isinstance(raw_seeds, list):
@@ -145,7 +148,9 @@ def get_context(
 
     # Route tracking
     route_traversals: list[Traversal] = []
-    scores: dict[str, float] = {seed: 100.0 for seed in seeds}
+    scores: dict[str, float] = {
+        seed: scoring_policy.scoring.seed_score for seed in seeds
+    }
 
     # Seed scoring
     for seed in seeds:
@@ -155,7 +160,9 @@ def get_context(
                     source_id="__SEED__",
                     target_id=seed,
                     relation=EdgeRelation.CONTAINS,
-                    score_contributed=100.0,
+                    source_type="seed",
+                    target_type=graph.nodes[seed].type.value,
+                    score_contributed=scoring_policy.scoring.seed_score,
                     reason="seed",
                 )
             )
@@ -163,16 +170,28 @@ def get_context(
     # Neighbor scoring with experience adjustment
     for seed in seeds:
         for neighbor, edge in graph.neighbors(seed):
-            relation_score = RELATION_WEIGHTS.get(edge.relation, 1.0)
+            relation_score = scoring_policy.base_weights.get(
+                edge.relation.value,
+                scoring_policy.scoring.default_relation_weight,
+            )
 
             # Apply experience confidence adjustment
             experience_adj = _experience_weight(
-                seed, neighbor.id, edge.relation, experience_weights
+                graph,
+                seed,
+                neighbor.id,
+                edge.relation,
+                experience_weights,
+                scoring_policy.scoring.neutral_multiplier,
             )
             relation_score_adjusted = relation_score * experience_adj
 
-            degree_score = len(graph.neighbors(neighbor.id)) * 0.1
-            freshness_score = _freshness(neighbor, latest)
+            degree_score = (
+                len(graph.neighbors(neighbor.id)) * scoring_policy.scoring.degree_factor
+            )
+            freshness_score = _freshness(
+                neighbor, latest, scoring_policy.scoring.freshness_years
+            )
             total_score = relation_score_adjusted + degree_score + freshness_score
 
             if neighbor.id not in scores or total_score > scores[neighbor.id]:
@@ -183,6 +202,8 @@ def get_context(
                             source_id=seed,
                             target_id=neighbor.id,
                             relation=edge.relation,
+                            source_type=graph.nodes[seed].type.value,
+                            target_type=neighbor.type.value,
                             score_contributed=total_score,
                             reason=(
                                 f"relation_weight:{relation_score} "
