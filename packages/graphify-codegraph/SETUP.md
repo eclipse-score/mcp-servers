@@ -7,11 +7,11 @@ This guide explains the two phases of using graphify: **Setup** and **Runtime**.
 
 ## Quick Setup (Recommended)
 
-Install the central setup package. Its declared MCP server is registered by
-the same install operation:
+Install Graphify. It brings the central setup package and registers its MCP
+server in the same install operation:
 
 ```bash
-apm install /path/to/mcp-servers/packages/apm-setup --target copilot
+apm install /path/to/mcp-servers/packages/graphify-codegraph --target copilot
 ```
 
 Then call `verify_setup` and `setup_graphify` through the `apm-setup` MCP
