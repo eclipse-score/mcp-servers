@@ -16,18 +16,16 @@ does not execute setup commands automatically.
 
 ## APM installation
 
-Install this package first:
+Install this package. This installs the instructions, skill files, and its
+self-defined stdio MCP server:
 
 ```bash
 apm install /path/to/mcp-servers/packages/apm-setup --target copilot
 ```
 
-Register the installed stdio server through APM:
-
-```bash
-apm install --mcp apm-setup --target copilot -- \
-	python3 apm_modules/_local/apm-setup/src/apm_setup/serve.py
-```
-
 For a published package, use the installed package path reported by APM in
 place of `apm_modules/_local/apm-setup`.
+
+After installation, call `verify_setup`, then call `setup_graphify` and/or
+`setup_context_discipline` with the target repository path. Do not run a
+repository setup script; setup is performed by the MCP tools.

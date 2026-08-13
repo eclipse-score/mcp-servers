@@ -30,7 +30,7 @@ Two-phase system:
 
 **Phase 1: Setup (one-time)**
 ```
-You run: graphify .
+You run: `graphify extract . --code-only`
     ↓
 External tool parses code with tree-sitter
     ↓
@@ -58,26 +58,17 @@ Returns: matching nodes from your code structure
 ### Setup (One-time per repo)
 
 ```bash
-# Step 1: Install packages
-apm install context-discipline
+# Step 1: Install the setup package and its MCP server
+apm install /path/to/mcp-servers/packages/apm-setup --target copilot
+apm install /path/to/mcp-servers/packages/graphify-codegraph --target copilot
 apm compile -t copilot
-
-# Step 2: Run the setup wizard from your project root
-cd /your/project
-./do setup-graphify
 ```
 
-**The wizard will:**
-- ✓ Install graphify CLI (if needed)
-- ✓ Generate code graph in your repo
-- ✓ Verify MCP setup
-- ✓ Show completion status
+Then call `verify_setup` followed by `setup_graphify` through the `apm-setup`
+MCP server, passing the absolute path of your project repository.
 
-Done. You don't regenerate this unless your code changes significantly.
-
-The `do` wrapper dispatches the executable `scripts/setup-graphify` command. If
-your project has no `./do`, copy the `scripts` directory from the package source
-checkout and run `./scripts/setup-graphify` directly.
+The setup tool installs Graphify when needed and generates the local code graph.
+You don't regenerate this unless your code changes significantly.
 
 ### Usage (During coding)
 
@@ -101,7 +92,7 @@ graphify query "validation"    # Find related code
 
 ## What You Get
 
-When you run `graphify .` once:
+When you run `graphify extract . --code-only` once:
 
 | File | Purpose |
 |------|---------|
@@ -155,20 +146,20 @@ uv tool install graphifyy
 **Q: graph.json not created**
 ```bash
 cd /path/to/repo
-graphify .  # Must run from repo root
+graphify extract . --code-only  # Must run from repo root
 ls graphify-out/  # Check output
 ```
 
 **Q: Graph is outdated after code changes**
 ```bash
 rm -rf graphify-out/
-graphify .  # Regenerate
+graphify extract . --code-only  # Regenerate
 ```
 
 **Q: Agent can't find graph (MCP error)**
 ```
 Make sure you:
-1. Ran graphify . in the repo
+1. Ran `graphify extract . --code-only` in the repo
 2. Installed context-discipline via apm
 3. graph.json exists at graphify-out/graph.json
 ```

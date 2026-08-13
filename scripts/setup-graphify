@@ -101,7 +101,7 @@ generate_graph() {
 	fi
 	
 	info "Generating code graph..."
-	if run_cmd graphify .; then
+	if run_cmd graphify extract . --code-only; then
 		success "Code graph generated at graphify-out/"
 		return 0
 	else

@@ -87,7 +87,7 @@ def setup_graphify(arguments: dict[str, Any]) -> dict[str, Any]:
             "next": "Call setup_graphify with install_graphify=true.",
         }
 
-    subprocess.run([graphify, "."], cwd=repo, check=True)
+    subprocess.run([graphify, "extract", str(repo), "--code-only"], check=True)
     add_gitignore_entry(repo, "graphify-out/")
     return {
         "ok": True,

@@ -7,20 +7,17 @@ This guide explains the two phases of using graphify: **Setup** and **Runtime**.
 
 ## Quick Setup (Recommended)
 
-After installing APM packages, run the interactive setup wizard:
+Install the central setup package. Its declared MCP server is registered by
+the same install operation:
 
 ```bash
-# From your project root
-/path/to/mcp-servers/do setup-graphify
+apm install /path/to/mcp-servers/packages/apm-setup --target copilot
 ```
 
-The wizard will:
-1. ✓ Install graphify CLI (if needed)
-2. ✓ Generate code graph
-3. ✓ Verify MCP setup
-4. ✓ Report completion
+Then call `verify_setup` and `setup_graphify` through the `apm-setup` MCP
+server, passing the absolute path of your repository.
 
-**That's it!** Your repo is ready for agent queries.
+The MCP tool installs Graphify when needed and generates the local code graph.
 
 ---
 
@@ -51,7 +48,7 @@ In your repository, run graphify to analyze your code:
 
 ```bash
 cd /path/to/your/repo
-graphify .
+graphify extract . --code-only
 ```
 
 **Output:** Creates `graphify-out/` directory:
@@ -148,10 +145,10 @@ cd /path/to/repo
 
 # Option 1: Fresh regeneration
 rm -rf graphify-out/
-graphify .
+graphify extract . --code-only
 
 # Option 2: Overwrite existing
-graphify .  # Same effect if graph already exists
+graphify extract . --code-only  # Same effect if graph already exists
 ```
 
 Takes only a few seconds.
@@ -173,7 +170,7 @@ After regeneration, the MCP server automatically reads the new `graph.json` on t
 │     ↓                                                         │
 │     [graphify CLI installed]                                │
 │                                                              │
-│  2. cd /my/repo && graphify .                               │
+│  2. Call setup_graphify(repo_path) through MCP                 │
 │     ↓                                                         │
 │     [parse code with tree-sitter AST]                       │
 │     ↓                                                         │
@@ -228,7 +225,7 @@ After regeneration, the MCP server automatically reads the new `graph.json` on t
 |--------|-------------|---------------|
 | **Who** | You (human) | Agent |
 | **When** | Once per repo | Every session |
-| **Command** | `graphify .` (CLI) | `wm.query_graph()` (MCP) |
+| **Command** | `setup_graphify(repo_path)` (MCP) | `wm.query_graph()` (MCP) |
 | **Tool** | External graphify CLI | graphify-codegraph MCP server |
 | **Output** | graphify-out/graph.json | Query results |
 | **Re-run** | Only if code changes | Never (uses cached graph) |
@@ -243,11 +240,11 @@ uv tool install graphifyy
 which graphify  # Should show the path
 ```
 
-**Q: `graph.json` not created after running `graphify .`**
+**Q: `graph.json` not created after running `setup_graphify`**
 ```bash
 # Make sure you're in the repo root
 cd /path/to/repo
-graphify .
+graphify extract . --code-only
 ls graphify-out/  # Check what was created
 ```
 
@@ -255,7 +252,7 @@ ls graphify-out/  # Check what was created
 ```bash
 # Regenerate the graph
 rm -rf graphify-out/
-graphify .
+graphify extract . --code-only
 # Agent will find it on next query
 ```
 
