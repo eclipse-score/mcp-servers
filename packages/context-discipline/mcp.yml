@@ -1,0 +1,115 @@
+# *******************************************************************************
+# Copyright (c) 2026 Contributors to the Eclipse Foundation
+#
+# See the NOTICE file(s) distributed with this work for additional
+# information regarding copyright ownership.
+#
+# This program and the accompanying materials are made available under the
+# terms of the Apache License Version 2.0 which is available at
+# https://www.apache.org/licenses/LICENSE-2.0
+#
+# SPDX-License-Identifier: Apache-2.0
+# *******************************************************************************
+
+name: context-discipline
+version: 0.1.0
+description: MCP server for working memory management and local learning
+entry_point: context_discipline.src.context_discipline_mcp
+depends_on:
+  - graphify-codegraph    # Provides graph queries (wraps external graphify)
+
+tools:
+  - name: initialize_session
+    description: Initialize a working memory session
+    input_schema:
+      type: object
+      properties:
+        goal:
+          type: string
+          description: Main goal for the session
+        subgoals:
+          type: array
+          items:
+            type: string
+          description: List of subgoals
+        assumptions:
+          type: object
+          description: Assumptions with confidence levels (high/medium/low)
+      required:
+        - goal
+        - subgoals
+
+  - name: query_graph
+    description: Query code graph (delegates to graphify-codegraph MCP, which wraps external graphify CLI)
+    input_schema:
+      type: object
+      properties:
+        query:
+          type: string
+          description: Natural language query about code structure
+      required:
+        - query
+
+  - name: record_decision
+    description: Record a decision with reasoning
+    input_schema:
+      type: object
+      properties:
+        decision:
+          type: string
+          description: What decision was made
+        reason:
+          type: array
+          items:
+            type: string
+          description: Reasons for the decision
+        reversible:
+          type: boolean
+          description: Can this decision be reversed?
+      required:
+        - decision
+        - reason
+
+  - name: record_outcome
+    description: Record final outcome for local learning
+    input_schema:
+      type: object
+      properties:
+        task:
+          type: string
+          description: Task description
+        verdict:
+          type: string
+          enum: ["pass", "fail"]
+          description: Did the task succeed?
+        coverage:
+          type: number
+          minimum: 0.0
+          maximum: 1.0
+          description: Coverage ratio
+        surfaced_nodes:
+          type: array
+          items:
+            type: string
+          description: Nodes/files that were surfaced/addressed
+        missing_nodes:
+          type: array
+          items:
+            type: string
+          description: Nodes/files that were missed
+      required:
+        - task
+        - verdict
+        - coverage
+
+  - name: get_working_memory
+    description: Get current working memory entries
+    input_schema:
+      type: object
+      properties: {}
+
+  - name: get_unverified_assumptions
+    description: Get list of unverified assumptions
+    input_schema:
+      type: object
+      properties: {}
