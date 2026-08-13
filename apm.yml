@@ -11,7 +11,7 @@
 # SPDX-License-Identifier: Apache-2.0
 # *******************************************************************************
 
-name: eclipse-score-context-attention
+name: eclipse-score-apm-marketplace
 version: 0.1.0
 description: Eclipse S-CORE Agent Context Attention Layer packages
 license: Apache-2.0
