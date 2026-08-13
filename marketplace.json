@@ -11,7 +11,7 @@
       "description": "MCP wrapper for Graphify Labs CLI - deterministic code structure parsing",
       "author": "Eclipse S-CORE",
       "license": "Apache-2.0",
-      "apm": "https://raw.githubusercontent.com/eclipse-score/mcp-servers/local_harness_apm/packages/graphify-codegraph/apm.yml"
+      "apm": "./packages/graphify-codegraph"
     },
     {
       "id": "context-discipline",
@@ -20,7 +20,7 @@
       "description": "Working memory management and local learning orchestration",
       "author": "Eclipse S-CORE",
       "license": "Apache-2.0",
-      "apm": "https://raw.githubusercontent.com/eclipse-score/mcp-servers/local_harness_apm/packages/context-discipline/apm.yml"
+      "apm": "./packages/context-discipline"
     },
     {
       "id": "context",
@@ -29,7 +29,7 @@
       "description": "Generated context attention fragments for Eclipse S-CORE",
       "author": "Eclipse S-CORE",
       "license": "Apache-2.0",
-      "apm": "https://raw.githubusercontent.com/eclipse-score/mcp-servers/local_harness_apm/packages/context/apm.yml"
+      "apm": "./packages/context"
     }
   ]
 }
