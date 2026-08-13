@@ -1,6 +1,6 @@
 # Eclipse S-CORE APM Monorepo
 
-Local-only agent packages for code understanding, working memory, and learning—no cloud dependencies.
+Local-only agent packages for code understanding, working memory...
 
 ## What You Get
 
@@ -22,33 +22,58 @@ Two ready-to-use packages for your AI agent:
 brew install microsoft/apm/apm  # or: pip install apm-cli
 ```
 
-### 2. Install Packages
+### 2. Add This Marketplace
+
+From your project root:
 
 ```bash
-cd /path/to/your-project
-apm install github.com/user/mcp-servers/packages/context-discipline
+apm marketplace add github.com/eclipse-score/mcp-servers
+```
+
+Or use the local path (for development):
+
+```bash
+apm marketplace add /path/to/mcp-servers
+```
+
+### 3. Install Packages
+
+```bash
+apm install graphify-codegraph context-discipline
 apm compile -t copilot
 ```
 
-### 3. Run Setup Wizard
+### 4. Run Setup Wizards
+
+After compilation, configure each package:
 
 ```bash
-/path/to/mcp-servers/do setup-graphify
+# From your project root (where apm.yml is)
+./node_modules/.bin/do setup-graphify   # Generates code graph
+./node_modules/.bin/do setup-context-discipline  # Creates working memory
 ```
 
-Just answer the prompts. The wizard installs graphify CLI and generates a code graph for your repo.
+Or copy setup scripts from this repo:
 
-### 4. Agent Uses It
+```bash
+cp -r /path/to/mcp-servers/scripts ./scripts
+./scripts/setup-graphify
+./scripts/setup-context-discipline
+```
+
+### 5. Agent Uses It
+
+Once configured, your agent can call MCP tools:
 
 ```python
-# Your agent can now:
+# Working memory
 wm.initialize_session(goal="...", subgoals=[...])
 wm.query_graph("Show auth functions")
 wm.record_decision(decision="...", reason=[...])
 wm.record_outcome(task="...", verdict="pass", coverage=0.85)
 ```
 
-Results go to `.score-local/observations.jsonl` (local only).
+Results: `.score-local/observations.jsonl` (local only, not committed).
 
 ---
 
