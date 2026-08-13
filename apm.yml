@@ -23,11 +23,11 @@ marketplace:
     claude: {}
   packages:
     - name: graphify-codegraph
-      source: ./packages/graphify-codegraph
+      source: https://github.com/eclipse-score/mcp-servers/tree/local_harness_apm/packages/graphify-codegraph
       version: 0.1.0
     - name: context-discipline
-      source: ./packages/context-discipline
+      source: https://github.com/eclipse-score/mcp-servers/tree/local_harness_apm/packages/context-discipline
       version: 0.1.0
     - name: context
-      source: ./packages/context
+      source: https://github.com/eclipse-score/mcp-servers/tree/local_harness_apm/packages/context
       version: 0.1.0
