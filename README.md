@@ -81,7 +81,7 @@ Results: `.score-local/observations.jsonl` (local only, not committed).
 
 - **For users:** You're reading it. More examples in each package's `README.md`.
 - **For agents:** See [AGENTS.md](AGENTS.md) to create new packages.
-- **For contributors:** See [CONTRIBUTING.md](CONTRIBUTING.md).
+- **For contributors:** See [CONTRIBUTION.md](CONTRIBUTION.md).
 
 ---
 
@@ -162,4 +162,4 @@ Result: Fewer tokens, faster time-to-solution (all local)
 - **Check setup status:** `./do setup-graphify --verify`
 - **Package examples:** See each package's `README.md`
 - **Create new packages:** See [AGENTS.md](AGENTS.md)
-- **Contribute to this repo:** See [CONTRIBUTING.md](CONTRIBUTING.md)
+- **Contribute to this repo:** See [CONTRIBUTION.md](CONTRIBUTION.md)
