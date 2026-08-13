@@ -29,3 +29,17 @@ place of `apm_modules/_local/apm-setup`.
 After installation, call `verify_setup`, then call `setup_graphify` and/or
 `setup_context_discipline` with the target repository path. Do not run a
 repository setup script; setup is performed by the MCP tools.
+
+### VS Code Remote troubleshooting
+
+Run the install command inside the remote workspace where the MCP server runs:
+
+```bash
+cd /workspaces/your-project
+apm install apm-setup@eclipse-score-apm-marketplace --target copilot
+```
+
+If VS Code reports that
+`apm_modules/_local/apm-setup/src/apm_setup/serve.py` is missing, the MCP
+configuration exists but the package files are missing or stale in that
+workspace. Re-run the install there and restart the `apm-setup` MCP server.

@@ -23,5 +23,12 @@ targets:
   - gemini
   - opencode
 dependencies:
-  apm: []
-  mcp: []
+  apm:
+    - path: ../apm-setup
+  mcp:
+    - name: apm-setup
+      registry: false
+      transport: stdio
+      command: python3
+      args:
+        - apm_modules/_local/apm-setup/src/apm_setup/serve.py

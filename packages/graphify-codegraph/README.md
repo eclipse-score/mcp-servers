@@ -58,8 +58,7 @@ Returns: matching nodes from your code structure
 ### Setup (One-time per repo)
 
 ```bash
-# Step 1: Install the setup package and its MCP server
-apm install /path/to/mcp-servers/packages/apm-setup --target copilot
+# Step 1: Install Graphify; it brings the setup MCP package with it
 apm install /path/to/mcp-servers/packages/graphify-codegraph --target copilot
 apm compile -t copilot
 ```
