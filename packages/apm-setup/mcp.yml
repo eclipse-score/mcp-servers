@@ -14,7 +14,7 @@
 name: apm-setup
 version: 0.1.0
 description: MCP server for explicit local APM package setup
-command: python -m apm_setup.src.serve
+command: python -m apm_setup.serve
 transport: stdio
 tools:
   - name: setup_graphify
