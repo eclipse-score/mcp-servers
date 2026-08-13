@@ -24,10 +24,10 @@ brew install microsoft/apm/apm  # or: pip install apm-cli
 
 ### 2. Add This Marketplace
 
-From your project root:
+From your project root, use this marketplace (currently on `local_harness_apm` branch):
 
 ```bash
-apm marketplace add https://github.com/eclipse-score/mcp-servers
+apm marketplace add https://github.com/eclipse-score/mcp-servers@local_harness_apm#local_harness_apm
 ```
 
 Or use the local path (for development):
@@ -35,6 +35,8 @@ Or use the local path (for development):
 ```bash
 apm marketplace add /path/to/mcp-servers
 ```
+
+**Note:** APM requires a `#ref` to pin a git marketplace. The branch name works as a reference.
 
 ### 3. Install Packages
 
