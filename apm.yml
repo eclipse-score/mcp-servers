@@ -22,6 +22,12 @@ marketplace:
   outputs:
     claude: {}
   packages:
+    - name: graphify-codegraph
+      source: ./packages/graphify-codegraph
+      version: 0.1.0
+    - name: context-discipline
+      source: ./packages/context-discipline
+      version: 0.1.0
     - name: context
       source: ./packages/context
       version: 0.1.0
