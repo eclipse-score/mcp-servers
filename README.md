@@ -22,53 +22,58 @@ Two ready-to-use packages for your AI agent:
 brew install microsoft/apm/apm  # or: pip install apm-cli
 ```
 
-### 2. Add This Marketplace
+### 2. Install Packages
 
-From your project root:
+**Option A: From the generated marketplace**
+
+The marketplace file is generated from `apm.yml`; do not create
+`marketplace.json` by hand. From this repository, run:
+
+```bash
+apm pack
+```
+
+Then, from your project root:
 
 ```bash
 apm marketplace add https://github.com/eclipse-score/mcp-servers
+apm install context-discipline@eclipse-score-apm-marketplace --target copilot
+apm install graphify-codegraph@eclipse-score-apm-marketplace --target copilot
+apm compile -t copilot
 ```
 
-Or use the local path (for development):
-
-```bash
-apm marketplace add /path/to/mcp-servers
-```
-
-### 3. Install Packages
+**Option B: From a local path** (development)
 
 ```bash
 apm install /path/to/mcp-servers/packages/context-discipline --target copilot
+apm install /path/to/mcp-servers/packages/graphify-codegraph --target copilot
 apm compile -t copilot
 ```
 
-Or from GitHub (once merged to main):
+**Option C: From a cloned checkout**
 
 ```bash
-apm install eclipse-score/mcp-servers@packages/context-discipline --target copilot
+git clone https://github.com/eclipse-score/mcp-servers -b local_harness_apm
+cd mcp-servers
+apm install ./packages/context-discipline --target copilot
+apm install ./packages/graphify-codegraph --target copilot
 apm compile -t copilot
 ```
 
-### 4. Run Setup Wizards
+### 3. Run Setup Wizards
 
 After compilation, configure each package:
 
 ```bash
+# Copy setup scripts to your project
+cp -r ./scripts ./your-project/scripts
+
 # From your project root (where apm.yml is)
-./node_modules/.bin/do setup-graphify   # Generates code graph
-./node_modules/.bin/do setup-context-discipline  # Creates working memory
-```
-
-Or copy setup scripts from this repo:
-
-```bash
-cp -r /path/to/mcp-servers/scripts ./scripts
 ./scripts/setup-graphify
 ./scripts/setup-context-discipline
 ```
 
-### 5. Agent Uses It
+### 4. Agent Uses It
 
 Once configured, your agent can call MCP tools:
 
@@ -124,10 +129,14 @@ See [packages/context-discipline/README.md](packages/context-discipline/README.m
 ## How It Works
 
 ```
-apm install context-discipline
+apm pack
   ↓
-  Fetches context-discipline + graphify-codegraph
-  Merges instructions/skills for your agent
+  Generates .claude-plugin/marketplace.json from apm.yml
+
+apm install context-discipline@eclipse-score-apm-marketplace
+apm install graphify-codegraph@eclipse-score-apm-marketplace
+  ↓
+  Installs both packages and merges their instructions/skills
   
 apm compile -t copilot
   ↓

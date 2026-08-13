@@ -30,16 +30,40 @@ Every commit must include a `Signed-off-by` trailer.
 
 ### Getting the source code and building
 
-Refer to [README.md](README.md) for the repository overview. The Python
-workspace uses [uv](https://docs.astral.sh/uv/):
+Refer to [README.md](README.md) for the repository overview. Validate the
+repository and generate the marketplace from `apm.yml`:
 
 ```shell
-uv sync
-uv run ruff check .
-uv run ruff format --check .
-uv run pyright
-uv run pytest
+./scripts/validate.sh
+apm pack --json
+apm pack --check-versions --dry-run --json
 ```
+
+`apm pack` generates `.claude-plugin/marketplace.json`. Do not hand-create or
+edit that generated file. Commit the generated marketplace artifact when the
+marketplace configuration changes.
+
+To verify package discovery from outside the repository, use a clean directory:
+
+```shell
+mkdir -p /tmp/test-marketplace
+cd /tmp/test-marketplace
+apm marketplace add /path/to/mcp-servers/.claude-plugin/marketplace.json
+apm marketplace browse eclipse-score-apm-marketplace
+```
+
+The browse command should list `context-discipline` and `graphify-codegraph`.
+
+### Package changes
+
+When adding or changing a package:
+
+1. Update the package's `apm.yml`, `mcp.yml`, documentation, and source files.
+2. Add or update its entry under `marketplace.packages` in the root `apm.yml`.
+3. Run `apm pack` to regenerate `.claude-plugin/marketplace.json`.
+4. Run the validation and version checks above.
+5. Test installation from a clean directory with an explicit target such as
+   `--target copilot`.
 
 ### Getting involved
 
