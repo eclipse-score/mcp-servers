@@ -39,7 +39,14 @@ apm marketplace add /path/to/mcp-servers
 ### 3. Install Packages
 
 ```bash
-apm install graphify-codegraph@mcp-servers context-discipline@mcp-servers
+apm install /path/to/mcp-servers/packages/context-discipline --target copilot
+apm compile -t copilot
+```
+
+Or from GitHub (once merged to main):
+
+```bash
+apm install eclipse-score/mcp-servers@packages/context-discipline --target copilot
 apm compile -t copilot
 ```
 
