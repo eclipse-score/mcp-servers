@@ -14,6 +14,7 @@
 ---
 name: repository-graph-navigation
 description: Guidelines for navigating code repositories as queryable graphs
+applyTo: "**"
 ---
 
 # Repository Graph Navigation Guidelines
