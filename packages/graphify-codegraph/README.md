@@ -62,9 +62,9 @@ Returns: matching nodes from your code structure
 apm install context-discipline
 apm compile -t copilot
 
-# Step 2: Run interactive setup wizard
+# Step 2: Run the setup wizard from your project root
 cd /your/project
-/path/to/mcp-servers/do setup-graphify
+./do setup-graphify
 ```
 
 **The wizard will:**
@@ -74,6 +74,11 @@ cd /your/project
 - ✓ Show completion status
 
 Done. You don't regenerate this unless your code changes significantly.
+
+The `do` wrapper follows the mbot-rules convention: it dispatches the
+executable `scripts/setup-graphify` command. If your project has no `./do`, copy
+the `scripts` directory from the package source checkout and run
+`./scripts/setup-graphify` directly.
 
 ### Usage (During coding)
 

@@ -22,14 +22,14 @@ Use this skill to understand your repository structure without exhausting contex
 
 ## Prerequisites: Graph Setup
 
-Before using this skill, run the repository setup wizard from the project root:
+Before using this skill, run the setup wrapper from the project root:
 
 ```bash
 ./do setup-graphify
 ```
 
 Use `./do setup-graphify --verify` to check whether the CLI and graph already
-exist. If the setup scripts are not present, copy them from the `mcp-servers`
+exist. If `./do` is unavailable, copy the setup scripts from the `mcp-servers`
 checkout and run the script directly:
 
 ```bash

@@ -21,28 +21,34 @@ applyTo: "**"
 
 ## Setup (One-Time)
 
-Before you can query a repository graph, it must be generated. Use the
-repository setup wizard when it is available:
+Before you can query a repository graph, it must be generated. If this
+repository has the `mbot-rules`/package setup wrapper, run:
 
 ```bash
 ./do setup-graphify
 ```
 
-The wizard installs the external `graphify` CLI, generates the graph for the
-current repository, adds `graphify-out/` to `.gitignore`, and verifies the MCP
-setup. Check the current state without changing anything:
+The `do` command dispatches `scripts/setup-graphify`; it installs the external
+`graphify` CLI, generates `graphify-out/graph.json`, adds the generated
+directory to `.gitignore`, and verifies the MCP setup. Check the current state
+without changing anything:
 
 ```bash
 ./do setup-graphify --verify
 ```
 
-If the setup scripts are not present in the project, copy them from the
-`mcp-servers` checkout first, then run the wizard from the project root:
+If `./do` is unavailable, copy the setup scripts from the package source
+checkout and run the script directly:
 
 ```bash
 cp -r /path/to/mcp-servers/scripts ./scripts
 ./scripts/setup-graphify
 ```
+
+Run setup before the first graph query when `graphify-out/graph.json` is
+missing. Run it again after major refactoring or when the graph no longer
+reflects the repository. Installing or compiling the APM package does not run
+the setup command automatically.
 
 As a manual fallback, install and run the external tool directly:
 
