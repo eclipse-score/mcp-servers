@@ -20,13 +20,33 @@ description: Guidelines for navigating code repositories as queryable graphs
 
 ## Setup (One-Time)
 
-Before you can query a repository graph, it must be generated:
+Before you can query a repository graph, it must be generated. Use the
+repository setup wizard when it is available:
 
 ```bash
-# Step 1: Install external tool (once per machine)
-uv tool install graphifyy
+./do setup-graphify
+```
 
-# Step 2: Generate graph (once per repository)
+The wizard installs the external `graphify` CLI, generates the graph for the
+current repository, adds `graphify-out/` to `.gitignore`, and verifies the MCP
+setup. Check the current state without changing anything:
+
+```bash
+./do setup-graphify --verify
+```
+
+If the setup scripts are not present in the project, copy them from the
+`mcp-servers` checkout first, then run the wizard from the project root:
+
+```bash
+cp -r /path/to/mcp-servers/scripts ./scripts
+./scripts/setup-graphify
+```
+
+As a manual fallback, install and run the external tool directly:
+
+```bash
+uv tool install graphifyy
 cd /path/to/repo
 graphify .
 ```

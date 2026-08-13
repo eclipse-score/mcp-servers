@@ -22,23 +22,22 @@ Use this skill to understand your repository structure without exhausting contex
 
 ## Prerequisites: Graph Setup
 
-Before using this skill:
+Before using this skill, run the repository setup wizard from the project root:
 
-1. **Install external tool** (once per machine):
-   ```bash
-   uv tool install graphifyy
-   ```
+```bash
+./do setup-graphify
+```
 
-2. **Generate repository graph** (once per repo):
-   ```bash
-   cd /path/to/repo
-   graphify .
-   ```
+Use `./do setup-graphify --verify` to check whether the CLI and graph already
+exist. If the setup scripts are not present, copy them from the `mcp-servers`
+checkout and run the script directly:
 
-3. **Verify success**:
-   ```bash
-   ls graphify-out/graph.json  # Should exist
-   ```
+```bash
+cp -r /path/to/mcp-servers/scripts ./scripts
+./scripts/setup-graphify
+```
+
+Verify that setup created `graphify-out/graph.json` before querying the graph.
 
 ## When to invoke
 
