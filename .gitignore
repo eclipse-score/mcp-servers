@@ -13,7 +13,6 @@ apm.lock.yaml
 
 # Compiled agent output
 .claude/
-.claude-plugin/
 .agents/
 .github/plugin/
 **/.github/plugin/

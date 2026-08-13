@@ -1,0 +1,23 @@
+{
+  "name": "eclipse-score-context-attention",
+  "owner": {
+    "name": "eclipe-score",
+    "url": "https://github.com/eclipse-score/mcp-servers"
+  },
+  "plugins": [
+    {
+      "name": "context-discipline",
+      "description": "Context discipline package for working memory management and local learning orchestration. Integrates graphify (external) for code structure queries.",
+      "version": "0.0.1",
+      "category": "Productivity",
+      "source": "./packages/context-discipline"
+    },
+    {
+      "name": "graphify-codegraph",
+      "description": "Graphify package for code structure queries. Integrates graphify (external) for code structure queries.",
+      "version": "0.0.1",
+      "category": "Productivity",
+      "source": "./packages/graphify-codegraph"
+    }
+  ]
+}
