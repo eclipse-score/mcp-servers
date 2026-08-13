@@ -1,82 +1,140 @@
 # Eclipse S-CORE APM Monorepo
 
-This repository is an **APM monorepo** for Eclipse S-CORE: a single home for
-[Microsoft APM](https://github.com/microsoft/apm) packages (skills, instructions,
-prompts, agents, hooks, context) and their supporting harness tools. New packages
-are added here and distributed to the S-CORE organization through APM.
+Local-only agent packages for code understanding, working memory, and learning—no cloud dependencies.
 
-It uses APM's **monorepo-hybrid** shape: a root `apm.yml` acts as the marketplace
-manifest and points at local packages, and each package under `packages/` is a
-full, independently installable APM package with its own `apm.yml` and `.apm/`
-tree.
+## What You Get
 
-On top there is a first context attention layer (`packages/context`).
-This is a context distribution mechansim which later on crates an asynch
-knowledge graph of "signals" in score.
+Two ready-to-use packages for your AI agent:
 
+| Package | What It Does |
+|---------|---|
+| **graphify-codegraph** | Query code structure (what classes/functions exist, how they're connected) |
+| **context-discipline** | Working memory + outcome recording (agent tracks decisions and learns from past work) |
 
-## Layout
+**Local only:** Everything runs in your project. Observations stored in `.score-local/` (not committed).
 
-- `apm.yml` — root **marketplace manifest**; lists the local packages.
-- `packages/<pkg>/` — one APM package each (own `apm.yml` + `.apm/<type>/`).
-  - `packages/_template/` — copy-to-add-a-package skeleton.
-  - `packages/context/` — the attention-layer package (one example).
-- `libs/` — shared Python code, MCP-free and independent of APM.
-  - `libs/score-context/` — the engine + Phase 0 schema used by `packages/context`.
+## Quick Start
 
-APM primitives live under each package's `.apm/<type>/` tree, where `<type>` is
-one of `instructions`, `skills`, `prompts`, `agents`, `hooks`, or `context`.
-MCP servers are **not** a directory — they are declared in a package's `apm.yml`
-under `dependencies.mcp:`, and APM writes each harness's MCP config on install.
+### 1. Install APM CLI
 
-## Adding a new APM package
-
-1. **Copy the template** to a new package directory:
-
-   ```shell
-   cp -r packages/_template packages/<your-package>
-   ```
-
-2. **Edit `packages/<your-package>/apm.yml`** — set `name`, `version`,
-   `description`, keep `license: Apache-2.0`, and uncomment/set `type:` and
-   `targets:` (e.g. `copilot`, `claude`, `cursor`, `codex`, `gemini`, `opencode`)
-   as needed. Declare any MCP servers under `dependencies.mcp:`.
-
-3. **Add your primitives** under `.apm/<type>/` — for example a skill at
-   `.apm/skills/<name>/SKILL.md`, or instructions at
-   `.apm/instructions/<name>.instructions.md`. Remove the `.gitkeep` files from
-   directories you populate and delete `.apm/<type>/` trees you do not use.
-
-4. **Register the package in the root marketplace** — add an entry under
-   `marketplace.packages` in the root `apm.yml`:
-
-   ```yaml
-   marketplace:
-     packages:
-       - name: <your-package>
-         source: ./packages/<your-package>
-         version: 0.1.0
-   ```
-
-5. **Add license/copyright headers** to every new file (Apache-2.0 SPDX header;
-   for files that cannot carry an inline header, add an entry to `REUSE.toml`) so
-   the repository stays REUSE-compliant.
-
-6. **Validate with the APM CLI** (a green `apm` run is the definition of valid):
-
-   ```shell
-   apm pack --offline --json
-   apm marketplace check --offline
-   ```
-
-## Development
-
-Python tooling for the shared engine and any package that ships code:
-
-```shell
-uv sync
-uv run ruff check .
-uv run ruff format --check .
-uv run pyright
-uv run pytest
+```bash
+# macOS/Linux/Windows: https://github.com/microsoft/apm#installation
+brew install microsoft/apm/apm  # or: pip install apm-cli
 ```
+
+### 2. Install Packages
+
+```bash
+cd /path/to/your-project
+apm install github.com/user/mcp-servers/packages/context-discipline
+apm compile -t copilot
+```
+
+### 3. Run Setup Wizard
+
+```bash
+/path/to/mcp-servers/do setup-graphify
+```
+
+Just answer the prompts. The wizard installs graphify CLI and generates a code graph for your repo.
+
+### 4. Agent Uses It
+
+```python
+# Your agent can now:
+wm.initialize_session(goal="...", subgoals=[...])
+wm.query_graph("Show auth functions")
+wm.record_decision(decision="...", reason=[...])
+wm.record_outcome(task="...", verdict="pass", coverage=0.85)
+```
+
+Results go to `.score-local/observations.jsonl` (local only).
+
+---
+
+## Documentation
+
+- **For users:** You're reading it. More examples in each package's `README.md`.
+- **For agents:** See [AGENTS.md](AGENTS.md) to create new packages.
+- **For contributors:** See [CONTRIBUTING.md](CONTRIBUTING.md).
+
+---
+
+## Packages at a Glance
+
+### graphify-codegraph
+
+Wraps [Graphify Labs graphify](https://github.com/Graphify-Labs/graphify) — deterministic AST parsing, no LLMs.
+
+**Generates:** `graphify-out/graph.json` (code structure), `graph.html` (interactive explorer)
+
+**One-time setup:** `graphify .` in your repo  
+**Runtime:** Agents query via MCP (no re-parsing)
+
+See [packages/graphify-codegraph/README.md](packages/graphify-codegraph/README.md) for details.
+
+### context-discipline
+
+Working memory system + local learning.
+
+**MCP tools:**
+- `initialize_session()` — Start a session with goal + subgoals + assumptions
+- `query_graph()` — Ask about code structure
+- `record_decision()` — Track reasoning
+- `record_outcome()` — Record results (appends to `.score-local/observations.jsonl`)
+- `get_working_memory()` — Retrieve session memory
+- `get_unverified_assumptions()` — Check uncertain assumptions
+
+See [packages/context-discipline/README.md](packages/context-discipline/README.md) for details.
+
+---
+
+## How It Works
+
+```
+apm install context-discipline
+  ↓
+  Fetches context-discipline + graphify-codegraph
+  Merges instructions/skills for your agent
+  
+apm compile -t copilot
+  ↓
+  Generates .github/copilot-instructions.md
+  
+./do setup-graphify
+  ↓
+  Installs graphify CLI
+  Generates graph.json in your repo
+  
+Agent runs
+  ↓
+  Calls MCP tools (initialize_session, query_graph, etc.)
+  MCP servers execute
+  Observations accumulate in .score-local/
+```
+
+For deeper details on APM concepts, see [Microsoft APM docs](https://github.com/microsoft/apm).
+
+---
+
+## Local Learning Loop
+
+```
+Session 1: query_graph() + record_outcome()
+Session 2: query_graph() + record_outcome()
+Session 3: query_graph() + record_outcome()
+   ↓ (observations.jsonl grows)
+Agent patterns emerge
+   ↓
+Result: Fewer tokens, faster time-to-solution (all local)
+```
+
+---
+
+## More Information
+
+- **Interactive setup:** `./do setup-graphify --help`
+- **Check setup status:** `./do setup-graphify --verify`
+- **Package examples:** See each package's `README.md`
+- **Create new packages:** See [AGENTS.md](AGENTS.md)
+- **Contribute to this repo:** See [CONTRIBUTING.md](CONTRIBUTING.md)
