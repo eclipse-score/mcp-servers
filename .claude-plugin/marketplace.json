@@ -1,7 +1,7 @@
 {
   "name": "eclipse-score-apm-marketplace",
   "owner": {
-    "name": "eclipe-score",
+    "name": "eclipse-score",
     "url": "https://github.com/eclipse-score/mcp-servers"
   },
   "plugins": [
