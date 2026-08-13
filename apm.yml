@@ -17,17 +17,37 @@ description: Eclipse S-CORE Agent Context Attention Layer packages
 license: Apache-2.0
 marketplace:
   owner:
-    name: eclipse-score
-    url: https://github.com/eclipse-score
+    name: eclipe-score
+    url: https://github.com/eclipse-score/mcp-servers
+
+  # Default tag pattern used to resolve version ranges for each package.
+  build:
+    tagPattern: "v{version}"
+
+  # Output targets (map form). 'claude' is enabled by default;
+  # uncomment 'codex' below to publish the Codex artifact too.
+  # Each output writes to its profile default path; add 'path:'
+  # under a key to override.
   outputs:
     claude: {}
+    # codex: {}
+    #
+    # Note: enabling codex requires every package below to declare
+    # 'category:' (e.g. category: Productivity).
+
+  # CI tip: build one or all formats with a machine-readable manifest:
+  #   apm pack --marketplace=claude,codex --json | jq -r '.marketplace.outputs[].path'
+
   packages:
-    - name: graphify-codegraph
-      source: ./packages/graphify-codegraph
-      version: 0.1.0
     - name: context-discipline
+      description: Context discipline package for working memory management and local learning orchestration. Integrates graphify (external) for code structure queries.
       source: ./packages/context-discipline
-      version: 0.1.0
-    - name: context
-      source: ./packages/context
-      version: 0.1.0
+      version: "0.0.1"
+      category: Productivity
+    - name: graphify-codegraph
+      description: Graphify package for code structure queries. Integrates graphify (external) for code structure queries.
+      source: ./packages/graphify-codegraph
+      version: "0.0.1"
+      category: Productivity  
+     
+
