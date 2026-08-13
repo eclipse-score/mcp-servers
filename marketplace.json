@@ -1,42 +1,6 @@
 {
   "version": "1.0",
   "$comment": "SPDX-License-Identifier: Apache-2.0 | Copyright (c) 2026 Contributors to the Eclipse Foundation",
-  "name": "eclipse-score-packages",
-  "description": "Local-only agent packages for code understanding and working memory",
-  "packages": [
-    {
-      "id": "graphify-codegraph",
-      "name": "graphify-codegraph",
-      "version": "0.1.0",
-      "description": "MCP wrapper for Graphify Labs CLI - deterministic code structure parsing",
-      "author": "Eclipse S-CORE",
-      "license": "Apache-2.0",
-      "url": "https://github.com/eclipse-score/mcp-servers/tree/main/packages/graphify-codegraph",
-      "path": "./packages/graphify-codegraph",
-      "tags": ["code-structure", "graph", "local-only"]
-    },
-    {
-      "id": "context-discipline",
-      "name": "context-discipline",
-      "version": "0.1.0",
-      "description": "Working memory management and local learning orchestration for agents",
-      "author": "Eclipse S-CORE",
-      "license": "Apache-2.0",
-      "url": "https://github.com/eclipse-score/mcp-servers/tree/main/packages/context-discipline",
-      "path": "./packages/context-discipline",
-      "tags": ["working-memory", "learning", "local-only"],
-      "dependencies": ["graphify-codegraph"]
-    },
-    {
-      "id": "context",
-      "name": "context",
-      "version": "0.1.0",
-      "description": "Generated context attention fragments for Eclipse S-CORE",
-      "author": "Eclipse S-CORE",
-      "license": "Apache-2.0",
-      "url": "https://github.com/eclipse-score/mcp-servers/tree/main/packages/context",
-      "path": "./packages/context",
-      "tags": ["context", "fragments"]
-    }
-  ]
+  "name": "Eclipse S-CORE",
+  "description": "Local-only agent packages for code understanding and working memory"
 }
