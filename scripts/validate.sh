@@ -80,7 +80,7 @@ echo "4. Documentation"
 
 check "  README.md exists" "test -f README.md"
 check "  AGENTS.md exists" "test -f AGENTS.md"
-check "  CONTRIBUTING.md exists" "test -f CONTRIBUTING.md"
+check "  CONTRIBUTION.md exists" "test -f CONTRIBUTION.md"
 
 echo ""
 echo "5. Python Modules"
