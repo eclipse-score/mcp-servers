@@ -3,7 +3,7 @@
   "$comment": "SPDX-License-Identifier: Apache-2.0 | Copyright (c) 2026 Contributors to the Eclipse Foundation",
   "name": "eclipse-score",
   "description": "Local-only agent packages for code understanding and working memory",
-  "packages": [
+  "plugins": [
     {
       "id": "graphify-codegraph",
       "name": "graphify-codegraph",
