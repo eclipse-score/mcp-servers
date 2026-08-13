@@ -27,7 +27,7 @@ brew install microsoft/apm/apm  # or: pip install apm-cli
 From your project root:
 
 ```bash
-apm marketplace add github.com/eclipse-score/mcp-servers
+apm marketplace add https://github.com/eclipse-score/mcp-servers
 ```
 
 Or use the local path (for development):
