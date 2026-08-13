@@ -39,6 +39,11 @@ marketplace:
   #   apm pack --marketplace=claude,codex --json | jq -r '.marketplace.outputs[].path'
 
   packages:
+    - name: apm-setup
+      description: Central setup MCP server for local APM package state.
+      source: ./packages/apm-setup
+      version: "0.1.0"
+      category: Productivity
     - name: context-discipline
       description: Context discipline package for working memory management and local learning orchestration. Integrates graphify (external) for code structure queries.
       source: ./packages/context-discipline

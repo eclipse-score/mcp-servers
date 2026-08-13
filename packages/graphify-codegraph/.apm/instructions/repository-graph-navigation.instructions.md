@@ -22,7 +22,7 @@ applyTo: "**"
 ## Setup (One-Time)
 
 Before you can query a repository graph, it must be generated. If this
-repository has the `mbot-rules`/package setup wrapper, run:
+repository has the package setup wrapper, run:
 
 ```bash
 ./do setup-graphify

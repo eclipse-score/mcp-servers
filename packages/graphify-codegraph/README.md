@@ -75,10 +75,9 @@ cd /your/project
 
 Done. You don't regenerate this unless your code changes significantly.
 
-The `do` wrapper follows the mbot-rules convention: it dispatches the
-executable `scripts/setup-graphify` command. If your project has no `./do`, copy
-the `scripts` directory from the package source checkout and run
-`./scripts/setup-graphify` directly.
+The `do` wrapper dispatches the executable `scripts/setup-graphify` command. If
+your project has no `./do`, copy the `scripts` directory from the package source
+checkout and run `./scripts/setup-graphify` directly.
 
 ### Usage (During coding)
 
