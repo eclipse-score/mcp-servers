@@ -17,7 +17,7 @@ description: Eclipse S-CORE Agent Context Attention Layer packages
 license: Apache-2.0
 marketplace:
   owner:
-    name: eclipe-score
+    name: eclipse-score
     url: https://github.com/eclipse-score/mcp-servers
 
   # Default tag pattern used to resolve version ranges for each package.
