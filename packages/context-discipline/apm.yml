@@ -23,7 +23,5 @@ targets:
   - gemini
   - opencode
 dependencies:
-  apm:
-    - graphify-codegraph        # Wrapper for graphify CLI
-  mcp:
-    - graphify-codegraph        # MCP: code graph queries (wraps external graphify)
+  apm: []
+  mcp: []
