@@ -12,12 +12,14 @@ applyTo: "**"
 
 # APM Setup Propagation
 
-Use the setup MCP tools explicitly when a repository needs local package state.
+Use the `apm-setup` MCP tools explicitly when a repository needs local package
+state.
 
 - Call `verify_setup` before setup when status is unknown.
 - Call `setup_graphify` before the first graph query when the graph is missing.
 - Call `setup_context_discipline` before recording local observations.
 - Run setup again after major repository changes when generated state is stale.
 
-APM installation and compilation do not run setup tools automatically. Setup
-operations are repository-local and must be explicitly requested.
+Installing the package registers its declared MCP server for the selected
+target; installation still does not run setup tools. Setup operations are
+repository-local and must be explicitly requested through the MCP tools.

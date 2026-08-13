@@ -37,6 +37,7 @@ Then, from your project root:
 
 ```bash
 apm marketplace add https://github.com/eclipse-score/mcp-servers
+apm install apm-setup@eclipse-score-apm-marketplace --target copilot
 apm install context-discipline@eclipse-score-apm-marketplace --target copilot
 apm install graphify-codegraph@eclipse-score-apm-marketplace --target copilot
 apm compile -t copilot
@@ -45,6 +46,7 @@ apm compile -t copilot
 **Option B: From a local path** (development)
 
 ```bash
+apm install /path/to/mcp-servers/packages/apm-setup --target copilot
 apm install /path/to/mcp-servers/packages/context-discipline --target copilot
 apm install /path/to/mcp-servers/packages/graphify-codegraph --target copilot
 apm compile -t copilot
@@ -55,23 +57,25 @@ apm compile -t copilot
 ```bash
 git clone https://github.com/eclipse-score/mcp-servers -b local_harness_apm
 cd mcp-servers
+apm install ./packages/apm-setup --target copilot
 apm install ./packages/context-discipline --target copilot
 apm install ./packages/graphify-codegraph --target copilot
 apm compile -t copilot
 ```
 
-### 3. Run Setup Wizards
+### 3. Initialize Repository Setup Through MCP
 
-After compilation, configure each package:
+After registering the server, call these tools for the target repository:
 
-```bash
-# Copy setup scripts to your project
-cp -r ./scripts ./your-project/scripts
-
-# From your project root (where apm.yml is)
-./scripts/setup-graphify
-./scripts/setup-context-discipline
+```text
+verify_setup(repo_path)
+setup_graphify(repo_path)
+setup_context_discipline(repo_path)
 ```
+
+APM installation registers the declared MCP server, but does not execute
+repository setup automatically. Repository setup is explicit and performed by
+the `apm-setup` MCP server.
 
 ### 4. Agent Uses It
 
@@ -105,7 +109,7 @@ Wraps [Graphify Labs graphify](https://github.com/Graphify-Labs/graphify) — de
 
 **Generates:** `graphify-out/graph.json` (code structure), `graph.html` (interactive explorer)
 
-**One-time setup:** `graphify .` in your repo  
+**One-time setup:** `setup_graphify(repo_path)` through the `apm-setup` MCP  
 **Runtime:** Agents query via MCP (no re-parsing)
 
 See [packages/graphify-codegraph/README.md](packages/graphify-codegraph/README.md) for details.
@@ -142,10 +146,10 @@ apm compile -t copilot
   ↓
   Generates .github/copilot-instructions.md
   
-./do setup-graphify
+apm install apm-setup@eclipse-score-apm-marketplace --target copilot
   ↓
-  Installs graphify CLI
-  Generates graph.json in your repo
+  Agent calls setup_graphify(repo_path)
+  Generates graphify-out/graph.json in your repo
   
 Agent runs
   ↓
@@ -174,8 +178,7 @@ Result: Fewer tokens, faster time-to-solution (all local)
 
 ## More Information
 
-- **Interactive setup:** `./do setup-graphify --help`
-- **Check setup status:** `./do setup-graphify --verify`
+- **Setup MCP:** See [packages/apm-setup/README.md](packages/apm-setup/README.md)
 - **Package examples:** See each package's `README.md`
 - **Create new packages:** See [AGENTS.md](AGENTS.md)
 - **Contribute to this repo:** See [CONTRIBUTION.md](CONTRIBUTION.md)

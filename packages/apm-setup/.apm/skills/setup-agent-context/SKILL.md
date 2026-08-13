@@ -11,6 +11,8 @@ description: Initialize local graph and working-memory state for APM packages
 
 # Setup Agent Context
 
+Use the registered `apm-setup` MCP server for all setup actions.
+
 Before using graph or working-memory tools:
 
 1. Call `verify_setup` for the target repository.
