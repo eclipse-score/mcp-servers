@@ -39,9 +39,11 @@ apm marketplace add /path/to/mcp-servers
 ### 3. Install Packages
 
 ```bash
-apm install graphify-codegraph context-discipline
+apm install graphify-codegraph@eclipse-score-packages context-discipline@eclipse-score-packages
 apm compile -t copilot
 ```
+
+(Replace `eclipse-score-packages` with your marketplace name if different. Check with: `apm marketplace list`)
 
 ### 4. Run Setup Wizards
 
