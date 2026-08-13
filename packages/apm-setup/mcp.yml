@@ -1,0 +1,49 @@
+# *******************************************************************************
+# Copyright (c) 2026 Contributors to the Eclipse Foundation
+#
+# See the NOTICE file(s) distributed with this work for additional
+# information regarding copyright ownership.
+#
+# This program and the accompanying materials are made available under the
+# terms of the Apache License Version 2.0 which is available at
+# https://www.apache.org/licenses/LICENSE-2.0
+#
+# SPDX-License-Identifier: Apache-2.0
+# *******************************************************************************
+
+name: apm-setup
+version: 0.1.0
+description: MCP server for explicit local APM package setup
+command: python -m apm_setup.src.serve
+transport: stdio
+tools:
+  - name: setup_graphify
+    description: Install graphify and generate graphify-out/graph.json in a repository
+    input_schema:
+      type: object
+      properties:
+        repo_path:
+          type: string
+          description: Repository path, defaulting to the current project
+        install_graphify:
+          type: boolean
+          description: Install graphifyy with uv when graphify is missing
+      required: []
+  - name: setup_context_discipline
+    description: Create local working-memory storage in a repository
+    input_schema:
+      type: object
+      properties:
+        repo_path:
+          type: string
+          description: Repository path, defaulting to the current project
+      required: []
+  - name: verify_setup
+    description: Check graphify and local working-memory setup status
+    input_schema:
+      type: object
+      properties:
+        repo_path:
+          type: string
+          description: Repository path, defaulting to the current project
+      required: []
