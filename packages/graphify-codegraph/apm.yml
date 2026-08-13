@@ -35,4 +35,4 @@ dependencies:
       transport: stdio
       command: python3
       args:
-        - apm_modules/apm-setup/src/apm_setup/serve.py
+        - apm_modules/eclipse-score/mcp-servers/packages/apm-setup/src/apm_setup/serve.py
