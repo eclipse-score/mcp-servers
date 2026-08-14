@@ -12,7 +12,6 @@ apm_modules/
 apm.lock.yaml
 
 # Compiled agent output
-.claude-plugin/marketplace.json
 .claude/
 .agents/
 .github/plugin/

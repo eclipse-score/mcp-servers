@@ -26,8 +26,8 @@ brew install microsoft/apm/apm  # or: pip install apm-cli
 
 **Option A: From the marketplace**
 
-The marketplace manifest is generated from `apm.yml` during packaging and is
-not committed to the repository. From this repository, run:
+The marketplace manifest is generated from `apm.yml` during packaging and
+committed at `.claude-plugin/marketplace.json`. From this repository, run:
 
 ```bash
 apm pack
@@ -36,32 +36,35 @@ apm pack
 Then, from your project root:
 
 ```bash
-apm marketplace add https://github.com/eclipse-score/mcp-servers
-apm install apm-setup@eclipse-score-apm-marketplace --target copilot
+apm marketplace add https://github.com/eclipse-score/mcp-servers#local_harness_apm
 apm install context-discipline@eclipse-score-apm-marketplace --target copilot --trust-transitive-mcp
-apm install graphify-codegraph@eclipse-score-apm-marketplace --target copilot --trust-transitive-mcp
 apm compile -t copilot
 ```
+
+Installing `context-discipline` also installs its transitive dependencies:
+`graphify-codegraph` and `apm-setup`.
 
 **Option B: From a local path** (development)
 
 ```bash
-apm install /path/to/mcp-servers/packages/apm-setup --target copilot
 apm install /path/to/mcp-servers/packages/context-discipline --target copilot --trust-transitive-mcp
-apm install /path/to/mcp-servers/packages/graphify-codegraph --target copilot --trust-transitive-mcp
 apm compile -t copilot
 ```
+
+Installing `context-discipline` also installs its transitive dependencies:
+`graphify-codegraph` and `apm-setup`.
 
 **Option C: From a cloned checkout**
 
 ```bash
 git clone https://github.com/eclipse-score/mcp-servers -b local_harness_apm
 cd mcp-servers
-apm install ./packages/apm-setup --target copilot
 apm install ./packages/context-discipline --target copilot --trust-transitive-mcp
-apm install ./packages/graphify-codegraph --target copilot --trust-transitive-mcp
 apm compile -t copilot
 ```
+
+Installing `context-discipline` also installs its transitive dependencies:
+`graphify-codegraph` and `apm-setup`.
 
 ### 3. Initialize Repository Setup Through MCP
 
@@ -133,23 +136,13 @@ See [packages/context-discipline/README.md](packages/context-discipline/README.m
 ## How It Works
 
 ```
-apm pack
-  ↓
-  Generates the marketplace manifest from apm.yml
-
 apm install context-discipline@eclipse-score-apm-marketplace --trust-transitive-mcp
-apm install graphify-codegraph@eclipse-score-apm-marketplace --trust-transitive-mcp
   ↓
-  Installs both packages and merges their instructions/skills
-  
+  Installs context-discipline plus graphify-codegraph and apm-setup
+
 apm compile -t copilot
   ↓
   Generates .github/copilot-instructions.md
-  
-apm install apm-setup@eclipse-score-apm-marketplace --target copilot
-  ↓
-  Agent calls setup_graphify(repo_path)
-  Generates graphify-out/graph.json in your repo
   
 Agent runs
   ↓
