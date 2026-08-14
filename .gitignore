@@ -13,7 +13,6 @@ apm.lock.yaml
 
 # Compiled agent output
 .claude/
-.claude-plugin/
 .agents/
 .github/plugin/
 **/.github/plugin/
@@ -24,5 +23,13 @@ apm.lock.yaml
 .continue/
 .opencode/
 
+# Local learning and artifacts
+.score-local/          # Local observations (ephemeral)
+graphify-out/          # Code graphs (generated)
+.working-memory/       # Working memory sessions (temporary)
+
 # Local tooling
 .DS_Store
+.score-local/
+.working-memory/
+graphify-out/

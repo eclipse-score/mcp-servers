@@ -11,17 +11,23 @@
 # SPDX-License-Identifier: Apache-2.0
 # *******************************************************************************
 
-name: context
+name: apm-setup
 version: 0.1.0
-description: Generated context attention fragments for Eclipse S-CORE
+description: Local setup MCP server for Eclipse S-CORE APM packages
 license: Apache-2.0
 targets:
   - copilot
   - claude
-  - codex
   - cursor
+  - codex
   - gemini
   - opencode
 dependencies:
   apm: []
-# The get_context MCP dependency will be added in Phase 6 under dependencies.mcp.
+  mcp:
+    - name: apm-setup
+      registry: false
+      transport: stdio
+      command: python3
+      args:
+        - apm_modules/eclipse-score/mcp-servers/packages/apm-setup/src/apm_setup/serve.py

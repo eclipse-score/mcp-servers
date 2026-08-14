@@ -1,0 +1,203 @@
+#!/usr/bin/env bash
+
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (c) 2026 Contributors to the Eclipse Foundation
+
+## setup-graphify: Interactive setup wizard for graphify-codegraph
+
+set -euo pipefail
+
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")"; pwd -P)"
+# shellcheck source=scripts/setup-common.sh
+source "${script_dir}/setup-common.sh"
+
+usage() {
+	cat <<'EOF'
+Usage:
+  ./do setup-graphify              # Interactive setup
+  ./do setup-graphify --verify     # Just check if setup is complete
+  ./do setup-graphify --help       # Show this help
+
+What it does:
+  1. Install graphify CLI (one-time per machine)
+  2. Generate code graph in current repo (one-time per repo)
+  3. Verify MCP server can start
+
+Each step is optional—you can skip what's already done.
+
+Examples:
+  ./do setup-graphify
+  ./do setup-graphify --verify
+EOF
+}
+
+# Check if graphify CLI is installed
+check_graphify_cli() {
+	if command_exists graphify; then
+		success "graphify CLI is installed"
+		return 0
+	else
+		return 1
+	fi
+}
+
+# Install graphify CLI
+install_graphify_cli() {
+	if ! confirm "Install graphify CLI?"; then
+		warn "Skipping graphify CLI installation"
+		return 0
+	fi
+	
+	info "Installing graphify CLI..."
+	
+	# Try uv first (preferred)
+	if command_exists uv; then
+		if run_cmd uv tool install 'graphifyy[mcp]'; then
+			success "graphify CLI installed via uv"
+			return 0
+		fi
+	fi
+	
+	# Fall back to pip
+	if command_exists pip || command_exists pip3; then
+		pip_cmd=$(command_exists pip && echo pip || echo pip3)
+		if run_cmd "$pip_cmd install 'graphifyy[mcp]'"; then
+			success "graphify CLI installed via pip"
+			return 0
+		fi
+	fi
+	
+	# Fall back to pipx
+	if command_exists pipx; then
+		if run_cmd pipx install 'graphifyy[mcp]'; then
+			success "graphify CLI installed via pipx"
+			return 0
+		fi
+	fi
+	
+	die "Failed to install graphify. Please install manually: uv tool install 'graphifyy[mcp]'"
+}
+
+# Check if graph.json exists
+check_graph() {
+	if path_exists graphify-out/graph.json; then
+		success "graph.json exists at graphify-out/graph.json"
+		return 0
+	else
+		return 1
+	fi
+}
+
+# Generate code graph
+generate_graph() {
+	if ! confirm "Generate code graph for this repo?"; then
+		warn "Skipping graph generation"
+		info "You can run it manually later: graphify ."
+		return 0
+	fi
+	
+	if ! path_exists .git; then
+		die "Not in a git repository. Please run from your repo root."
+	fi
+	
+	info "Generating code graph..."
+	if run_cmd graphify extract . --code-only; then
+		success "Code graph generated at graphify-out/"
+		return 0
+	else
+		die "Failed to generate graph. Check your repository structure."
+	fi
+}
+
+# Verify MCP server can start
+verify_mcp() {
+	if ! confirm "Verify MCP server setup?"; then
+		warn "Skipping MCP verification"
+		return 0
+	fi
+	
+	info "Checking MCP server installation..."
+	
+	if python3 -c "import graphify" 2>/dev/null; then
+		success "graphify-codegraph MCP is ready"
+		return 0
+	else
+		warn "Could not verify MCP setup. This is OK if you haven't run apm install yet."
+		return 0
+	fi
+}
+
+# Add artifact paths to .gitignore (graphify-specific)
+setup_gitignore() {
+	if ! path_exists .gitignore; then
+		info "Creating .gitignore..."
+		touch .gitignore
+	fi
+	
+	# Only add graphify-codegraph artifacts
+	if ! grep -q "^graphify-out/$" .gitignore; then
+		echo "graphify-out/" >> .gitignore
+		success "Added graphify-out/ to .gitignore"
+	else
+		success ".gitignore already configured"
+	fi
+}
+
+# Main flow
+main() {
+	case "${1:-}" in
+		--help|-h)
+			usage
+			exit 0
+			;;
+		--verify)
+			# Just check status
+			info "Checking graphify-codegraph setup..."
+			echo ""
+			
+			if check_graphify_cli; then
+				echo "  graphify CLI: ✓"
+			else
+				echo "  graphify CLI: ✗ (not installed)"
+			fi
+			
+			if check_graph; then
+				echo "  code graph:   ✓"
+			else
+				echo "  code graph:   ✗ (not generated)"
+			fi
+			
+			echo ""
+			info "Run './do setup-graphify' to complete setup"
+			exit 0
+			;;
+		*)
+			# Interactive setup
+			info "graphify-codegraph Setup Wizard"
+			echo ""
+			
+			if ! check_graphify_cli; then
+				install_graphify_cli
+			fi
+			
+			echo ""
+			
+			if ! check_graph; then
+				generate_graph
+			fi
+			
+			echo ""
+			setup_gitignore
+			
+			echo ""
+			verify_mcp
+			
+			echo ""
+			success "Setup complete!"
+			info "Your agent can now query code structure:"
+			echo "  wm.query_graph('auth functions')"
+			;;
+	esac
+}
+
+main "$@"
