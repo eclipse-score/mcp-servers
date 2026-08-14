@@ -132,8 +132,8 @@ You don't call the CLI repeatedly—that's the whole point of generating the gra
 - [apm.yml](apm.yml) — Package metadata, dependencies
 - [mcp.yml](mcp.yml) — MCP server configuration
 - [src/serve.py](src/serve.py) — MCP server launcher
-- [.apm/instructions/](./apm/instructions/) — How to use graphs in projects
-- [.apm/skills/](./apm/skills/) — VSCode workflow integrations
+- [.apm/instructions/](.apm/instructions/) — How to use graphs in projects
+- [.apm/skills/](.apm/skills/) — VSCode workflow integrations
 
 ## Troubleshooting
 
@@ -167,8 +167,8 @@ Make sure you:
 ## More Information
 
 - **External Tool:** [Graphify Labs graphify](https://github.com/Graphify-Labs/graphify)
-- **About Deterministic Graphs:** See [.apm/instructions/repository-graph-navigation.instructions.md](./apm/instructions/repository-graph-navigation.instructions.md)
-- **VSCode Integration:** See [.apm/skills/map-repository-graph/SKILL.md](./apm/skills/map-repository-graph/SKILL.md)
+- **About Deterministic Graphs:** See [.apm/instructions/repository-graph-navigation.instructions.md](.apm/instructions/repository-graph-navigation.instructions.md)
+- **VSCode Integration:** See [.apm/skills/map-repository-graph/SKILL.md](.apm/skills/map-repository-graph/SKILL.md)
 - **Context-Discipline:** How working memory uses graphs
 
 ## License
