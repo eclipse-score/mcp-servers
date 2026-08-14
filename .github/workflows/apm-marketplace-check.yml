@@ -56,4 +56,5 @@ jobs:
             --name eclipse-score-apm-marketplace --ref "$PR_REF"
           apm install context-discipline@eclipse-score-apm-marketplace \
             --target copilot --trust-transitive-mcp
+          uv tool install 'graphifyy[mcp]'
           python "$GITHUB_WORKSPACE/scripts/check_remote_mcp.py"
