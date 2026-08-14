@@ -20,7 +20,7 @@ AI agents typically ask embeddings (slow, cloud) or LLMs (hallucinate). Graphify
 We wrap the external [Graphify Labs graphify](https://github.com/Graphify-Labs/graphify) tool and provide:
 
 1. **MCP Server** — Query interface for agents (reads pre-generated graph)
-2. **Behavioral Guidance** — How to use graphs effectively 
+2. **Behavioral Guidance** — How to use graphs effectively
 3. **Skills** — VSCode workflow integrations
 4. **Context Integration** — Plugs into context-discipline working memory
 
@@ -139,7 +139,7 @@ You don't call the CLI repeatedly—that's the whole point of generating the gra
 
 **Q: Command not found: graphify**
 ```bash
-uv tool install graphifyy
+uv tool install 'graphifyy[mcp]'
 # Verify: which graphify
 ```
 

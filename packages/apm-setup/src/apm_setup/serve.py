@@ -75,7 +75,7 @@ def setup_graphify(arguments: dict[str, Any]) -> dict[str, Any]:
     graphify = shutil.which("graphify")
     installed = False
     if graphify is None and arguments.get("install_graphify", False):
-        subprocess.run(["uv", "tool", "install", "graphifyy"], check=True)
+        subprocess.run(["uv", "tool", "install", "graphifyy[mcp]"], check=True)
         graphify = shutil.which("graphify")
         installed = True
     if graphify is None:

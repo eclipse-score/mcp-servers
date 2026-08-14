@@ -29,4 +29,8 @@ targets:
 dependencies:
   apm:
     - path: ../apm-setup
-  mcp: []
+  mcp:
+    - name: graphify-codegraph
+      registry: false
+      transport: stdio
+      command: graphify-mcp

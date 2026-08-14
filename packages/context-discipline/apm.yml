@@ -25,4 +25,5 @@ targets:
 dependencies:
   apm:
     - path: ../apm-setup
+    - path: ../graphify-codegraph
   mcp: []

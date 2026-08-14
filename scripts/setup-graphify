@@ -52,7 +52,7 @@ install_graphify_cli() {
 	
 	# Try uv first (preferred)
 	if command_exists uv; then
-		if run_cmd uv tool install graphifyy; then
+		if run_cmd uv tool install 'graphifyy[mcp]'; then
 			success "graphify CLI installed via uv"
 			return 0
 		fi
@@ -61,7 +61,7 @@ install_graphify_cli() {
 	# Fall back to pip
 	if command_exists pip || command_exists pip3; then
 		pip_cmd=$(command_exists pip && echo pip || echo pip3)
-		if run_cmd "$pip_cmd install graphifyy"; then
+		if run_cmd "$pip_cmd install 'graphifyy[mcp]'"; then
 			success "graphify CLI installed via pip"
 			return 0
 		fi
@@ -69,13 +69,13 @@ install_graphify_cli() {
 	
 	# Fall back to pipx
 	if command_exists pipx; then
-		if run_cmd pipx install graphifyy; then
+		if run_cmd pipx install 'graphifyy[mcp]'; then
 			success "graphify CLI installed via pipx"
 			return 0
 		fi
 	fi
 	
-	die "Failed to install graphify. Please install manually: uv tool install graphifyy"
+	die "Failed to install graphify. Please install manually: uv tool install 'graphifyy[mcp]'"
 }
 
 # Check if graph.json exists
