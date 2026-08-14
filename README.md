@@ -24,10 +24,10 @@ brew install microsoft/apm/apm  # or: pip install apm-cli
 
 ### 2. Install Packages
 
-**Option A: From the generated marketplace**
+**Option A: From the marketplace**
 
-The marketplace file is generated from `apm.yml`; do not create
-`marketplace.json` by hand. From this repository, run:
+The marketplace manifest is generated from `apm.yml` during packaging and is
+not committed to the repository. From this repository, run:
 
 ```bash
 apm pack
@@ -135,7 +135,7 @@ See [packages/context-discipline/README.md](packages/context-discipline/README.m
 ```
 apm pack
   ↓
-  Generates .claude-plugin/marketplace.json from apm.yml
+  Generates the marketplace manifest from apm.yml
 
 apm install context-discipline@eclipse-score-apm-marketplace --trust-transitive-mcp
 apm install graphify-codegraph@eclipse-score-apm-marketplace --trust-transitive-mcp
