@@ -16,7 +16,7 @@ version: 0.1.0
 description: MCP server for working memory management and local learning
 entry_point: context_discipline.src.context_discipline_mcp
 depends_on:
-  - graphify-codegraph    # Provides graph queries (wraps external graphify)
+  - graphify-codegraph
 
 tools:
   - name: initialize_session
@@ -40,7 +40,7 @@ tools:
         - subgoals
 
   - name: query_graph
-    description: Query code graph (delegates to graphify-codegraph MCP, which wraps external graphify CLI)
+    description: Query code graph through the graphify-codegraph MCP
     input_schema:
       type: object
       properties:

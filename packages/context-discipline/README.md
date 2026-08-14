@@ -121,8 +121,8 @@ Session N: Pattern emerges
 
 ## Integration
 
-**With graphify-codegraph:**  
-Call `query_graph()` to ask about code structure—automatically delegates to graphify MCP.
+**With graphify-codegraph:**
+Call `query_graph()` to ask about code structure through the Graphify MCP.
 
 ## Files in This Package
 

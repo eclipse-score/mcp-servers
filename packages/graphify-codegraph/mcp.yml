@@ -17,5 +17,5 @@ description: MCP server wrapping external graphify CLI for code graph queries
 command: python -m graphify_codegraph.src.serve
 external_dependency:
   tool: graphify
-  install: uv tool install graphifyy
+  install: uv tool install 'graphifyy[mcp]'
   docs: https://github.com/Graphify-Labs/graphify

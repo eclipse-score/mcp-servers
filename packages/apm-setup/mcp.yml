@@ -27,7 +27,7 @@ tools:
           description: Repository path, defaulting to the current project
         install_graphify:
           type: boolean
-          description: Install graphifyy with uv when graphify is missing
+          description: Install graphifyy[mcp] with uv when graphify is missing
       required: []
   - name: setup_context_discipline
     description: Create local working-memory storage in a repository

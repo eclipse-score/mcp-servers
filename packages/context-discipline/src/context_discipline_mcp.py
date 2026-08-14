@@ -67,9 +67,12 @@ class ContextDisciplineMCP:
     """
 
     def __init__(self, repo_path: str = ".", local_store: str = ".score-local"):
-        self.repo_path = Path(repo_path)
-        self.local_store = Path(local_store)
-        self.local_store.mkdir(exist_ok=True)
+        self.repo_path = Path(repo_path).expanduser().resolve()
+        store_path = Path(local_store).expanduser()
+        self.local_store = (
+            store_path if store_path.is_absolute() else self.repo_path / store_path
+        )
+        self.local_store.mkdir(parents=True, exist_ok=True)
 
         self.session_id = f"session_{uuid4().hex[:8]}"
         self.working_memory = []

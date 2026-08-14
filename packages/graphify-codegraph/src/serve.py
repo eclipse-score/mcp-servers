@@ -12,24 +12,20 @@
 # SPDX-License-Identifier: Apache-2.0
 # *******************************************************************************
 
-"""
-Graphify MCP Server Launcher
-
-Wraps external graphify CLI's MCP server.
-Requires: graphify CLI installed (uv tool install graphifyy)
-"""
+"""Launch Graphify's built-in MCP server."""
 
 import subprocess
 import sys
 
 
-def main():
-    """Launch graphify MCP server."""
+def main() -> None:
+    """Launch graphify's built-in MCP server."""
     try:
-        # Run graphify's built-in MCP server
         subprocess.run([sys.executable, "-m", "graphify.serve"], check=True)
     except FileNotFoundError:
-        print("Error: graphify not found. Install with: uv tool install graphifyy")
+        print(
+            "Error: graphify not found. Install with: uv tool install 'graphifyy[mcp]'"
+        )
         sys.exit(1)
     except KeyboardInterrupt:
         print("\nShutdown requested")
