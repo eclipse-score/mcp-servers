@@ -129,8 +129,8 @@ Call `query_graph()` to ask about code structure—automatically delegates to gr
 - [src/context_discipline_mcp.py](src/context_discipline_mcp.py) — MCP server implementation
 - [mcp.yml](mcp.yml) — MCP server configuration
 - [apm.yml](apm.yml) — Package dependencies
-- [.apm/instructions/](./apm/instructions/) — Behavioral patterns
-- [.apm/skills/](./apm/skills/) — VSCode workflows
+- [.apm/instructions/](.apm/instructions/) — Behavioral patterns
+- [.apm/skills/](.apm/skills/) — VSCode workflows
 
 ## Phase 2 Integration
 
@@ -144,8 +144,8 @@ No changes needed—local optimization is self-contained.
 ## See Also
 
 - [graphify-codegraph](../graphify-codegraph/) — Code structure queries
-- [.apm/instructions/working-memory-discipline.instructions.md](./apm/instructions/working-memory-discipline.instructions.md) — Behavioral patterns
-- [.apm/skills/maintain-working-memory/SKILL.md](./apm/skills/maintain-working-memory/SKILL.md) — Step-by-step workflow
+- [.apm/instructions/working-memory-discipline.instructions.md](.apm/instructions/working-memory-discipline.instructions.md) — Behavioral patterns
+- [.apm/skills/maintain-working-memory/SKILL.md](.apm/skills/maintain-working-memory/SKILL.md) — Step-by-step workflow
 
 ## License
 

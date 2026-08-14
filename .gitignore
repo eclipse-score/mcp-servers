@@ -32,3 +32,4 @@ graphify-out/          # Code graphs (generated)
 .DS_Store
 .score-local/
 .working-memory/
+graphify-out/
