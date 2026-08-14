@@ -28,6 +28,36 @@ Every commit must include a `Signed-off-by` trailer.
 
 ## Contributing
 
+
+### Directory structure for packages
+
+```text
+my-pkg/
++-- apm.yml                       # The manifest. Required. See below.
++-- apm.lock.yaml                 # Resolved versions + content hashes. Generated.
++-- apm_modules/                  # Installed dependencies. Generated. Gitignore.
++-- .apm/                         # Source primitives you author.
+|   +-- instructions/             # Always-on rules attached to file globs.
+|   +-- skills/                   # Multi-file capabilities (SKILL.md + assets).
+|   +-- prompts/                  # Reusable prompt templates.
+|   +-- agents/                   # Named agents (model + system prompt + tools).
+|   +-- context/                  # Shared context fragments.
+|   +-- hooks/                    # Lifecycle hooks (pre/post events).
++-- .github/                      # Compiled output for Copilot. Generated.
+|   +-- instructions/
+|   +-- agents/
+|   +-- copilot-instructions.md
++-- .claude/                      # Compiled output for Claude Code. Generated.
++-- .cursor/                      # Compiled output for Cursor. Generated.
++-- .codex/                       # Compiled output for Codex. Generated.
++-- AGENTS.md                     # Compiled context for agents-family targets. Generated.
++-- GEMINI.md                     # Compiled context for Gemini. Generated.
++-- apm-policy.yml                # Optional org/repo policy. See enterprise docs.
++-- scripts/                      # Optional helper scripts you author.
++-- tests/                        # Optional tests for your primitives.
+```
+
+
 ### Getting the source code and building
 
 Refer to [README.md](README.md) for the repository overview. Validate the

@@ -11,7 +11,8 @@ Install Graphify. It brings the central setup package and registers its MCP
 server in the same install operation:
 
 ```bash
-apm install /path/to/mcp-servers/packages/graphify-codegraph --target copilot
+apm install graphify-codegraph@eclipse-score-apm-marketplace --target copilot \
+    --trust-transitive-mcp
 ```
 
 Then call `verify_setup` and `setup_graphify` through the `apm-setup` MCP
