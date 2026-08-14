@@ -38,8 +38,8 @@ Then, from your project root:
 ```bash
 apm marketplace add https://github.com/eclipse-score/mcp-servers
 apm install apm-setup@eclipse-score-apm-marketplace --target copilot
-apm install context-discipline@eclipse-score-apm-marketplace --target copilot
-apm install graphify-codegraph@eclipse-score-apm-marketplace --target copilot
+apm install context-discipline@eclipse-score-apm-marketplace --target copilot --trust-transitive-mcp
+apm install graphify-codegraph@eclipse-score-apm-marketplace --target copilot --trust-transitive-mcp
 apm compile -t copilot
 ```
 
@@ -47,8 +47,8 @@ apm compile -t copilot
 
 ```bash
 apm install /path/to/mcp-servers/packages/apm-setup --target copilot
-apm install /path/to/mcp-servers/packages/context-discipline --target copilot
-apm install /path/to/mcp-servers/packages/graphify-codegraph --target copilot
+apm install /path/to/mcp-servers/packages/context-discipline --target copilot --trust-transitive-mcp
+apm install /path/to/mcp-servers/packages/graphify-codegraph --target copilot --trust-transitive-mcp
 apm compile -t copilot
 ```
 
@@ -58,8 +58,8 @@ apm compile -t copilot
 git clone https://github.com/eclipse-score/mcp-servers -b local_harness_apm
 cd mcp-servers
 apm install ./packages/apm-setup --target copilot
-apm install ./packages/context-discipline --target copilot
-apm install ./packages/graphify-codegraph --target copilot
+apm install ./packages/context-discipline --target copilot --trust-transitive-mcp
+apm install ./packages/graphify-codegraph --target copilot --trust-transitive-mcp
 apm compile -t copilot
 ```
 
@@ -137,8 +137,8 @@ apm pack
   ↓
   Generates .claude-plugin/marketplace.json from apm.yml
 
-apm install context-discipline@eclipse-score-apm-marketplace
-apm install graphify-codegraph@eclipse-score-apm-marketplace
+apm install context-discipline@eclipse-score-apm-marketplace --trust-transitive-mcp
+apm install graphify-codegraph@eclipse-score-apm-marketplace --trust-transitive-mcp
   ↓
   Installs both packages and merges their instructions/skills
   

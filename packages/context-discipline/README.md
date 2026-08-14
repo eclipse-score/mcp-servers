@@ -36,7 +36,7 @@ Provides an MCP server with these tools:
 ### Install
 
 ```bash
-apm install context-discipline
+apm install context-discipline --trust-transitive-mcp
 # Auto-installs graphify-codegraph
 ```
 

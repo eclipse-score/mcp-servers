@@ -23,8 +23,8 @@ self-defined stdio MCP server:
 apm install /path/to/mcp-servers/packages/apm-setup --target copilot
 ```
 
-For a published package, use the installed package path reported by APM in
-place of `apm_modules/apm-setup`.
+The MCP launcher resolves the installed package location under `apm_modules`
+at runtime, including APM's hashed local-dependency paths.
 
 After installation, call `verify_setup`, then call `setup_graphify` and/or
 `setup_context_discipline` with the target repository path. Do not run a
@@ -39,7 +39,6 @@ cd /workspaces/your-project
 apm install apm-setup@eclipse-score-apm-marketplace --target copilot
 ```
 
-If VS Code reports that
-`apm_modules/apm-setup/src/apm_setup/serve.py` is missing, the MCP
+If VS Code reports that the setup server cannot be found, the MCP
 configuration exists but the package files are missing or stale in that
 workspace. Re-run the install there and restart the `apm-setup` MCP server.

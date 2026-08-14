@@ -59,7 +59,8 @@ Returns: matching nodes from your code structure
 
 ```bash
 # Step 1: Install Graphify; it brings the setup MCP package with it
-apm install /path/to/mcp-servers/packages/graphify-codegraph --target copilot
+apm install graphify-codegraph@eclipse-score-apm-marketplace --target copilot \
+    --trust-transitive-mcp
 apm compile -t copilot
 ```
 
