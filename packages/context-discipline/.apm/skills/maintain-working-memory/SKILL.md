@@ -304,7 +304,3 @@ if state.importance_score >= 5 and state.coverage >= 0.3:
 - ✅ **Importance/coverage filtering** — Automatic signal vs. noise detection
 - ✅ **No maintenance burden** — Simple Python class, no YAML to maintain
 - ✅ **Global learning ready** — Integrates with Phase 2 experience aggregation
-
-## Reference
-
-See [IMPLEMENTATION.md](../../../IMPLEMENTATION.md) for complete API reference and examples.
