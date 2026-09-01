@@ -3,9 +3,9 @@
 
 # context-discipline
 
-**MCP Server for working memory management and local learning**
+**MCP Server for working memory management, context overlays, and local learning**
 
-Maintains an explicit working memory session for complex coding tasks. Tracks goals, assumptions, decisions, and outcomes—then records observations to `.score-local/` for local performance optimization.
+Maintains an explicit working memory session for complex coding tasks. Tracks goals, assumptions, decisions, and outcomes, then stores collaboration records and durable S-CORE context locally.
 
 ## The Problem
 
@@ -25,11 +25,13 @@ Provides an MCP server with these tools:
 | Tool | Purpose |
 |------|----------|
 | `initialize_session` | Start with goal, subgoals, assumptions |
-| `query_graph` | Ask graphify-codegraph about code structure |
+| `query_graph` | Ask the merged code, domain, and collaboration graph |
 | `record_decision` | Track a decision + reasoning |
 | `record_outcome` | Record pass/fail + coverage for learning |
 | `get_working_memory` | View all session entries |
 | `get_unverified_assumptions` | See what still needs checking |
+| `get_prior_context` | Retrieve relevant reasoning from other sessions |
+| `add_overlay_node` | Add a durable S-CORE node and graph relation |
 
 ## Quick Start
 
@@ -47,7 +49,7 @@ apm install context-discipline --trust-transitive-mcp
 wm.initialize_session(
     goal="Refactor auth module",
     subgoals=["Understand current flow", "Identify dependencies"],
-    assumptions={"Password hashing uses bcrypt": "high", "No 2FA": "low"}
+    assumptions={"Password hashing uses bcrypt": "high", "No 2FA": "low"},
 )
 
 # Agent explores code
@@ -56,7 +58,7 @@ auth_structure = wm.query_graph("Show me auth.py structure")
 # Agent records findings
 wm.record_decision(
     decision="Use existing auth module",
-    reason=["Reduces complexity", "Proven in production"]
+    reason=["Reduces complexity", "Proven in production"],
 )
 
 # At the end: record what worked
@@ -65,26 +67,27 @@ wm.record_outcome(
     verdict="pass",
     coverage=0.85,
     surfaced_nodes=["PasswordHasher", "TokenManager", "User"],
-    missing_nodes=["MFAService", "SessionCache"]
+    missing_nodes=["MFAService", "SessionCache"],
 )
 ```
 
 ### View Results
 
 **Working memory** is available through the `get_working_memory` MCP tool.
-Completed outcomes are persisted in `.score-local/observations.jsonl`.
+Sessions are persisted in `.score-local/sessions.jsonl`. Durable domain nodes and
+edges are persisted in `score-context/overlay.json`.
 
-**Local observations** (appended for learning):
+**Local session records** (append-only JSONL):
 ```bash
-cat .score-local/observations.jsonl | jq
+cat .score-local/sessions.jsonl | jq
 ```
 
 ## Local Learning Loop
 
 ```
 Session 1: Refactor auth
-  ↓ record_outcome() → .score-local/observations.jsonl
-  {"task": "auth", "verdict": "pass", "coverage": 0.85, ...}
+  ↓ record_decision() → .score-local/sessions.jsonl
+  {"record_type": "reasoning", "kind": "decision", ...}
 
 Session 2: Refactor payments
   ↓ Agent sees: similar modules
@@ -97,24 +100,24 @@ Session N: Pattern emerges
 
 ## Storage
 
-**Observations** stored in `.score-local/observations.jsonl`:
+**Session records** stored in `.score-local/sessions.jsonl`:
 
 ```json
 {
-  "session_id": "session_a1b2c3d4",
-  "task": "Refactor auth module",
-  "verdict": "pass",
-  "coverage": 0.85,
-  "path_length": 12,
-  "surfaced_nodes": ["PasswordHasher", "TokenManager"],
-  "missing_nodes": ["MFAService"],
-  "timestamp": "2026-08-13T10:23:45.123456"
+  "record_type": "reasoning",
+  "id": "reasoning__a1b2c3d4",
+  "session_id": "session__12345678",
+  "task_id": "task__12345678",
+  "text": "Use the existing auth module",
+  "kind": "decision",
+  "grounded_nodes": ["PasswordHasher", "TokenManager"],
+  "timestamp": "2026-08-13T10:23:45.123456+00:00"
 }
 ```
 
 **Add to `.gitignore`:**
 ```
-.score-local/            # Local observations (ephemeral)
+.score-local/            # Local session records (ephemeral)
 ```
 
 ## Integration
@@ -130,14 +133,17 @@ Call `query_graph()` to search the generated local Graphify code graph.
 - [.apm/instructions/](.apm/instructions/) — Behavioral patterns
 - [.apm/skills/](.apm/skills/) — VSCode workflows
 
-## Phase 2 Integration
+## Intersession Context
 
-Your `.score-local/observations.jsonl` is prepared for Phase 2 experience learning:
-- Schema aligns with ExperienceNode
-- Appends automatically with each session
-- Ready to feed into `libs/score-context/`
+The `get_prior_context` tool scores reasoning from other sessions using lexical
+similarity, shared grounded nodes, and the owning task outcome. It excludes the
+current session and returns deterministic top-ranked results.
 
-No changes needed—local optimization is self-contained.
+## Durable Context Overlay
+
+`add_overlay_node` writes a provenance-bearing S-CORE node and relation to
+`score-context/overlay.json`. The generated Graphify code graph remains
+read-only; the merged view combines code, domain, and collaboration layers.
 
 ## See Also
 
@@ -147,4 +153,4 @@ No changes needed—local optimization is self-contained.
 
 ## License
 
-Apache License 2.0 (SPDX-License-Identifier: Apache-2.0)
+Apache License 2.0

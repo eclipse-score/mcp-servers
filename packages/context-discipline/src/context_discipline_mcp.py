@@ -14,16 +14,28 @@
 """
 Context-Discipline MCP Server
 
-Manages working memory and records local learning observations.
+Manages working memory, durable context overlays, and local session retrieval.
 Integrates with graphify-codegraph (wraps external graphify CLI).
 """
 
 import json
 from dataclasses import asdict, dataclass
-from datetime import datetime
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 from uuid import uuid4
+
+from context_attention import get_prior_context
+from context_merge import MergedGraph
+from context_overlay import OverlayEdge, OverlayNode, OverlayStore, Provenance
+from context_sessions import (
+    OutcomeRecord,
+    ReasoningRecord,
+    RetrievalRecord,
+    SessionLog,
+    SessionRecord,
+    TaskRecord,
+)
 
 
 @dataclass
@@ -74,15 +86,23 @@ class ContextDisciplineMCP:
         )
         self.local_store.mkdir(parents=True, exist_ok=True)
 
-        self.session_id = f"session_{uuid4().hex[:8]}"
+        self.session_id = f"session__{uuid4().hex[:8]}"
         self.working_memory = []
         self.observations_path = self.local_store / "observations.jsonl"
+        self.session_log = SessionLog(self.repo_path, local_store)
+        self.overlay_store = OverlayStore(self.repo_path)
+        self.overlay_store.load()
+        self.session_log.append(
+            SessionRecord(id=self.session_id, agent="unknown", goal="")
+        )
+        self.goal_task_id: str | None = None
 
     def initialize_session(
         self,
         goal: str,
         subgoals: list[str],
         assumptions: list[str] | dict[str, str] | None = None,
+        agent: str = "unknown",
     ) -> str:
         """
         Initialize a working memory session.
@@ -95,6 +115,20 @@ class ContextDisciplineMCP:
         Returns:
             session_id
         """
+        self.session_log.append(
+            SessionRecord(id=self.session_id, agent=agent, goal=goal)
+        )
+        goal_task = TaskRecord(session_id=self.session_id, text=goal)
+        self.goal_task_id = goal_task.id
+        self.session_log.append(goal_task)
+        for subgoal in subgoals:
+            self.session_log.append(
+                TaskRecord(
+                    session_id=self.session_id,
+                    text=subgoal,
+                    parent_id=goal_task.id,
+                )
+            )
         self.working_memory.append(
             WorkingMemoryEntry(
                 timestamp=datetime.now().isoformat(),
@@ -141,24 +175,45 @@ class ContextDisciplineMCP:
             Query result as string
         """
         graph_path = self.repo_path / "graphify-out" / "graph.json"
+        graph = MergedGraph.build(self.repo_path)
+        terms = [term.lower() for term in query.split() if term.strip()]
+        nodes = tuple(graph.nodes.values())
+        serialized_nodes = [
+            (
+                node,
+                json.dumps(
+                    {
+                        "id": node.id,
+                        "label": node.label,
+                        "type": node.type,
+                    },
+                    sort_keys=True,
+                ).lower(),
+            )
+            for node in nodes
+        ]
+        matched_nodes = [
+            asdict(node)
+            for node, serialized in serialized_nodes
+            if all(term in serialized for term in terms)
+        ]
         if not graph_path.exists():
             finding = (
                 f"Graph query: {query}\n"
                 f"No graph found at {graph_path}. Run setup_graphify first."
             )
         else:
-            graph = json.loads(graph_path.read_text(encoding="utf-8"))
-            terms = [term.lower() for term in query.split() if term.strip()]
-            nodes = graph.get("nodes", [])
-            serialized_nodes = [
-                (node, json.dumps(node, sort_keys=True).lower()) for node in nodes
-            ]
-            matches = [
-                node
-                for node, serialized in serialized_nodes
-                if all(term in serialized for term in terms)
-            ]
-            finding = json.dumps({"query": query, "matches": matches}, sort_keys=True)
+            finding = json.dumps(
+                {"query": query, "matches": matched_nodes}, sort_keys=True
+            )
+        self.session_log.append(
+            RetrievalRecord(
+                session_id=self.session_id,
+                task_id=self.goal_task_id or "",
+                query=query,
+                returned_nodes=[node["id"] for node in matched_nodes],
+            )
+        )
         self.working_memory.append(
             WorkingMemoryEntry(
                 timestamp=datetime.now().isoformat(),
@@ -170,9 +225,22 @@ class ContextDisciplineMCP:
         return finding
 
     def record_decision(
-        self, decision: str, reason: list[str], reversible: bool = True
+        self,
+        decision: str,
+        reason: list[str],
+        reversible: bool = True,
+        grounded_nodes: list[str] | None = None,
     ) -> None:
         """Record a decision with reasoning."""
+        self.session_log.append(
+            ReasoningRecord(
+                session_id=self.session_id,
+                task_id=self.goal_task_id or "",
+                text=decision,
+                kind="decision",
+                grounded_nodes=grounded_nodes or [],
+            )
+        )
         self.working_memory.append(
             WorkingMemoryEntry(
                 timestamp=datetime.now().isoformat(),
@@ -214,6 +282,20 @@ class ContextDisciplineMCP:
             )
         )
 
+        task_id = self.goal_task_id or ""
+        for record in reversed(self.session_log.records_for(self.session_id)):
+            if isinstance(record, TaskRecord) and record.text == task:
+                task_id = record.id
+                break
+        self.session_log.append(
+            OutcomeRecord(
+                session_id=self.session_id,
+                task_id=task_id,
+                verdict=verdict,
+                coverage=coverage,
+            )
+        )
+
         # Record observation for local learning
         observation = LocalObservation(
             session_id=self.session_id,
@@ -242,6 +324,53 @@ class ContextDisciplineMCP:
         ]
         return assumptions
 
+    def get_prior_context(
+        self, task_text: str, current_nodes: list[str]
+    ) -> list[dict[str, Any]]:
+        """Retrieve relevant reasoning from other sessions."""
+        return [
+            asdict(item)
+            for item in get_prior_context(
+                self.session_log, self.session_id, task_text, set(current_nodes)
+            )
+        ]
+
+    def add_overlay_node(
+        self,
+        id: str,
+        type: str,
+        title: str,
+        relation: str,
+        target: str,
+        confidence: float,
+    ) -> dict[str, Any]:
+        """Add a durable domain node and relation to the merged graph."""
+        graph = MergedGraph.build(self.repo_path)
+        if not graph.has_node(target):
+            raise ValueError(f"overlay target node not found: {target}")
+        provenance = Provenance(
+            repo=str(self.repo_path),
+            adapter="context-discipline",
+            confidence=confidence,
+            observed_at=datetime.now(tz=UTC).isoformat(),
+        )
+        node = OverlayNode(
+            id=id,
+            type=type,
+            title=title,
+            provenance=provenance,
+        )
+        edge = OverlayEdge(
+            source=id,
+            target=target,
+            relation=relation,
+            provenance=provenance,
+        )
+        self.overlay_store.upsert_node(node)
+        self.overlay_store.upsert_edge(edge)
+        self.overlay_store.save()
+        return {"node": asdict(node), "edge": asdict(edge)}
+
 
 TOOLS = [
     {
@@ -253,6 +382,7 @@ TOOLS = [
                 "goal": {"type": "string"},
                 "subgoals": {"type": "array", "items": {"type": "string"}},
                 "assumptions": {"type": ["array", "object", "null"]},
+                "agent": {"type": "string", "default": "unknown"},
             },
             "required": ["goal", "subgoals"],
         },
@@ -275,6 +405,10 @@ TOOLS = [
                 "decision": {"type": "string"},
                 "reason": {"type": "array", "items": {"type": "string"}},
                 "reversible": {"type": "boolean", "default": True},
+                "grounded_nodes": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                },
             },
             "required": ["decision", "reason"],
         },
@@ -310,6 +444,45 @@ TOOLS = [
         "description": "Get assumptions that are not verified.",
         "inputSchema": {"type": "object", "properties": {}},
     },
+    {
+        "name": "get_prior_context",
+        "description": "Retrieve relevant reasoning from other sessions.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "task_text": {"type": "string"},
+                "current_nodes": {"type": "array", "items": {"type": "string"}},
+            },
+            "required": ["task_text", "current_nodes"],
+        },
+    },
+    {
+        "name": "add_overlay_node",
+        "description": "Add a durable S-CORE node and relation to the graph.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "id": {"type": "string"},
+                "type": {"type": "string"},
+                "title": {"type": "string"},
+                "relation": {"type": "string"},
+                "target": {"type": "string"},
+                "confidence": {
+                    "type": "number",
+                    "minimum": 0.0,
+                    "maximum": 1.0,
+                },
+            },
+            "required": [
+                "id",
+                "type",
+                "title",
+                "relation",
+                "target",
+                "confidence",
+            ],
+        },
+    },
 ]
 
 
@@ -328,6 +501,10 @@ def call_tool(
         return manager.get_working_memory()
     if name == "get_unverified_assumptions":
         return manager.get_unverified_assumptions()
+    if name == "get_prior_context":
+        return manager.get_prior_context(**arguments)
+    if name == "add_overlay_node":
+        return manager.add_overlay_node(**arguments)
     raise ValueError(f"Unknown tool: {name}")
 
 

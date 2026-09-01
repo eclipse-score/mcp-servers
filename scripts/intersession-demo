@@ -1,0 +1,113 @@
+#!/usr/bin/env bash
+# *******************************************************************************
+# Copyright (c) 2026 Contributors to the Eclipse Foundation
+#
+# See the NOTICE file(s) distributed with this work for additional
+# information regarding copyright ownership.
+#
+# This program and the accompanying materials are made available under the
+# terms of the Apache License Version 2.0 which is available at
+# https://www.apache.org/licenses/LICENSE-2.0
+#
+# SPDX-License-Identifier: Apache-2.0
+# *******************************************************************************
+
+set -euo pipefail
+
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")"; pwd -P)"
+repo_root="$(cd "${script_dir}/.."; pwd -P)"
+export PYTHONPATH="${repo_root}/packages/context-discipline/src${PYTHONPATH:+:${PYTHONPATH}}"
+
+uv run --project "${repo_root}" python - <<'PY'
+from pathlib import Path
+from tempfile import TemporaryDirectory
+
+from context_attention import get_prior_context, redundancy
+from context_sessions import (
+    OutcomeRecord,
+    ReasoningRecord,
+    SessionLog,
+    SessionRecord,
+    TaskRecord,
+)
+
+
+with TemporaryDirectory() as directory:
+    log = SessionLog(Path(directory))
+    session_a = SessionRecord(
+        id="session__a",
+        agent="demo",
+        goal="Understand the API contract",
+        timestamp="2026-01-01T00:00:00+00:00",
+    )
+    task_a = TaskRecord(
+        id="task__a",
+        session_id=session_a.id,
+        text="Understand the API contract",
+        timestamp="2026-01-01T00:00:01+00:00",
+    )
+    reasoning_a = ReasoningRecord(
+        id="reasoning__a",
+        session_id=session_a.id,
+        task_id=task_a.id,
+        text="The API contract is grounded in the service implementation",
+        kind="finding",
+        grounded_nodes=["node__api", "node__service"],
+        timestamp="2026-01-01T00:00:02+00:00",
+    )
+    for record in (
+        session_a,
+        task_a,
+        reasoning_a,
+        OutcomeRecord(
+            id="outcome__a",
+            session_id=session_a.id,
+            task_id=task_a.id,
+            verdict="pass",
+            coverage=1.0,
+            timestamp="2026-01-01T00:00:03+00:00",
+        ),
+    ):
+        log.append(record)
+
+    session_b = SessionRecord(
+        id="session__b",
+        agent="demo",
+        goal="Update the API contract",
+        timestamp="2026-01-02T00:00:00+00:00",
+    )
+    task_b = TaskRecord(
+        id="task__b",
+        session_id=session_b.id,
+        text="Update the API contract",
+        timestamp="2026-01-02T00:00:01+00:00",
+    )
+    log.append(session_b)
+    log.append(task_b)
+    current_nodes = {"node__api", "node__service"}
+
+    prior_without = ()
+    r_without = redundancy(set(), current_nodes)
+    prior_with = get_prior_context(
+        log,
+        session_b.id,
+        task_b.text,
+        current_nodes,
+    )
+    covered = {
+        node_id for item in prior_with for node_id in item.grounded_nodes
+    }
+    r_with = redundancy(covered, current_nodes)
+
+    print("session A: goal=Understand the API contract, grounded nodes=node__api, node__service")
+    print(
+        "session B WITHOUT prior context: grounded nodes=node__api, node__service, "
+        f"redundancy={r_without:.1f} (scripted scenario, not a measurement of live agent behaviour)"
+    )
+    print(
+        "session B WITH prior context:    prior items surfaced="
+        f"{len(prior_with)}, redundancy={r_with:.1f} "
+        "(scripted scenario, not a measurement of live agent behaviour)"
+    )
+    print("previously grounded nodes are marked as covered")
+PY
