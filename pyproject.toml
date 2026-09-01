@@ -16,9 +16,9 @@ members = ["libs/score-context"]
 
 [dependency-groups]
 dev = [
-  "pyright>=1.1.411",
-  "pytest>=9.1.1",
-  "ruff>=0.16.3",
+  "pyright>=1.1.390",
+  "pytest>=8.3",
+  "ruff>=0.9",
 ]
 
 [tool.ruff]
@@ -29,7 +29,11 @@ target-version = "py312"
 select = ["E", "F", "I", "UP", "B", "SIM"]
 
 [tool.pyright]
-include = ["libs/score-context/src", "libs/score-context/tests"]
+include = [
+  "harness",
+  "libs/score-context/src",
+  "libs/score-context/tests",
+]
 pythonVersion = "3.12"
 typeCheckingMode = "strict"
 reportMissingTypeStubs = false

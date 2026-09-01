@@ -1,0 +1,22 @@
+# *******************************************************************************
+# Copyright (c) 2026 Contributors to the Eclipse Foundation
+#
+# SPDX-License-Identifier: Apache-2.0
+# *******************************************************************************
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "score-context-discipline"
+version = "0.1.0"
+description = "Working memory and local learning MCP server"
+requires-python = ">=3.11"
+
+[project.scripts]
+context-discipline = "context_discipline_mcp:main"
+
+[tool.hatch.build.targets.wheel]
+only-include = ["src/context_discipline_mcp.py"]
+sources = ["src"]

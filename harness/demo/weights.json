@@ -1,0 +1,15 @@
+{
+  "weights": [
+    {
+      "base_weight": 2.5,
+      "failure_count": 0,
+      "multiplier": 1.5,
+      "reason": "seeded_demo_learning",
+      "relation": "discussed_in",
+      "source_type": "pull_request",
+      "success_count": 3,
+      "success_ratio": 1.0,
+      "target_type": "dec_rec"
+    }
+  ]
+}

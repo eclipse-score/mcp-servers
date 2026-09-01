@@ -26,6 +26,8 @@ path = [
   "uv.lock",
   "**/.gitkeep",
   "packages/context/.apm/skills/query-context/SKILL.md",
+  "packages/context/.apm/context/*.md",
+  "harness/contract/*.md",
 ]
 SPDX-FileCopyrightText = "Copyright (c) 2026 Contributors to the Eclipse Foundation"
 SPDX-License-Identifier = "Apache-2.0"

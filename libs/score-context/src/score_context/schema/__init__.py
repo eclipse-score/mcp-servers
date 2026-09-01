@@ -12,16 +12,30 @@
 # *******************************************************************************
 
 from score_context.schema.edges import ADR_RELATION_MAPPINGS, Edge, EdgeRelation
+from score_context.schema.experience import (
+    ConfidenceSignalNode,
+    ExperienceNode,
+    Route,
+    RouteHop,
+    RouteObservationNode,
+    Traversal,
+)
 from score_context.schema.nodes import NEEDS_MODEL_TYPES, Node, NodeType
 from score_context.schema.provenance import Provenance, SourceRef
 
 __all__ = [
     "ADR_RELATION_MAPPINGS",
+    "ConfidenceSignalNode",
     "Edge",
     "EdgeRelation",
+    "ExperienceNode",
     "NEEDS_MODEL_TYPES",
     "Node",
     "NodeType",
     "Provenance",
+    "Route",
+    "RouteHop",
+    "RouteObservationNode",
     "SourceRef",
+    "Traversal",
 ]

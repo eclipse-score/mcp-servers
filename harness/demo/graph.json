@@ -1,0 +1,73 @@
+{
+  "$schema": "../schema/graph_fragment_v1.json",
+  "fragment_version": "v1",
+  "adapter": {
+    "name": "demo",
+    "version": "1.0.0",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "nodes": [
+    {
+      "id": "pr__demo__1",
+      "type": "pull_request",
+      "title": "Demo pull request",
+      "provenance": {
+        "repo": "mcp-servers",
+        "sha": "demo",
+        "adapter": "demo",
+        "confidence": 1.0,
+        "observed_at": "2026-01-03T00:00:00Z"
+      }
+    },
+    {
+      "id": "dec_rec__demo__1",
+      "type": "dec_rec",
+      "title": "Decision record selected by learned relevance",
+      "provenance": {
+        "repo": "mcp-servers",
+        "sha": "demo",
+        "adapter": "demo",
+        "confidence": 1.0,
+        "observed_at": "2026-01-03T00:00:00Z"
+      }
+    },
+    {
+      "id": "contract__demo__1",
+      "type": "contract",
+      "title": "Competing contract context",
+      "provenance": {
+        "repo": "mcp-servers",
+        "sha": "demo",
+        "adapter": "demo",
+        "confidence": 1.0,
+        "observed_at": "2026-01-03T00:00:00Z"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "source": "pr__demo__1",
+      "target": "dec_rec__demo__1",
+      "relation": "discussed_in",
+      "provenance": {
+        "repo": "mcp-servers",
+        "sha": "demo",
+        "adapter": "demo",
+        "confidence": 1.0,
+        "observed_at": "2026-01-03T00:00:00Z"
+      }
+    },
+    {
+      "source": "pr__demo__1",
+      "target": "contract__demo__1",
+      "relation": "affects",
+      "provenance": {
+        "repo": "mcp-servers",
+        "sha": "demo",
+        "adapter": "demo",
+        "confidence": 1.0,
+        "observed_at": "2026-01-03T00:00:00Z"
+      }
+    }
+  ]
+}

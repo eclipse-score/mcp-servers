@@ -28,18 +28,73 @@ Every commit must include a `Signed-off-by` trailer.
 
 ## Contributing
 
+
+### Directory structure for packages
+
+```text
+my-pkg/
++-- apm.yml                       # The manifest. Required. See below.
++-- apm.lock.yaml                 # Resolved versions + content hashes. Generated.
++-- apm_modules/                  # Installed dependencies. Generated. Gitignore.
++-- .apm/                         # Source primitives you author.
+|   +-- instructions/             # Always-on rules attached to file globs.
+|   +-- skills/                   # Multi-file capabilities (SKILL.md + assets).
+|   +-- prompts/                  # Reusable prompt templates.
+|   +-- agents/                   # Named agents (model + system prompt + tools).
+|   +-- context/                  # Shared context fragments.
+|   +-- hooks/                    # Lifecycle hooks (pre/post events).
++-- .github/                      # Compiled output for Copilot. Generated.
+|   +-- instructions/
+|   +-- agents/
+|   +-- copilot-instructions.md
++-- .claude/                      # Compiled output for Claude Code. Generated.
++-- .cursor/                      # Compiled output for Cursor. Generated.
++-- .codex/                       # Compiled output for Codex. Generated.
++-- AGENTS.md                     # Compiled context for agents-family targets. Generated.
++-- GEMINI.md                     # Compiled context for Gemini. Generated.
++-- apm-policy.yml                # Optional org/repo policy. See enterprise docs.
++-- scripts/                      # Optional helper scripts you author.
++-- tests/                        # Optional tests for your primitives.
+```
+
+
 ### Getting the source code and building
 
-Refer to [README.md](README.md) for the repository overview. The Python
-workspace uses [uv](https://docs.astral.sh/uv/):
+Refer to [README.md](README.md) for the repository overview. Validate the
+repository and generate the marketplace from `apm.yml`:
 
 ```shell
-uv sync
-uv run ruff check .
-uv run ruff format --check .
-uv run pyright
-uv run pytest
+./scripts/validate.sh
+apm pack --json
+apm pack --check-versions --dry-run --json
 ```
+
+`apm pack` generates the marketplace manifest under `.claude-plugin/`.
+Do not hand-create or edit that generated artifact. Commit it when the
+marketplace configuration changes so remote consumers can discover the
+marketplace.
+
+To verify package discovery from outside the repository, use a clean directory:
+
+```shell
+mkdir -p /tmp/test-marketplace
+cd /tmp/test-marketplace
+apm marketplace add /path/to/mcp-servers
+apm marketplace browse eclipse-score-apm-marketplace
+```
+
+The browse command should list `context-discipline` and `graphify-codegraph`.
+
+### Package changes
+
+When adding or changing a package:
+
+1. Update the package's `apm.yml`, `mcp.yml`, documentation, and source files.
+2. Add or update its entry under `marketplace.packages` in the root `apm.yml`.
+3. Run `apm pack` to regenerate `.claude-plugin/marketplace.json` and commit it.
+4. Run the validation and version checks above.
+5. Test installation from a clean directory with an explicit target such as
+   `--target copilot`.
 
 ### Getting involved
 

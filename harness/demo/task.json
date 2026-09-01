@@ -1,0 +1,7 @@
+{
+  "task_version": "v1",
+  "id": "task_demo_learning",
+  "seed_node_ids": ["pr__demo__1"],
+  "expected_node_ids": ["pr__demo__1", "dec_rec__demo__1"],
+  "top_n": 2
+}

@@ -1,0 +1,147 @@
+{
+  "$schema": "http://json-schema.org/draft-2020-12/schema",
+  "$id": "https://eclipse-score.github.io/schema/experience_v1.json",
+  "title": "Experience Artifact",
+  "description": "Recorded route + verdict from one harness run (learning signal).",
+  "type": "object",
+  "required": [
+    "experience_version", "id", "type", "task_id", "run_id",
+    "verdict", "provenance", "timestamp"
+  ],
+  "properties": {
+    "experience_version": {
+      "type": "string",
+      "const": "v1",
+      "description": "Schema version for this experience"
+    },
+    "id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Unique experience identifier"
+    },
+    "type": {
+      "type": "string",
+      "const": "experience",
+      "description": "Fixed artifact type"
+    },
+    "task_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Which task was evaluated"
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "UUID of this harness invocation"
+    },
+    "attempt": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Attempt number within run"
+    },
+    "route_edges": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "source_id", "target_id", "relation", "source_type", "target_type"
+        ],
+        "properties": {
+          "source_id": {"type": "string", "minLength": 1},
+          "target_id": {"type": "string", "minLength": 1},
+          "relation": {"type": "string", "minLength": 1},
+          "source_type": {"type": "string", "minLength": 1},
+          "target_type": {"type": "string", "minLength": 1}
+        },
+        "additionalProperties": false,
+        "description": "Edges traversed with reusable edge-class types"
+      },
+      "description": "Edges traversed in order"
+    },
+    "route_node_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Nodes visited in order"
+    },
+    "verdict": {
+      "type": "string",
+      "enum": ["pass", "fail"],
+      "description": "Did lane_a_gate pass?"
+    },
+    "surfaced_node_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Expected nodes that appeared in context"
+    },
+    "missing_node_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Expected nodes that did not appear"
+    },
+    "coverage_ratio": {
+      "type": "number",
+      "minimum": 0.0,
+      "maximum": 1.0,
+      "description": "surfaced / expected"
+    },
+    "path_length": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Number of hops in route"
+    },
+    "provenance": {
+      "$ref": "#/$defs/provenance"
+    },
+    "seed_node_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Seeds used for this task"
+    },
+    "top_n": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Top-N parameter used"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When experience was recorded"
+    }
+  },
+  "$defs": {
+    "provenance": {
+      "type": "object",
+      "required": ["repo", "adapter", "confidence", "observed_at"],
+      "properties": {
+        "repo": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sha": {
+          "type": ["string", "null"]
+        },
+        "adapter": {
+          "type": "string",
+          "minLength": 1
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 1.0
+        },
+        "observed_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    }
+  }
+}

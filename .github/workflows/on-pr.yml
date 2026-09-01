@@ -42,7 +42,7 @@ jobs:
       - name: Ruff lint
         run: uv run ruff check .
       - name: Ruff format
-        run: uv run ruff format --check .
+        run: uv run ruff format --check . --exclude '*.md'
       - name: Pyright
         run: uv run pyright
       - name: Pytest

@@ -1,0 +1,37 @@
+{
+  "name": "eclipse-score-apm-marketplace",
+  "owner": {
+    "name": "eclipse-score",
+    "url": "https://github.com/eclipse-score/mcp-servers"
+  },
+  "plugins": [
+    {
+      "name": "context",
+      "description": "Eclipse S-CORE Agent Context Attention Layer.",
+      "version": "0.1.0",
+      "category": "Productivity",
+      "source": "./packages/context"
+    },
+    {
+      "name": "apm-setup",
+      "description": "Central setup MCP server for local APM package state.",
+      "version": "0.1.0",
+      "category": "Productivity",
+      "source": "./packages/apm-setup"
+    },
+    {
+      "name": "context-discipline",
+      "description": "Context discipline package for working memory management and local learning orchestration. Integrates graphify (external) for code structure queries.",
+      "version": "0.1.0",
+      "category": "Productivity",
+      "source": "./packages/context-discipline"
+    },
+    {
+      "name": "graphify-codegraph",
+      "description": "Graphify package for code structure queries. Integrates graphify (external) for code structure queries.",
+      "version": "0.1.0",
+      "category": "Productivity",
+      "source": "./packages/graphify-codegraph"
+    }
+  ]
+}

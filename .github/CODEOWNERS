@@ -17,4 +17,5 @@
 
 # Note: last match wins.
 
-
+# Interim default owner; this can be broadened by the repository owner later.
+* @FScholPer
