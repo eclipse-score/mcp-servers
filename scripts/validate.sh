@@ -34,8 +34,19 @@ check() {
 
 # 1. License headers
 echo "1. License Headers"
-py_missing=$(find packages -name "*.py" 2>/dev/null | xargs grep -L "SPDX-License-Identifier" | wc -l)
-bash_missing=$(find scripts -name "*.sh" 2>/dev/null | xargs grep -L "SPDX-License-Identifier" 2>/dev/null | wc -l)
+py_missing=0
+while IFS= read -r -d '' file; do
+	if ! grep -q "SPDX-License-Identifier" "$file"; then
+		py_missing=$((py_missing + 1))
+	fi
+done < <(find packages -name "*.py" -print0 2>/dev/null)
+
+bash_missing=0
+while IFS= read -r -d '' file; do
+	if ! grep -q "SPDX-License-Identifier" "$file"; then
+		bash_missing=$((bash_missing + 1))
+	fi
+done < <(find scripts -name "*.sh" -print0 2>/dev/null)
 
 if [ "$py_missing" -eq 0 ]; then
 	echo -e "${GREEN}✓${NC} All Python files have SPDX headers"
