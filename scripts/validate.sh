@@ -25,10 +25,10 @@ check() {
 	
 	if eval "$cmd" > /dev/null 2>&1; then
 		echo -e "${GREEN}✓${NC} $name"
-		((pass++))
+		pass=$((pass + 1))
 	else
 		echo -e "${RED}✗${NC} $name"
-		((fail++))
+		fail=$((fail + 1))
 	fi
 }
 
@@ -39,18 +39,18 @@ bash_missing=$(find scripts -name "*.sh" 2>/dev/null | xargs grep -L "SPDX-Licen
 
 if [ "$py_missing" -eq 0 ]; then
 	echo -e "${GREEN}✓${NC} All Python files have SPDX headers"
-	((pass++))
+	pass=$((pass + 1))
 else
 	echo -e "${RED}✗${NC} $py_missing Python files missing SPDX headers"
-	((fail++))
+	fail=$((fail + 1))
 fi
 
 if [ "$bash_missing" -eq 0 ]; then
 	echo -e "${GREEN}✓${NC} All Bash files have SPDX headers"
-	((pass++))
+	pass=$((pass + 1))
 else
 	echo -e "${RED}✗${NC} $bash_missing Bash files missing SPDX headers"
-	((fail++))
+	fail=$((fail + 1))
 fi
 
 echo ""

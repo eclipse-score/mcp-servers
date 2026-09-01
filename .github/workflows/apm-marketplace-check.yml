@@ -57,8 +57,8 @@ jobs:
         run: |
           smoke_dir="$(mktemp -d)"
           cd "$smoke_dir"
-          apm marketplace add "$GITHUB_WORKSPACE" \
-            --name eclipse-score-apm-marketplace
+          apm marketplace add https://github.com/eclipse-score/mcp-servers \
+            --name eclipse-score-apm-marketplace --ref "$MCP_REF"
           apm install context-discipline@eclipse-score-apm-marketplace \
             --target copilot --trust-transitive-mcp
           python - <<'PY'
