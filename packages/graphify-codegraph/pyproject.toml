@@ -13,6 +13,7 @@ name = "score-graphify-codegraph"
 version = "0.1.0"
 description = "MCP launcher for the Graphify code graph server"
 requires-python = ">=3.11"
+dependencies = ["graphifyy[mcp]==0.9.53"]
 
 [project.scripts]
 graphify-codegraph = "serve:main"
