@@ -60,7 +60,7 @@ jobs:
           apm marketplace add https://github.com/eclipse-score/mcp-servers \
             --name eclipse-score-apm-marketplace --ref "$MCP_REF"
           apm install context-discipline@eclipse-score-apm-marketplace \
-            --target copilot --trust-transitive-mcp
+            --target vscode --trust-transitive-mcp
           python - <<'PY'
           import json
           import os
