@@ -101,6 +101,8 @@ tools:
         - task
         - verdict
         - coverage
+        - surfaced_nodes
+        - missing_nodes
 
   - name: get_working_memory
     description: Get current working memory entries

@@ -26,4 +26,12 @@ dependencies:
   apm:
     - path: ../apm-setup
     - path: ../graphify-codegraph
-  mcp: []
+  mcp:
+    - name: context-discipline
+      registry: false
+      transport: stdio
+      command: uvx
+      args:
+        - --from
+        - git+https://github.com/eclipse-score/mcp-servers#subdirectory=packages/context-discipline
+        - context-discipline

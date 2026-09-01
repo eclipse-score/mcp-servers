@@ -13,12 +13,12 @@
 
 ---
 name: maintain-working-memory
-description: Use WorkingMemoryManager to track goals, assumptions, and decisions during agentic sessions—no custom YAML required
+description: Use context-discipline MCP tools to track goals, assumptions, and decisions during agentic sessions
 ---
 
 # Maintain Working Memory Skill
 
-Use **WorkingMemoryManager** to track your session explicitly without custom YAML maintenance.
+Use the `context-discipline` MCP tools to track your session explicitly without custom YAML maintenance.
 
 Simple, self-contained implementation. Works standalone. Designed to integrate with Phase 2 LocalObservationManager without breaking changes.
 
@@ -32,16 +32,10 @@ Simple, self-contained implementation. Works standalone. Designed to integrate w
 
 ## How to use
 
-### Setup: Initialize working memory manager
+### Setup: Initialize working memory
 
 ```python
-from working_memory_manager import WorkingMemoryManager
-
-# Create manager (uses .working-memory/ directory)
-wm = WorkingMemoryManager(repo_path=".working-memory")
-
-# Initialize session
-wm.initialize(
+wm.initialize_session(
     goal="Refactor auth module to async",
     subgoals=[
         "Identify all auth functions",
@@ -49,7 +43,7 @@ wm.initialize(
         "Implement async versions",
         "Update call sites"
     ],
-    initial_assumptions=["auth.py is the only auth module"]
+    assumptions=["auth.py is the only auth module"]
 )
 ```
 
@@ -57,28 +51,23 @@ wm.initialize(
 
 ```python
 # After each tool call, record (COMPRESS to 1-2 sentences)
-wm.record_finding(
-    tool="graphify-codegraph",
-    query="All functions in lib/auth.py",
-    result="4 sync functions: authenticate, verify_token, refresh, logout"
-)
-
-# Add relevant artifacts to track
-wm.add_artifact("lib/auth.py", "Main auth functions", lines="1-150")
-wm.add_artifact("api/handlers.py", "Update async calls")
+wm.query_graph("All functions in lib/auth.py")
 ```
 
 ### Track assumptions
 
 ```python
 # Add assumptions (especially ones to verify)
-wm.add_assumption("auth.py is only auth module", confidence="high")
-wm.add_assumption("No external code imports auth", confidence="medium")
+wm.initialize_session(
+    goal="Track assumptions",
+    subgoals=[],
+    assumptions={"auth.py is only auth module": "high", "No external code imports auth": "medium"},
+)
 
 # Before risky decisions, check for unverified ones
 unverified = wm.get_unverified_assumptions()
 if unverified:
-    print(f"⚠️  WARNING: {len(unverified)} unverified assumptions")
+    print(f"WARNING: {len(unverified)} unverified assumptions")
     for a in unverified:
         if a.confidence in ["low", "medium"]:
             print(f"  - {a.key} (confidence: {a.confidence}) - VERIFY BEFORE PROCEEDING")
@@ -103,11 +92,12 @@ wm.record_decision(
 
 ```python
 # After each major step, update your plan
-wm.update_plan(
-    current_plan="Now mapping all call sites of authenticate() function",
-    next_action="Query graph for reverse dependencies",
-    coverage=0.35,  # 35% of task understood
-    importance_score=8  # 0-10 scale
+wm.record_outcome(
+    task="Map all call sites of authenticate()",
+    verdict="pass",
+    coverage=0.35,
+    surfaced_nodes=["authenticate"],
+    missing_nodes=[],
 )
 ```
 
@@ -115,186 +105,22 @@ wm.update_plan(
 
 ```python
 # Get current state
-state = wm.get_current_state()
-print(f"Goal: {state.goal}")
-print(f"Progress: {state.coverage * 100:.0f}%")
-print(f"Next: {state.next_action}")
+state = wm.get_working_memory()
+print(f"Entries: {len(state)}")
 
 # Check for potential issues
 unverified = wm.get_unverified_assumptions()
-stale = wm.get_stale_artifacts(stale_after_turns=5)
-irreversible = wm.get_irreversible_decisions()
 
 if unverified:
-    print(f"⚠️  {len(unverified)} unverified assumptions")
-if stale:
-    print(f"⚠️  {len(stale)} artifacts may be stale - re-verify")
-if irreversible:
-    print(f"⚠️  {len(irreversible)} irreversible decisions - ensure rollback plan exists")
+    print(f"WARNING: {len(unverified)} unverified assumptions")
 ```
 
-### Load previous session
+## Current API
 
-```python
-# List available sessions
-wm = WorkingMemoryManager()
-sessions = wm.list_sessions()
-print(f"Available sessions: {sessions}")
-
-# Resume previous session
-state = wm.load_session("session_abc12345")
-print(f"Resuming: {state.goal}")
-print(f"Last plan: {state.current_plan}")
-```
-
-## Full Example: Async Refactoring Session
-
-```python
-from working_memory_manager import WorkingMemoryManager
-
-wm = WorkingMemoryManager()
-
-# Initialize
-wm.initialize(
-    goal="Convert auth module to async",
-    subgoals=["Understand current", "Map dependencies", "Implement async"],
-    initial_assumptions=["auth.py is only auth module"]
-)
-
-# Turn 1: Query graph
-wm.record_finding(
-    tool="graphify-codegraph",
-    query="All functions in lib/auth.py",
-    result="4 sync functions: authenticate, verify_token, refresh, logout"
-)
-wm.add_artifact("lib/auth.py", "Main auth functions", lines="1-150")
-wm.update_plan("Identified target functions", "Map all call sites", coverage=0.25, importance_score=9)
-
-# Turn 2: Find dependencies
-wm.record_finding(
-    tool="graphify-codegraph",
-    query="reverse dependencies of authenticate()",
-    result="3 files call authenticate(): handlers.py:87, cli.py:15, scripts.py:33"
-)
-wm.record_decision(
-    "Refactor auth.py first, then update callers",
-    ["Reduces risk", "Can test independently"],
-    reversible=True
-)
-wm.verify_assumption("auth.py is only auth module")
-wm.update_plan("Dependencies mapped", "Implement async", coverage=0.40)
-
-# Turn 3: Read implementation
-wm.mark_artifact_read("lib/auth.py")
-wm.record_finding(
-    tool="file-read",
-    query="authenticate() implementation",
-    result="Uses time.sleep() for retry and requests.get() for API"
-)
-wm.add_assumption("Backwards compatibility needed", confidence="high")
-wm.update_plan("Ready to implement", "Start async authenticate()", coverage=0.50)
-
-# Turn 4: Safety check before code changes
-print("Safety check:")
-unverified = wm.get_unverified_assumptions()
-if not unverified:
-    print("✅ All assumptions verified. Ready to proceed.")
-```
-
-## Pro Tips
-
-### 1. Always compress findings
-
-```python
-# ✅ GOOD: 1-2 sentence summary
-wm.record_finding("tool", "query", "authenticate() uses blocking I/O; needs asyncio")
-
-# ❌ BAD: Raw output violates discipline
-wm.record_finding("tool", "query", "[50KB of source code]")
-```
-
-### 2. Use confidence levels
-
-```python
-# High: Verified independently
-wm.add_assumption("auth.py is only module", confidence="high")
-
-# Medium: Likely but unverified
-wm.add_assumption("No external imports", confidence="medium")
-
-# Low: Needs verification
-wm.add_assumption("Backwards compat needed", confidence="low")
-```
-
-### 3. Track reversibility
-
-```python
-# Can undo
-wm.record_decision("Rename function", [...], reversible=True)
-
-# Can't undo - get explicit confirmation
-irreversible = wm.get_irreversible_decisions()
-if irreversible:
-    print("VERIFY ROLLBACK PLANS FOR IRREVERSIBLE CHANGES")
-```
-
-### 4. Check for stale artifacts
-
-```python
-# Before making changes, re-check old findings
-stale = wm.get_stale_artifacts(stale_after_turns=5)
-for artifact in stale:
-    print(f"⚠️  {artifact.file} may be out of date - re-verify")
-```
-
-### 5. Importance and coverage
-
-```python
-# importance_score (0-10): Future filtering threshold >= 5
-#   - Critical task = 9-10
-#   - Major discovery = 7-8
-#   - Regular progress = 5-6
-#   - Minor detail = < 5 (filtered out)
-
-# coverage (0.0-1.0): Future filtering threshold >= 0.3
-#   - Just started = 0.2-0.3
-#   - Good understanding = 0.5-0.7
-#   - Nearly complete = 0.85-1.0
-```
-
-## How It Works
-
-### Phase 0 (Current)
-
-Self-contained `WorkingMemoryManager`:
-- Python class (no dependencies)
-- JSONL persistence (`.working-memory/observations/`)
-- Works standalone
-
-### Phase 2 Integration (Future)
-
-When available, adapter to LocalObservationManager:
-
-```python
-from score_context.harness.local_observation import LocalObservationManager
-
-wm = WorkingMemoryManager()
-observer = LocalObservationManager()
-
-state = wm.get_current_state()
-
-# Submit to global learning (if important enough)
-if state.importance_score >= 5 and state.coverage >= 0.3:
-    observer.record_discovery(
-        type="working_memory_state",
-        node_id=f"session:{state.session_id}",
-        findings=state.to_dict(),
-        importance_score=state.importance_score,
-        coverage=state.coverage
-    )
-```
-
-**No breaking changes.** WorkingMemoryManager works the same in both phases.
+The six MCP tools are the complete current API: `initialize_session`,
+`query_graph`, `record_decision`, `record_outcome`, `get_working_memory`, and
+`get_unverified_assumptions`. Working memory is held for the running server
+session; completed outcomes are persisted to `.score-local/observations.jsonl`.
 
 ## Automatic Benefits
 

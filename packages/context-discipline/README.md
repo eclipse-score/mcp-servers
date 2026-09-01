@@ -71,10 +71,8 @@ wm.record_outcome(
 
 ### View Results
 
-**Working memory** (this session's reasoning):
-```bash
-cat .score-local/session_*.json
-```
+**Working memory** is available through the `get_working_memory` MCP tool.
+Completed outcomes are persisted in `.score-local/observations.jsonl`.
 
 **Local observations** (appended for learning):
 ```bash

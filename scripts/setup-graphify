@@ -118,7 +118,7 @@ verify_mcp() {
 	
 	info "Checking MCP server installation..."
 	
-	if python3 -c "import graphify" 2>/dev/null; then
+	if command -v graphify >/dev/null 2>&1; then
 		success "graphify-codegraph MCP is ready"
 		return 0
 	else

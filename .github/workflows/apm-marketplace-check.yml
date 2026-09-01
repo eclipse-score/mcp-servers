@@ -52,13 +52,11 @@ jobs:
         run: apm marketplace check
 
       - name: Test remote marketplace MCP servers
-        env:
-          PR_REF: ${{ github.head_ref || github.ref_name }}
         run: |
           smoke_dir="$(mktemp -d)"
           cd "$smoke_dir"
-          apm marketplace add https://github.com/eclipse-score/mcp-servers \
-            --name eclipse-score-apm-marketplace --ref "$PR_REF"
+          apm marketplace add "$GITHUB_WORKSPACE" \
+            --name eclipse-score-apm-marketplace
           apm install context-discipline@eclipse-score-apm-marketplace \
             --target copilot --trust-transitive-mcp
           uv tool install 'graphifyy[mcp]'
