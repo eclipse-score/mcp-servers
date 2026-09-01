@@ -22,19 +22,11 @@ Use this skill to understand your repository structure without exhausting contex
 
 ## Prerequisites: Graph Setup
 
-Before using this skill, run the setup wrapper from the project root:
+Before using this skill, call the `apm-setup` MCP tools for the target repository:
 
 ```bash
-./do setup-graphify
-```
-
-Use `./do setup-graphify --verify` to check whether the CLI and graph already
-exist. If `./do` is unavailable, copy the setup scripts from the `mcp-servers`
-checkout and run the script directly:
-
-```bash
-cp -r /path/to/mcp-servers/scripts ./scripts
-./scripts/setup-graphify
+verify_setup(repo_path)
+setup_graphify(repo_path)
 ```
 
 Verify that setup created `graphify-out/graph.json` before querying the graph.
@@ -101,7 +93,10 @@ auth_nodes = wm.query_graph("All functions related to authentication")
 # ↓ Returns relevant symbols + files
 
 # Use results to guide file reads
-wm.record_finding("Auth defined in lib/auth.py, called by api/login.py")
+wm.record_decision(
+    decision="Read auth.py and api/login.py",
+    reason=["Graph results identify the relevant files"],
+)
 ```
 
 ## Refreshing the Graph

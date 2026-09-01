@@ -57,7 +57,7 @@ Installing `context-discipline` also installs its transitive dependencies:
 **Option C: From a cloned checkout**
 
 ```bash
-git clone https://github.com/eclipse-score/mcp-servers -b local_harness_apm
+git clone https://github.com/eclipse-score/mcp-servers
 cd mcp-servers
 apm install ./packages/context-discipline --target copilot --trust-transitive-mcp
 apm compile -t copilot

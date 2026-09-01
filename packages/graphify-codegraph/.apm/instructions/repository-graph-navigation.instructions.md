@@ -21,29 +21,22 @@ applyTo: "**"
 
 ## Setup (One-Time)
 
-Before you can query a repository graph, it must be generated. If this
-repository has the package setup wrapper, run:
+Before you can query a repository graph, it must be generated. Call the
+`apm-setup` MCP tools for the target repository:
 
 ```bash
-./do setup-graphify
+verify_setup(repo_path)
+setup_graphify(repo_path)
 ```
 
-The `do` command dispatches `scripts/setup-graphify`; it installs the external
-`graphify` CLI, generates `graphify-out/graph.json`, adds the generated
-directory to `.gitignore`, and verifies the MCP setup. Check the current state
-without changing anything:
+The setup MCP installs Graphify when requested and generates the graph. Check
+the current state without changing anything:
 
 ```bash
-./do setup-graphify --verify
+verify_setup(repo_path)
 ```
 
-If `./do` is unavailable, copy the setup scripts from the package source
-checkout and run the script directly:
-
-```bash
-cp -r /path/to/mcp-servers/scripts ./scripts
-./scripts/setup-graphify
-```
+Call `setup_graphify(repo_path, install_graphify=true)` through the setup MCP.
 
 Run setup before the first graph query when `graphify-out/graph.json` is
 missing. Run it again after major refactoring or when the graph no longer

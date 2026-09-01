@@ -70,7 +70,9 @@ apm pack --check-versions --dry-run --json
 ```
 
 `apm pack` generates the marketplace manifest under `.claude-plugin/`.
-Do not hand-create, edit, or commit that generated artifact.
+Do not hand-create or edit that generated artifact. Commit it when the
+marketplace configuration changes so remote consumers can discover the
+marketplace.
 
 To verify package discovery from outside the repository, use a clean directory:
 
@@ -89,7 +91,7 @@ When adding or changing a package:
 
 1. Update the package's `apm.yml`, `mcp.yml`, documentation, and source files.
 2. Add or update its entry under `marketplace.packages` in the root `apm.yml`.
-3. Run `apm pack` to regenerate the local marketplace manifest.
+3. Run `apm pack` to regenerate `.claude-plugin/marketplace.json` and commit it.
 4. Run the validation and version checks above.
 5. Test installation from a clean directory with an explicit target such as
    `--target copilot`.

@@ -1,0 +1,21 @@
+# *******************************************************************************
+# Copyright (c) 2026 Contributors to the Eclipse Foundation
+#
+# SPDX-License-Identifier: Apache-2.0
+# *******************************************************************************
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "score-apm-setup"
+version = "0.1.0"
+description = "Local setup MCP server for Eclipse S-CORE APM packages"
+requires-python = ">=3.11"
+
+[project.scripts]
+apm-setup = "apm_setup.serve:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/apm_setup"]

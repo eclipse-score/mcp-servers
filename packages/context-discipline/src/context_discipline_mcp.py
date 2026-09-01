@@ -140,7 +140,24 @@ class ContextDisciplineMCP:
         Returns:
             Query result as string
         """
-        finding = f"Graph query: {query}"
+        graph_path = self.repo_path / "graphify-out" / "graph.json"
+        if not graph_path.exists():
+            finding = (
+                f"Graph query: {query}\n"
+                f"No graph found at {graph_path}. Run setup_graphify first."
+            )
+        else:
+            graph = json.loads(graph_path.read_text(encoding="utf-8"))
+            terms = [term.lower() for term in query.split() if term.strip()]
+            nodes = graph.get("nodes", [])
+            matches = [
+                node
+                for node in nodes
+                if all(
+                    term in json.dumps(node, sort_keys=True).lower() for term in terms
+                )
+            ]
+            finding = json.dumps({"query": query, "matches": matches}, sort_keys=True)
         self.working_memory.append(
             WorkingMemoryEntry(
                 timestamp=datetime.now().isoformat(),
@@ -225,15 +242,147 @@ class ContextDisciplineMCP:
         return assumptions
 
 
-# For testing
-if __name__ == "__main__":
-    mcp = ContextDisciplineMCP()
-    session_id = mcp.initialize_session(
-        goal="Refactor auth module",
-        subgoals=["Understand", "Implement", "Test"],
-        assumptions={"auth.py exists": "high", "No external imports": "medium"},
+TOOLS = [
+    {
+        "name": "initialize_session",
+        "description": "Initialize working memory for a coding session.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "goal": {"type": "string"},
+                "subgoals": {"type": "array", "items": {"type": "string"}},
+                "assumptions": {"type": ["array", "object", "null"]},
+            },
+            "required": ["goal", "subgoals"],
+        },
+    },
+    {
+        "name": "query_graph",
+        "description": "Query the generated Graphify code graph.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {"query": {"type": "string"}},
+            "required": ["query"],
+        },
+    },
+    {
+        "name": "record_decision",
+        "description": "Record a decision and its reasons.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "decision": {"type": "string"},
+                "reason": {"type": "array", "items": {"type": "string"}},
+                "reversible": {"type": "boolean", "default": True},
+            },
+            "required": ["decision", "reason"],
+        },
+    },
+    {
+        "name": "record_outcome",
+        "description": "Record a completed task for local learning.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "task": {"type": "string"},
+                "verdict": {"type": "string"},
+                "coverage": {"type": "number", "minimum": 0.0, "maximum": 1.0},
+                "surfaced_nodes": {"type": "array", "items": {"type": "string"}},
+                "missing_nodes": {"type": "array", "items": {"type": "string"}},
+            },
+            "required": [
+                "task",
+                "verdict",
+                "coverage",
+                "surfaced_nodes",
+                "missing_nodes",
+            ],
+        },
+    },
+    {
+        "name": "get_working_memory",
+        "description": "Get current working memory entries.",
+        "inputSchema": {"type": "object", "properties": {}},
+    },
+    {
+        "name": "get_unverified_assumptions",
+        "description": "Get assumptions that are not verified.",
+        "inputSchema": {"type": "object", "properties": {}},
+    },
+]
+
+
+def call_tool(
+    manager: ContextDisciplineMCP, name: str, arguments: dict[str, Any]
+) -> Any:
+    if name == "initialize_session":
+        return manager.initialize_session(**arguments)
+    if name == "query_graph":
+        return manager.query_graph(**arguments)
+    if name == "record_decision":
+        return manager.record_decision(**arguments)
+    if name == "record_outcome":
+        return manager.record_outcome(**arguments)
+    if name == "get_working_memory":
+        return manager.get_working_memory()
+    if name == "get_unverified_assumptions":
+        return manager.get_unverified_assumptions()
+    raise ValueError(f"Unknown tool: {name}")
+
+
+def handle(manager: ContextDisciplineMCP, request: dict[str, Any]) -> str | None:
+    if request.get("method") == "notifications/initialized":
+        return None
+    request_id = request.get("id")
+    method = request.get("method")
+    if method == "initialize":
+        result = {
+            "protocolVersion": "2024-11-05",
+            "capabilities": {"tools": {}},
+            "serverInfo": {"name": "context-discipline", "version": "0.1.0"},
+        }
+        return json.dumps({"jsonrpc": "2.0", "id": request_id, "result": result})
+    if method == "tools/list":
+        return json.dumps(
+            {"jsonrpc": "2.0", "id": request_id, "result": {"tools": TOOLS}}
+        )
+    if method == "tools/call":
+        try:
+            params = request.get("params", {})
+            result = call_tool(manager, params["name"], params.get("arguments", {}))
+            content = [{"type": "text", "text": json.dumps(result)}]
+            return json.dumps(
+                {"jsonrpc": "2.0", "id": request_id, "result": {"content": content}}
+            )
+        except (KeyError, OSError, ValueError, json.JSONDecodeError) as exc:
+            return json.dumps(
+                {
+                    "jsonrpc": "2.0",
+                    "id": request_id,
+                    "error": {"code": -32000, "message": str(exc)},
+                }
+            )
+    return json.dumps(
+        {
+            "jsonrpc": "2.0",
+            "id": request_id,
+            "error": {"code": -32601, "message": f"Unknown method: {method}"},
+        }
     )
 
-    print(f"Session: {session_id}")
-    print(f"Working memory entries: {len(mcp.get_working_memory())}")
-    print(f"Unverified assumptions: {mcp.get_unverified_assumptions()}")
+
+def serve() -> None:
+    manager = ContextDisciplineMCP()
+    for line in __import__("sys").stdin:
+        if line.strip():
+            output = handle(manager, json.loads(line))
+            if output:
+                print(output, flush=True)
+
+
+def main() -> None:
+    serve()
+
+
+if __name__ == "__main__":
+    main()
