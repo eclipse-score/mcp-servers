@@ -1,0 +1,149 @@
+#!/usr/bin/env bash
+
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (c) 2026 Contributors to the Eclipse Foundation
+
+## setup-context-discipline: Interactive setup wizard for context-discipline
+
+set -euo pipefail
+
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")"; pwd -P)"
+# shellcheck source=scripts/setup-common.sh
+source "${script_dir}/setup-common.sh"
+
+usage() {
+	cat <<'EOF'
+Usage:
+  ./do setup-context-discipline              # Interactive setup
+  ./do setup-context-discipline --verify     # Just check if setup is complete
+  ./do setup-context-discipline --help       # Show this help
+
+What it does:
+  1. Create .score-local/ directory for observations
+  2. Add artifact paths to .gitignore
+  3. Verify MCP server can start
+
+Each step is optional—you can skip what's already done.
+
+Examples:
+  ./do setup-context-discipline
+  ./do setup-context-discipline --verify
+EOF
+}
+
+# Check if .score-local exists
+check_score_local() {
+	if path_exists .score-local; then
+		success ".score-local/ exists"
+		return 0
+	else
+		return 1
+	fi
+}
+
+# Create .score-local directory
+create_score_local() {
+	if ! confirm "Create .score-local/ directory for observations?"; then
+		warn "Skipping .score-local/ creation"
+		info "You can create it manually later: mkdir .score-local"
+		return 0
+	fi
+	
+	info "Creating .score-local/..."
+	mkdir -p .score-local
+	success ".score-local/ created"
+}
+
+# Add artifact paths to .gitignore (context-discipline-specific)
+setup_gitignore() {
+	if ! path_exists .gitignore; then
+		info "Creating .gitignore..."
+		touch .gitignore
+	fi
+	
+	# Paths for context-discipline
+	local paths=(
+		".score-local/"
+		".working-memory/"
+	)
+	
+	local updated=0
+	for path in "${paths[@]}"; do
+		if ! grep -q "^${path}$" .gitignore; then
+			echo "$path" >> .gitignore
+			updated=$((updated + 1))
+		fi
+	done
+	
+	if [ "$updated" -gt 0 ]; then
+		success "Added $updated paths to .gitignore"
+	else
+		success ".gitignore already configured"
+	fi
+}
+
+# Verify MCP server can start
+verify_mcp() {
+	if ! confirm "Verify MCP server setup?"; then
+		warn "Skipping MCP verification"
+		return 0
+	fi
+	
+	info "Checking MCP server installation..."
+	
+	if python3 -c "import sys; sys.path.insert(0, 'packages/context-discipline/src'); from context_discipline_mcp import ContextDisciplineMCP" 2>/dev/null; then
+		success "context-discipline MCP is ready"
+		return 0
+	else
+		warn "Could not verify MCP setup. This is OK if you haven't run apm install yet."
+		return 0
+	fi
+}
+
+# Main flow
+main() {
+	case "${1:-}" in
+		--help|-h)
+			usage
+			exit 0
+			;;
+		--verify)
+			# Just check status
+			info "Checking context-discipline setup..."
+			echo ""
+			
+			if check_score_local; then
+				echo "  .score-local/: ✓"
+			else
+				echo "  .score-local/: ✗ (not created)"
+			fi
+			
+			echo ""
+			info "Run './do setup-context-discipline' to complete setup"
+			exit 0
+			;;
+		*)
+			# Interactive setup
+			info "context-discipline Setup Wizard"
+			echo ""
+			
+			if ! check_score_local; then
+				create_score_local
+			fi
+			
+			echo ""
+			setup_gitignore
+			
+			echo ""
+			verify_mcp
+			
+			echo ""
+			success "Setup complete!"
+			info "Your agent can now use working memory:"
+			echo "  wm.initialize_session(goal='...', subgoals=[...])"
+			echo "  wm.record_outcome(task='...', verdict='pass', coverage=0.85)"
+			;;
+	esac
+}
+
+main "$@"

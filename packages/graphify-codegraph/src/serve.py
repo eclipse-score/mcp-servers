@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # *******************************************************************************
 # Copyright (c) 2026 Contributors to the Eclipse Foundation
 #
@@ -11,15 +12,25 @@
 # SPDX-License-Identifier: Apache-2.0
 # *******************************************************************************
 
-repos:
-  - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.16.3
-    hooks:
-      - id: ruff
-        args: [--fix]
-      - id: ruff-format
+"""Launch Graphify's built-in MCP server."""
 
-  - repo: https://codeberg.org/fsfe/reuse-tool
-    rev: v6.2.0
-    hooks:
-      - id: reuse-lint-file
+import subprocess
+import sys
+
+
+def main() -> None:
+    """Launch graphify's built-in MCP server."""
+    try:
+        subprocess.run([sys.executable, "-m", "graphify.serve"], check=True)
+    except FileNotFoundError:
+        print(
+            "Error: graphify not found. Install with: uv tool install 'graphifyy[mcp]'"
+        )
+        sys.exit(1)
+    except KeyboardInterrupt:
+        print("\nShutdown requested")
+        sys.exit(0)
+
+
+if __name__ == "__main__":
+    main()
