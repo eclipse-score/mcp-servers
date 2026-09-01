@@ -1,0 +1,22 @@
+# *******************************************************************************
+# Copyright (c) 2026 Contributors to the Eclipse Foundation
+#
+# SPDX-License-Identifier: Apache-2.0
+# *******************************************************************************
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "score-graphify-codegraph"
+version = "0.1.0"
+description = "MCP launcher for the Graphify code graph server"
+requires-python = ">=3.11"
+
+[project.scripts]
+graphify-codegraph = "serve:main"
+
+[tool.hatch.build.targets.wheel]
+only-include = ["src/serve.py"]
+sources = ["src"]

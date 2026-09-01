@@ -22,9 +22,10 @@ def main() -> None:
     """Launch graphify's built-in MCP server."""
     try:
         subprocess.run([sys.executable, "-m", "graphify.serve"], check=True)
-    except FileNotFoundError:
+    except (FileNotFoundError, subprocess.CalledProcessError):
         print(
-            "Error: graphify not found. Install with: uv tool install 'graphifyy[mcp]'"
+            "Error: graphify not found. Install with: uv tool install "
+            "'graphifyy[mcp]==0.9.53'"
         )
         sys.exit(1)
     except KeyboardInterrupt:

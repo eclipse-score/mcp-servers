@@ -132,7 +132,7 @@ class ContextDisciplineMCP:
 
     def query_graph(self, query: str) -> str:
         """
-        Query code graph via graphify-codegraph MCP.
+        Query the generated local Graphify code graph.
 
         Args:
             query: Natural language query (e.g., "all functions in auth.py")
@@ -150,12 +150,13 @@ class ContextDisciplineMCP:
             graph = json.loads(graph_path.read_text(encoding="utf-8"))
             terms = [term.lower() for term in query.split() if term.strip()]
             nodes = graph.get("nodes", [])
+            serialized_nodes = [
+                (node, json.dumps(node, sort_keys=True).lower()) for node in nodes
+            ]
             matches = [
                 node
-                for node in nodes
-                if all(
-                    term in json.dumps(node, sort_keys=True).lower() for term in terms
-                )
+                for node, serialized in serialized_nodes
+                if all(term in serialized for term in terms)
             ]
             finding = json.dumps({"query": query, "matches": matches}, sort_keys=True)
         self.working_memory.append(
@@ -354,7 +355,7 @@ def handle(manager: ContextDisciplineMCP, request: dict[str, Any]) -> str | None
             return json.dumps(
                 {"jsonrpc": "2.0", "id": request_id, "result": {"content": content}}
             )
-        except (KeyError, OSError, ValueError, json.JSONDecodeError) as exc:
+        except (KeyError, OSError, TypeError, ValueError, json.JSONDecodeError) as exc:
             return json.dumps(
                 {
                     "jsonrpc": "2.0",
@@ -375,7 +376,19 @@ def serve() -> None:
     manager = ContextDisciplineMCP()
     for line in __import__("sys").stdin:
         if line.strip():
-            output = handle(manager, json.loads(line))
+            try:
+                output = handle(manager, json.loads(line))
+            except (json.JSONDecodeError, TypeError) as exc:
+                output = json.dumps(
+                    {
+                        "jsonrpc": "2.0",
+                        "id": None,
+                        "error": {
+                            "code": -32700,
+                            "message": f"Invalid JSON-RPC request: {exc}",
+                        },
+                    }
+                )
             if output:
                 print(output, flush=True)
 

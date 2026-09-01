@@ -40,7 +40,7 @@ tools:
         - subgoals
 
   - name: query_graph
-    description: Query code graph through the graphify-codegraph MCP
+    description: Query the generated local Graphify code graph
     input_schema:
       type: object
       properties:

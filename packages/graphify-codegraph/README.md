@@ -44,9 +44,9 @@ Generates: graphify-out/
 ```
 Agent: context-discipline.query_graph("auth functions")
     ↓
-graphify-codegraph MCP (this package)
+context-discipline MCP
     ↓
-Reads existing graph.json
+Reads existing graphify-out/graph.json
     ↓
 Returns: matching nodes from your code structure
 ```
@@ -77,7 +77,7 @@ Now your agent can query the graph:
 ```python
 # From your working memory session
 auth_structure = wm.query_graph("Where is authentication logic?")
-# ↓ Calls graphify-codegraph MCP
+# ↓ Queries the generated local graph
 # ↓ Reads graphify-out/graph.json
 # ↓ Returns: Files, classes, functions related to auth
 ```
@@ -112,7 +112,7 @@ Your agent queries `graph.json` via MCP repeatedly without regenerating it.
 
 ## Integration with context-discipline
 
-When you call `query_graph()` in a working memory session, you're using **graphify-codegraph MCP**, not the CLI:
+When you call `query_graph()` in a working memory session, the context server queries the generated local graph:
 
 ```python
 # Agent session
@@ -120,9 +120,9 @@ wm.query_graph("Find all database connections")
 ```
 
 **Behind the scenes:**
-1. context-discipline MCP → calls graphify-codegraph MCP
-2. graphify-codegraph MCP → reads graphify-out/graph.json
-3. Returns matching nodes
+1. `apm-setup` runs Graphify once and writes `graphify-out/graph.json`
+2. context-discipline reads that generated graph locally
+3. Returns matching nodes without re-parsing the repository
 
 You don't call the CLI repeatedly—that's the whole point of generating the graph once and querying it many times.
 

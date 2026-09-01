@@ -120,7 +120,7 @@ Session N: Pattern emerges
 ## Integration
 
 **With graphify-codegraph:**
-Call `query_graph()` to ask about code structure through the Graphify MCP.
+Call `query_graph()` to search the generated local Graphify code graph.
 
 ## Files in This Package
 

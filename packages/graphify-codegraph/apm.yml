@@ -33,4 +33,10 @@ dependencies:
     - name: graphify-codegraph
       registry: false
       transport: stdio
-      command: graphify-mcp
+      command: uvx
+      args:
+        - --from
+        - graphifyy[mcp]==0.9.53
+        - --from
+        - git+https://github.com/eclipse-score/mcp-servers#subdirectory=packages/graphify-codegraph
+        - graphify-codegraph

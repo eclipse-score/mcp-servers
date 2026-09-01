@@ -36,7 +36,7 @@ apm pack
 Then, from your project root:
 
 ```bash
-apm marketplace add https://github.com/eclipse-score/mcp-servers#local_harness_apm
+apm marketplace add https://github.com/eclipse-score/mcp-servers
 apm install context-discipline@eclipse-score-apm-marketplace --target copilot --trust-transitive-mcp
 apm compile -t copilot
 ```

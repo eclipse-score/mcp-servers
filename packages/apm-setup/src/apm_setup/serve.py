@@ -75,7 +75,7 @@ def setup_graphify(arguments: dict[str, Any]) -> dict[str, Any]:
     graphify = shutil.which("graphify")
     installed = False
     if graphify is None and arguments.get("install_graphify", False):
-        subprocess.run(["uv", "tool", "install", "graphifyy[mcp]"], check=True)
+        subprocess.run(["uv", "tool", "install", "graphifyy[mcp]==0.9.53"], check=True)
         graphify = shutil.which("graphify")
         installed = True
     if graphify is None:
@@ -177,7 +177,13 @@ def main() -> None:
     for line in sys.stdin:
         if not line.strip():
             continue
-        output = handle(json.loads(line))
+        try:
+            output = handle(json.loads(line))
+        except (json.JSONDecodeError, TypeError) as exc:
+            output = response(
+                None,
+                error={"code": -32700, "message": f"Invalid JSON-RPC request: {exc}"},
+            )
         if output is not None:
             sys.stdout.write(output + "\n")
             sys.stdout.flush()

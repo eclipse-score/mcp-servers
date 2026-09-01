@@ -24,9 +24,9 @@ apm.lock.yaml
 .opencode/
 
 # Local learning and artifacts
-.score-local/          # Local observations (ephemeral)
-graphify-out/          # Code graphs (generated)
-.working-memory/       # Working memory sessions (temporary)
+.score-local/
+graphify-out/
+.working-memory/
 
 # Local tooling
 .DS_Store

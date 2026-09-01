@@ -19,7 +19,6 @@ on:
   push:
     branches:
       - main
-      - local_harness_apm
   merge_group:
     types: [checks_requested]
 

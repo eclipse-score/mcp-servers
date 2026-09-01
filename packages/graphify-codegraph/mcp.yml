@@ -14,8 +14,14 @@
 name: graphify-codegraph
 version: 0.1.0
 description: MCP server wrapping external graphify CLI for code graph queries
-command: python -m graphify_codegraph.src.serve
+command: uvx
+args:
+  - --from
+  - graphifyy[mcp]==0.9.53
+  - --from
+  - git+https://github.com/eclipse-score/mcp-servers#subdirectory=packages/graphify-codegraph
+  - graphify-codegraph
 external_dependency:
   tool: graphify
-  install: uv tool install 'graphifyy[mcp]'
+  install: uv tool install 'graphifyy[mcp]==0.9.53'
   docs: https://github.com/Graphify-Labs/graphify
