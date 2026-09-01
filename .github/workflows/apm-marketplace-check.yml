@@ -52,6 +52,8 @@ jobs:
         run: apm marketplace check
 
       - name: Test remote marketplace MCP servers
+        env:
+          MCP_REF: ${{ github.event.pull_request.head.sha || github.sha }}
         run: |
           smoke_dir="$(mktemp -d)"
           cd "$smoke_dir"
@@ -59,5 +61,24 @@ jobs:
             --name eclipse-score-apm-marketplace
           apm install context-discipline@eclipse-score-apm-marketplace \
             --target copilot --trust-transitive-mcp
+          python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          config_path = Path(".vscode/mcp.json")
+          config = json.loads(config_path.read_text(encoding="utf-8"))
+          revision = os.environ["MCP_REF"]
+          for server in config["servers"].values():
+              args = server.get("args", [])
+              for index, argument in enumerate(args):
+                  if argument.startswith("git+https://github.com/eclipse-score/mcp-servers#"):
+                      args[index] = argument.replace(
+                          "git+https://github.com/eclipse-score/mcp-servers#",
+                          f"git+https://github.com/eclipse-score/mcp-servers@{revision}#",
+                          1,
+                      )
+          config_path.write_text(json.dumps(config, indent=2) + "\n", encoding="utf-8")
+          PY
           uv tool install 'graphifyy[mcp]'
           python "$GITHUB_WORKSPACE/scripts/check_remote_mcp.py"
