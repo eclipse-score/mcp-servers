@@ -92,9 +92,6 @@ class ContextDisciplineMCP:
         self.session_log = SessionLog(self.repo_path, local_store)
         self.overlay_store = OverlayStore(self.repo_path)
         self.overlay_store.load()
-        self.session_log.append(
-            SessionRecord(id=self.session_id, agent="unknown", goal="")
-        )
         self.goal_task_id: str | None = None
 
     def initialize_session(
@@ -337,8 +334,8 @@ class ContextDisciplineMCP:
 
     def add_overlay_node(
         self,
-        id: str,
-        type: str,
+        node_id: str,
+        node_type: str,
         title: str,
         relation: str,
         target: str,
@@ -349,19 +346,19 @@ class ContextDisciplineMCP:
         if not graph.has_node(target):
             raise ValueError(f"overlay target node not found: {target}")
         provenance = Provenance(
-            repo=str(self.repo_path),
+            repo=self.repo_path.name,
             adapter="context-discipline",
             confidence=confidence,
             observed_at=datetime.now(tz=UTC).isoformat(),
         )
         node = OverlayNode(
-            id=id,
-            type=type,
+            id=node_id,
+            type=node_type,
             title=title,
             provenance=provenance,
         )
         edge = OverlayEdge(
-            source=id,
+            source=node_id,
             target=target,
             relation=relation,
             provenance=provenance,
@@ -504,7 +501,14 @@ def call_tool(
     if name == "get_prior_context":
         return manager.get_prior_context(**arguments)
     if name == "add_overlay_node":
-        return manager.add_overlay_node(**arguments)
+        return manager.add_overlay_node(
+            node_id=arguments["id"],
+            node_type=arguments["type"],
+            title=arguments["title"],
+            relation=arguments["relation"],
+            target=arguments["target"],
+            confidence=arguments["confidence"],
+        )
     raise ValueError(f"Unknown tool: {name}")
 
 

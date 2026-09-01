@@ -53,6 +53,10 @@ def test_overlay_rejects_unknown_values() -> None:
         OverlayEdge("x", "y", "unknown", provenance())
     with pytest.raises(ValueError):
         Provenance("example", "test", 1.5, "now")
+    with pytest.raises(ValueError):
+        OverlayEdge("", "y", "affects", provenance())
+    with pytest.raises(ValueError):
+        OverlayEdge("x", "", "affects", provenance())
 
 
 def test_overlay_save_is_deterministic(tmp_path: Path) -> None:

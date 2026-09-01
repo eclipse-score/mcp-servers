@@ -34,6 +34,8 @@ from context_sessions import (
 
 with TemporaryDirectory() as directory:
     log = SessionLog(Path(directory))
+    A_NODES = {"node__api", "node__service"}
+    B_CANDIDATE_NODES = ("node__api", "node__service", "node__auth")
     session_a = SessionRecord(
         id="session__a",
         agent="demo",
@@ -84,30 +86,40 @@ with TemporaryDirectory() as directory:
     )
     log.append(session_b)
     log.append(task_b)
-    current_nodes = {"node__api", "node__service"}
-
-    prior_without = ()
-    r_without = redundancy(set(), current_nodes)
-    prior_with = get_prior_context(
+    r_without = redundancy(A_NODES, set(B_CANDIDATE_NODES))
+    prior = get_prior_context(
         log,
         session_b.id,
         task_b.text,
-        current_nodes,
+        set(B_CANDIDATE_NODES),
     )
-    covered = {
-        node_id for item in prior_with for node_id in item.grounded_nodes
-    }
-    r_with = redundancy(covered, current_nodes)
+    if not prior:
+        raise RuntimeError("demo expected prior context but none was surfaced")
+    covered = {node_id for item in prior for node_id in item.grounded_nodes}
+    b_grounded_with = set(B_CANDIDATE_NODES) - covered
+    r_with = redundancy(A_NODES, b_grounded_with)
 
-    print("session A: goal=Understand the API contract, grounded nodes=node__api, node__service")
     print(
-        "session B WITHOUT prior context: grounded nodes=node__api, node__service, "
-        f"redundancy={r_without:.1f} (scripted scenario, not a measurement of live agent behaviour)"
+        "session A: goal=Understand the API contract, "
+        "grounded=node__api, node__service (outcome: pass)"
+    )
+    print("session B task: Update the API contract")
+    print()
+    print(
+        "  without prior context: B grounds "
+        f"{', '.join(B_CANDIDATE_NODES)}  redundancy={r_without:.2f}"
     )
     print(
-        "session B WITH prior context:    prior items surfaced="
-        f"{len(prior_with)}, redundancy={r_with:.1f} "
+        "  with prior context:    "
+        f"{len(prior)} prior item surfaced, covering node__api, node__service"
+    )
+    print(
+        "                         B grounds "
+        f"{', '.join(sorted(b_grounded_with)):<42} redundancy={r_with:.2f}"
+    )
+    print()
+    print(
+        f"redundancy {r_without:.2f} -> {r_with:.2f} "
         "(scripted scenario, not a measurement of live agent behaviour)"
     )
-    print("previously grounded nodes are marked as covered")
 PY

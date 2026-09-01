@@ -53,3 +53,15 @@ def test_session_log_reports_malformed_line_number(tmp_path: Path) -> None:
 
     with pytest.raises(ValueError, match="line 2"):
         log.read_all()
+
+
+def test_session_log_rejects_unknown_record_type(tmp_path: Path) -> None:
+    log = SessionLog(tmp_path)
+    log.path.parent.mkdir(parents=True)
+    log.path.write_text(
+        '{"record_type":"unknown","id":"record__one"}\n',
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match="unknown session record kind"):
+        log.read_all()

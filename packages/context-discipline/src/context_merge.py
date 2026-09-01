@@ -106,6 +106,7 @@ class MergedGraph:
     nodes: dict[str, MergedNode]
     edges: dict[tuple[str, str, str], MergedEdge]
     conflicts: tuple[str, ...] = ()
+    edge_conflicts: tuple[tuple[str, str, str], ...] = ()
 
     @classmethod
     def build(cls, repo_path: str | Path) -> MergedGraph:
@@ -134,7 +135,7 @@ class MergedGraph:
                 edge = MergedEdge(
                     source=str(raw["source"]),
                     target=str(raw["target"]),
-                    relation=str(raw["relation"]),
+                    relation=str(raw.get("relation", "")),
                     layer="code",
                 )
                 key = (edge.source, edge.target, edge.relation)
@@ -188,7 +189,12 @@ class MergedGraph:
                 edge_conflicts.add(key)
             else:
                 edges[key] = edge
-        return cls(nodes, edges, tuple(sorted(conflicts)))
+        return cls(
+            nodes,
+            edges,
+            tuple(sorted(conflicts)),
+            tuple(sorted(edge_conflicts)),
+        )
 
     def neighbors(self, node_id: str) -> tuple[MergedNode, ...]:
         neighbor_ids = {

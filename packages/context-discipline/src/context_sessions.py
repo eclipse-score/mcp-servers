@@ -25,7 +25,6 @@
 from __future__ import annotations
 
 import json
-from collections.abc import Mapping
 from dataclasses import asdict, dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
@@ -103,9 +102,7 @@ type Record = (
 )
 
 
-def _record_dict(record: Record | Mapping[str, Any]) -> dict[str, Any]:
-    if isinstance(record, Mapping):
-        return dict(record)
+def _record_dict(record: Record) -> dict[str, Any]:
     data = asdict(record)
     data["record_type"] = record.record_type
     return data
@@ -113,21 +110,15 @@ def _record_dict(record: Record | Mapping[str, Any]) -> dict[str, Any]:
 
 def _record_from_dict(data: dict[str, Any]) -> Record:
     record_type = cast(str | None, data.get("record_type"))
-    if record_type is None:
-        record_type = cast(str | None, data.get("kind"))
-        if record_type in {"finding", "decision"}:
-            record_type = "reasoning"
     values = dict(data)
     values.pop("record_type", None)
     if record_type == "reasoning":
-        if "reasoning_kind" in values and "kind" not in values:
-            values["kind"] = values.pop("reasoning_kind")
         return ReasoningRecord(
             id=values["id"],
             session_id=values["session_id"],
             task_id=values["task_id"],
             text=values["text"],
-            kind=cast(str, data.get("kind", data.get("reasoning_kind", "finding"))),
+            kind=cast(str, values["kind"]),
             grounded_nodes=list(cast(list[str], values.get("grounded_nodes", []))),
             timestamp=values["timestamp"],
         )
@@ -138,7 +129,7 @@ def _record_from_dict(data: dict[str, Any]) -> Record:
         "outcome": OutcomeRecord,
     }
     if record_type is None:
-        raise ValueError(f"unknown session record kind: {record_type!r}")
+        raise ValueError("missing session record type")
     constructor = constructors.get(record_type)
     if constructor is None:
         raise ValueError(f"unknown session record kind: {record_type!r}")
@@ -155,7 +146,7 @@ class SessionLog:
         root = store if store.is_absolute() else repo / store
         self.path = root / "sessions.jsonl"
 
-    def append(self, record: Record | Mapping[str, Any]) -> None:
+    def append(self, record: Record) -> None:
         self.path.parent.mkdir(parents=True, exist_ok=True)
         with self.path.open("a", encoding="utf-8") as stream:
             stream.write(json.dumps(_record_dict(record), sort_keys=True) + "\n")
@@ -182,17 +173,25 @@ class SessionLog:
         return tuple(records)
 
     def records_for(self, session_id: str) -> tuple[Record, ...]:
+        """Return this session's session record and records carrying its ID."""
         return tuple(
             record
             for record in self.read_all()
-            if getattr(record, "id", None) == session_id
-            or getattr(record, "session_id", None) == session_id
+            if (isinstance(record, SessionRecord) and record.id == session_id)
+            or (
+                not isinstance(record, SessionRecord)
+                and record.session_id == session_id
+            )
         )
 
     def other_sessions(self, session_id: str) -> tuple[Record, ...]:
+        """Return records excluding its session record and records carrying its ID."""
         return tuple(
             record
             for record in self.read_all()
-            if getattr(record, "id", None) != session_id
-            and getattr(record, "session_id", None) != session_id
+            if (isinstance(record, SessionRecord) and record.id != session_id)
+            or (
+                not isinstance(record, SessionRecord)
+                and record.session_id != session_id
+            )
         )

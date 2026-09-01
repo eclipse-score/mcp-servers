@@ -106,6 +106,10 @@ class OverlayEdge:
     attributes: dict[str, str] = field(default_factory=_empty_attributes)
 
     def __post_init__(self) -> None:
+        if not self.source:
+            raise ValueError("overlay edge source must not be empty")
+        if not self.target:
+            raise ValueError("overlay edge target must not be empty")
         if self.relation not in OVERLAY_RELATIONS:
             raise ValueError(f"unknown overlay relation: {self.relation}")
 
@@ -160,10 +164,7 @@ class OverlayStore:
         data = {
             "version": SCORE_OVERLAY_VERSION,
             "nodes": [asdict(self._nodes[node_id]) for node_id in sorted(self._nodes)],
-            "edges": [
-                asdict(self._edges[key])
-                for key in sorted(self._edges, key=lambda item: item)
-            ],
+            "edges": [asdict(self._edges[key]) for key in sorted(self._edges)],
         }
         self.path.parent.mkdir(parents=True, exist_ok=True)
         self.path.write_text(
@@ -177,6 +178,4 @@ class OverlayStore:
 
     @property
     def edges(self) -> tuple[OverlayEdge, ...]:
-        return tuple(
-            self._edges[key] for key in sorted(self._edges, key=lambda item: item)
-        )
+        return tuple(self._edges[key] for key in sorted(self._edges))

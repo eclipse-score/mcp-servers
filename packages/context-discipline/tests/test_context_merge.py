@@ -40,7 +40,13 @@ def test_three_layer_merge_and_dangling_edges(tmp_path: Path) -> None:
                         "source": "code__one",
                         "target": "missing",
                         "relation": "contains",
-                    }
+                    },
+                    {
+                        "source": "code__one",
+                        "target": "missing",
+                        "relation": "contains",
+                    },
+                    {"source": "code__one", "target": "code__one"},
                 ],
             }
         ),
@@ -102,6 +108,7 @@ def test_three_layer_merge_and_dangling_edges(tmp_path: Path) -> None:
     assert merged.nodes[reasoning.id].layer == "collaboration"
     assert merged.nodes["collision"].label == "Code"
     assert "collision" in merged.conflicts
+    assert merged.edge_conflicts == (("code__one", "missing", "contains"),)
     assert merged.edges[(session.id, task.id, "contains")].relation == "contains"
     assert merged.edges[(reasoning.id, task.id, "belongs_to")].relation == "belongs_to"
     assert merged.edges[(reasoning.id, "domain__one", "supported_by")]
