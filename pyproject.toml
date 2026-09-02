@@ -35,6 +35,7 @@ include = [
   "packages/context-discipline/src/context_attention.py",
   "packages/context-discipline/src/context_merge.py",
   "packages/context-discipline/src/context_overlay.py",
+  "packages/context-discipline/src/context_policy.py",
   "packages/context-discipline/src/context_sessions.py",
   "packages/context-discipline/tests",
 ]

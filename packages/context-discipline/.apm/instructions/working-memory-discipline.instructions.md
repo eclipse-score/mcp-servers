@@ -124,7 +124,10 @@ Missing nodes: [any edge cases not covered]
 
 Use `add_overlay_node` when a decision, requirement, contract, issue, or pull
 request should survive Graphify regeneration. Overlay nodes and edges are
-provenance-bearing and stored in `score-context/overlay.json`.
+provenance-bearing and stored as shards in `score-context/nodes/` and
+`score-context/edges/`. The versioned thresholds are in
+`score-context/policy.toml`; validate them locally with
+`uv run python scripts/validate_overlay.py`.
 
 ## Local Artifacts (Gitignored)
 
@@ -133,7 +136,6 @@ Don't commit working memory:
 ```
 .gitignore:
   .score-local/
-  score-context/overlay.json
 ```
 
 These are ephemeral scaffolding for your reasoning, not deliverables.
@@ -151,4 +153,7 @@ These are ephemeral scaffolding for your reasoning, not deliverables.
 
 - [maintain-working-memory/SKILL.md](../skills/maintain-working-memory/SKILL.md) — Workflow guide
 - `.score-local/sessions.jsonl` — Append-only collaboration records
-- `score-context/overlay.json` — Durable provenance-bearing context
+- `score-context/meta.json` — Overlay version metadata
+- `score-context/policy.toml` — Versioned attention/privacy/overlay thresholds
+- `score-context/nodes/` — One provenance-bearing node per JSON shard
+- `score-context/edges/` — One provenance-bearing edge per hash-named shard

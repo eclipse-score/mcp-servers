@@ -15,10 +15,13 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
+import os
+import re
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import cast
+from typing import Any, cast
 
 SCORE_OVERLAY_VERSION = 1
 
@@ -58,9 +61,24 @@ OVERLAY_RELATIONS = frozenset(
     }
 )
 
+_SAFE_NODE_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$")
+_SAFE_NODE_ID_MESSAGE = (
+    "overlay node id must match "
+    "[A-Za-z0-9][A-Za-z0-9._-]{0,127} (ASCII letters, digits, dot, underscore, hyphen)"
+)
+
 
 def _empty_attributes() -> dict[str, str]:
     return {}
+
+
+def _edge_digest(source: str, relation: str, target: str) -> str:
+    identity = f"{source}\0{relation}\0{target}".encode()
+    return hashlib.sha256(identity).hexdigest()[:16]
+
+
+def _has_control_character(value: str) -> bool:
+    return any(ord(character) < 32 or ord(character) == 0x7F for character in value)
 
 
 @dataclass(frozen=True)
@@ -89,11 +107,11 @@ class OverlayNode:
     attributes: dict[str, str] = field(default_factory=_empty_attributes)
 
     def __post_init__(self) -> None:
-        if self.type not in OVERLAY_NODE_TYPES:
+        if type(self.id) is not str or not _SAFE_NODE_ID.fullmatch(self.id):
+            raise ValueError(_SAFE_NODE_ID_MESSAGE)
+        if type(self.type) is not str or self.type not in OVERLAY_NODE_TYPES:
             raise ValueError(f"unknown overlay node type: {self.type}")
-        if not self.id:
-            raise ValueError("overlay node id must not be empty")
-        if not self.title:
+        if type(self.title) is not str or not self.title:
             raise ValueError("overlay node title must not be empty")
 
 
@@ -106,11 +124,15 @@ class OverlayEdge:
     attributes: dict[str, str] = field(default_factory=_empty_attributes)
 
     def __post_init__(self) -> None:
-        if not self.source:
+        if type(self.source) is not str or not self.source:
             raise ValueError("overlay edge source must not be empty")
-        if not self.target:
+        if type(self.target) is not str or not self.target:
             raise ValueError("overlay edge target must not be empty")
-        if self.relation not in OVERLAY_RELATIONS:
+        if _has_control_character(self.source):
+            raise ValueError("overlay edge source must not contain control characters")
+        if _has_control_character(self.target):
+            raise ValueError("overlay edge target must not contain control characters")
+        if type(self.relation) is not str or self.relation not in OVERLAY_RELATIONS:
             raise ValueError(f"unknown overlay relation: {self.relation}")
 
 
@@ -119,39 +141,115 @@ class OverlayStore:
 
     def __init__(self, repo_path: str | Path, overlay_dir: str = "score-context"):
         self.repo_path = Path(repo_path).expanduser().resolve()
-        self.path = self.repo_path / overlay_dir / "overlay.json"
+        self.root = self.repo_path / overlay_dir
+        self.nodes_dir = self.root / "nodes"
+        self.edges_dir = self.root / "edges"
+        self.meta_path = self.root / "meta.json"
+        self.legacy_path = self.root / "overlay.json"
         self._nodes: dict[str, OverlayNode] = {}
         self._edges: dict[tuple[str, str, str], OverlayEdge] = {}
 
+    def _inside_root(self, path: Path) -> Path:
+        root = self.root.resolve()
+        resolved = path.resolve()
+        try:
+            resolved.relative_to(root)
+        except ValueError as exc:
+            raise ValueError(f"overlay path escapes root: {path}") from exc
+        return resolved
+
+    def _node_path(self, node_id: str) -> Path:
+        return self._inside_root(self.nodes_dir / f"{node_id}.json")
+
+    def _edge_path(self, edge: OverlayEdge) -> Path:
+        return self._inside_root(
+            self.edges_dir
+            / f"{_edge_digest(edge.source, edge.relation, edge.target)}.json"
+        )
+
+    @staticmethod
+    def _write_json(path: Path, data: dict[str, Any]) -> None:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        temporary = path.with_name(f"{path.name}.tmp")
+        temporary.write_text(
+            json.dumps(data, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
+        os.replace(temporary, path)
+
+    @staticmethod
+    def _read_json(path: Path) -> dict[str, Any]:
+        try:
+            value: Any = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+            raise ValueError(f"malformed overlay shard {path}: {exc}") from exc
+        if not isinstance(value, dict):
+            raise ValueError(f"malformed overlay shard {path}: expected an object")
+        return cast(dict[str, Any], value)
+
+    @staticmethod
+    def _node_from_dict(data: dict[str, Any], path: Path) -> OverlayNode:
+        try:
+            attributes = cast(dict[str, str], data.get("attributes", {}))
+            return OverlayNode(
+                id=data["id"],
+                type=data["type"],
+                title=data["title"],
+                provenance=Provenance(**data["provenance"]),
+                attributes=dict(attributes),
+            )
+        except (KeyError, TypeError, ValueError) as exc:
+            raise ValueError(f"malformed overlay shard {path}: {exc}") from exc
+
+    @staticmethod
+    def _edge_from_dict(data: dict[str, Any], path: Path) -> OverlayEdge:
+        try:
+            attributes = cast(dict[str, str], data.get("attributes", {}))
+            return OverlayEdge(
+                source=data["source"],
+                target=data["target"],
+                relation=data["relation"],
+                provenance=Provenance(**data["provenance"]),
+                attributes=dict(attributes),
+            )
+        except (KeyError, TypeError, ValueError) as exc:
+            raise ValueError(f"malformed overlay shard {path}: {exc}") from exc
+
     def load(self) -> None:
-        """Load the overlay, treating a missing file as an empty overlay."""
+        """Load legacy data first, then sharded data as authoritative overrides."""
         self._nodes.clear()
         self._edges.clear()
-        if not self.path.exists():
+        if self.legacy_path.exists():
+            data = self._read_json(self.legacy_path)
+            version = data.get("version")
+            if (
+                isinstance(version, bool)
+                or not isinstance(version, int)
+                or version != SCORE_OVERLAY_VERSION
+            ):
+                raise ValueError(f"unknown overlay version: {data.get('version')!r}")
+            for raw_node in data.get("nodes", []):
+                self.upsert_node(self._node_from_dict(raw_node, self.legacy_path))
+            for raw_edge in data.get("edges", []):
+                self.upsert_edge(self._edge_from_dict(raw_edge, self.legacy_path))
+        if not self.meta_path.exists():
             return
-        data = json.loads(self.path.read_text(encoding="utf-8"))
-        if data.get("version") != SCORE_OVERLAY_VERSION:
-            raise ValueError(f"unknown overlay version: {data.get('version')!r}")
-        for raw_node in data.get("nodes", []):
-            attributes = cast(dict[str, str], raw_node.get("attributes", {}))
-            node = OverlayNode(
-                id=raw_node["id"],
-                type=raw_node["type"],
-                title=raw_node["title"],
-                provenance=Provenance(**raw_node["provenance"]),
-                attributes=dict(attributes),
-            )
-            self.upsert_node(node)
-        for raw_edge in data.get("edges", []):
-            attributes = cast(dict[str, str], raw_edge.get("attributes", {}))
-            edge = OverlayEdge(
-                source=raw_edge["source"],
-                target=raw_edge["target"],
-                relation=raw_edge["relation"],
-                provenance=Provenance(**raw_edge["provenance"]),
-                attributes=dict(attributes),
-            )
-            self.upsert_edge(edge)
+        meta = self._read_json(self.meta_path)
+        version = meta.get("version")
+        if (
+            isinstance(version, bool)
+            or not isinstance(version, int)
+            or version != SCORE_OVERLAY_VERSION
+        ):
+            raise ValueError(f"unknown overlay version: {meta.get('version')!r}")
+        if self.nodes_dir.exists():
+            for path in sorted(self.nodes_dir.glob("*.json")):
+                self._inside_root(path)
+                self.upsert_node(self._node_from_dict(self._read_json(path), path))
+        if self.edges_dir.exists():
+            for path in sorted(self.edges_dir.glob("*.json")):
+                self._inside_root(path)
+                self.upsert_edge(self._edge_from_dict(self._read_json(path), path))
 
     def upsert_node(self, node: OverlayNode) -> None:
         self._nodes[node.id] = node
@@ -160,17 +258,31 @@ class OverlayStore:
         self._edges[(edge.source, edge.target, edge.relation)] = edge
 
     def save(self) -> None:
-        """Persist a deterministic, reviewable overlay document."""
-        data = {
-            "version": SCORE_OVERLAY_VERSION,
-            "nodes": [asdict(self._nodes[node_id]) for node_id in sorted(self._nodes)],
-            "edges": [asdict(self._edges[key]) for key in sorted(self._edges)],
+        """Atomically persist shards and remove legacy overlay after migration."""
+        self._write_json(self.meta_path, {"version": SCORE_OVERLAY_VERSION})
+        expected_nodes = {f"{node_id}.json" for node_id in self._nodes}
+        for node in self._nodes.values():
+            self._write_json(self._node_path(node.id), asdict(node))
+        expected_edges = {
+            f"{_edge_digest(edge.source, edge.relation, edge.target)}.json"
+            for edge in self._edges.values()
         }
-        self.path.parent.mkdir(parents=True, exist_ok=True)
-        self.path.write_text(
-            json.dumps(data, indent=2, sort_keys=True) + "\n",
-            encoding="utf-8",
-        )
+        for edge in self._edges.values():
+            self._write_json(self._edge_path(edge), asdict(edge))
+        for directory, expected in (
+            (self.nodes_dir, expected_nodes),
+            (self.edges_dir, expected_edges),
+        ):
+            if directory.exists():
+                for path in directory.iterdir():
+                    if (
+                        path.is_file()
+                        and path.suffix == ".json"
+                        and path.name not in expected
+                    ):
+                        path.unlink()
+        if self.legacy_path.exists():
+            self.legacy_path.unlink()
 
     @property
     def nodes(self) -> tuple[OverlayNode, ...]:

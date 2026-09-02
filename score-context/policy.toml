@@ -1,0 +1,25 @@
+# Versioned single source of attention, privacy, and overlay thresholds.
+version = 1
+
+[attention]
+w_semantic = 0.6
+w_structural = 0.4
+outcome_bonus = 0.2
+score_threshold = 0.15
+top_k = 5
+half_life_days = 30.0
+min_corroboration = 2
+
+[privacy]
+retention_days = 90
+max_prior_chars = 800
+max_prior_total_chars = 4000
+
+[overlay]
+max_nodes = 20000
+max_edges = 60000
+max_title_chars = 200
+max_attribute_chars = 500
+max_attributes = 20
+max_added_nodes_per_change = 200
+max_added_edges_per_change = 400

@@ -75,7 +75,29 @@ wm.record_outcome(
 
 **Working memory** is available through the `get_working_memory` MCP tool.
 Sessions are persisted in `.score-local/sessions.jsonl`. Durable domain nodes and
-edges are persisted in `score-context/overlay.json`.
+edges are persisted as individually reviewable shards in `score-context/`.
+
+The overlay layout is:
+
+```text
+score-context/
+├── policy.toml
+├── meta.json
+├── nodes/<node-id>.json
+└── edges/<sha256-prefix>.json
+```
+
+Each node and edge has its own file, so independent changes touch disjoint
+files and avoid a single Git merge-conflict hotspot. Node IDs used as
+filenames must match `[A-Za-z0-9][A-Za-z0-9._-]{0,127}`. Edge filenames are
+hashes because Graphify endpoint IDs may contain path separators.
+
+`policy.toml` is the versioned single source of attention, privacy, and
+overlay thresholds. Validate an overlay locally with:
+
+```bash
+uv run python scripts/validate_overlay.py
+```
 
 **Local session records** (append-only JSONL):
 ```bash
@@ -142,8 +164,9 @@ current session and returns deterministic top-ranked results.
 ## Durable Context Overlay
 
 `add_overlay_node` writes a provenance-bearing S-CORE node and relation to
-`score-context/overlay.json`. The generated Graphify code graph remains
-read-only; the merged view combines code, domain, and collaboration layers.
+the sharded `score-context/nodes/` and `score-context/edges/` files. The
+generated Graphify code graph remains read-only; the merged view combines
+code, domain, and collaboration layers.
 
 ## See Also
 
