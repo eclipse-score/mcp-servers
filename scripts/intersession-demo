@@ -1,0 +1,127 @@
+#!/usr/bin/env bash
+# *******************************************************************************
+# Copyright (c) 2026 Contributors to the Eclipse Foundation
+#
+# See the NOTICE file(s) distributed with this work for additional
+# information regarding copyright ownership.
+#
+# This program and the accompanying materials are made available under the
+# terms of the Apache License Version 2.0 which is available at
+# https://www.apache.org/licenses/LICENSE-2.0
+#
+# SPDX-License-Identifier: Apache-2.0
+# *******************************************************************************
+
+set -euo pipefail
+
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")"; pwd -P)"
+repo_root="$(cd "${script_dir}/.."; pwd -P)"
+export PYTHONPATH="${repo_root}/packages/context-discipline/src${PYTHONPATH:+:${PYTHONPATH}}"
+
+uv run --project "${repo_root}" python - <<'PY'
+from pathlib import Path
+from tempfile import TemporaryDirectory
+from datetime import UTC, datetime
+
+from context_attention import get_prior_context, redundancy
+from context_sessions import (
+    OutcomeRecord,
+    ReasoningRecord,
+    SessionLog,
+    SessionRecord,
+    TaskRecord,
+)
+
+
+with TemporaryDirectory() as directory:
+    log = SessionLog(Path(directory))
+    A_NODES = {"node__api", "node__service"}
+    B_CANDIDATE_NODES = ("node__api", "node__service", "node__auth")
+    session_a = SessionRecord(
+        id="session__a",
+        agent="demo",
+        goal="Understand the API contract",
+        timestamp="2026-01-01T00:00:00+00:00",
+    )
+    task_a = TaskRecord(
+        id="task__a",
+        session_id=session_a.id,
+        text="Understand the API contract",
+        timestamp="2026-01-01T00:00:01+00:00",
+    )
+    reasoning_a = ReasoningRecord(
+        id="reasoning__a",
+        session_id=session_a.id,
+        task_id=task_a.id,
+        text="The API contract is grounded in the service implementation",
+        kind="finding",
+        grounded_nodes=["node__api", "node__service"],
+        timestamp="2026-01-01T00:00:02+00:00",
+    )
+    for record in (
+        session_a,
+        task_a,
+        reasoning_a,
+        OutcomeRecord(
+            id="outcome__a",
+            session_id=session_a.id,
+            task_id=task_a.id,
+            verdict="pass",
+            coverage=1.0,
+            timestamp="2026-01-01T00:00:03+00:00",
+        ),
+    ):
+        log.append(record)
+
+    session_b = SessionRecord(
+        id="session__b",
+        agent="demo",
+        goal="Update the API contract",
+        timestamp="2026-01-02T00:00:00+00:00",
+    )
+    task_b = TaskRecord(
+        id="task__b",
+        session_id=session_b.id,
+        text="Update the API contract",
+        timestamp="2026-01-02T00:00:01+00:00",
+    )
+    log.append(session_b)
+    log.append(task_b)
+    r_without = redundancy(A_NODES, set(B_CANDIDATE_NODES))
+    prior = get_prior_context(
+        log,
+        session_b.id,
+        task_b.text,
+        set(B_CANDIDATE_NODES),
+        now=datetime(2026, 1, 2, tzinfo=UTC),
+    )
+    if not prior:
+        raise RuntimeError("demo expected prior context but none was surfaced")
+    covered = {node_id for item in prior for node_id in item.grounded_nodes}
+    b_grounded_with = set(B_CANDIDATE_NODES) - covered
+    r_with = redundancy(A_NODES, b_grounded_with)
+
+    print(
+        "session A: goal=Understand the API contract, "
+        "grounded=node__api, node__service (outcome: pass)"
+    )
+    print("session B task: Update the API contract")
+    print()
+    print(
+        "  without prior context: B grounds "
+        f"{', '.join(B_CANDIDATE_NODES)}  redundancy={r_without:.2f}"
+    )
+    print(
+        "  with prior context:    "
+        f"{len(prior)} prior item surfaced, covering node__api, node__service"
+    )
+    print(
+        "                         B grounds "
+        f"{', '.join(sorted(b_grounded_with)):<42} redundancy={r_with:.2f}"
+    )
+    print()
+    print(
+        f"redundancy {r_without:.2f} -> {r_with:.2f} "
+        "(scripted scenario, not a measurement of live agent behaviour)"
+    )
+PY

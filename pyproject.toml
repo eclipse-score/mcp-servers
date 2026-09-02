@@ -29,7 +29,17 @@ target-version = "py312"
 select = ["E", "F", "I", "UP", "B", "SIM"]
 
 [tool.pyright]
-include = ["libs/score-context/src", "libs/score-context/tests"]
+include = [
+  "libs/score-context/src",
+  "libs/score-context/tests",
+  "packages/context-discipline/src/context_attention.py",
+  "packages/context-discipline/src/context_merge.py",
+  "packages/context-discipline/src/context_overlay.py",
+  "packages/context-discipline/src/context_policy.py",
+  "packages/context-discipline/src/context_sessions.py",
+  "packages/context-discipline/tests",
+]
 pythonVersion = "3.12"
 typeCheckingMode = "strict"
 reportMissingTypeStubs = false
+extraPaths = ["packages/context-discipline/src"]
