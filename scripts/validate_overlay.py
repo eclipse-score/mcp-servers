@@ -218,16 +218,23 @@ def validate(
     edges_dir = root / "edges"
     node_paths = sorted(nodes_dir.glob("*.json")) if nodes_dir.exists() else []
     edge_paths = sorted(edges_dir.glob("*.json")) if edges_dir.exists() else []
+    policy = _policy(repo, failures)
     has_data = (
         (root / "meta.json").exists()
         or (root / "overlay.json").exists()
         or bool(node_paths)
         or bool(edge_paths)
     )
+    if (root / "overlay.json").exists():
+        failures.append(
+            (
+                "score-context/overlay.json",
+                "legacy single-file overlay must be migrated to shards",
+            )
+        )
     if not has_data:
         return failures, warnings, False
 
-    policy = _policy(repo, failures)
     meta_path = root / "meta.json"
     if not meta_path.exists() and not (root / "overlay.json").exists():
         failures.append(("score-context/meta.json", "missing overlay metadata"))
@@ -340,6 +347,12 @@ def main() -> int:
     repo = args.repo.expanduser().resolve()
     failures, warnings, has_data = validate(repo, args.base)
     if not has_data:
+        for path, message in failures:
+            print(f"overlay: {path}: {message}")
+        for path, message in warnings:
+            print(f"overlay: {path}: warning: {message}")
+        if failures:
+            return 1
         print("overlay: no overlay data")
         return 0
     for path, message in failures:

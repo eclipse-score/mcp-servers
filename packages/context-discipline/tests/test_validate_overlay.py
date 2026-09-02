@@ -57,6 +57,41 @@ def test_clean_fixture_passes(tmp_path: Path) -> None:
     assert "overlay: valid" in result.stdout
 
 
+def test_invalid_policy_version_fails_without_overlay_shards(tmp_path: Path) -> None:
+    policy_path = tmp_path / "score-context" / "policy.toml"
+    policy_path.parent.mkdir()
+    policy_path.write_text("version = 9\n", encoding="utf-8")
+
+    result = run_validator(tmp_path)
+
+    assert result.returncode == 1
+    assert "unknown policy version" in result.stdout
+
+
+def test_unknown_policy_key_fails_without_overlay_shards(tmp_path: Path) -> None:
+    policy_path = tmp_path / "score-context" / "policy.toml"
+    policy_path.parent.mkdir()
+    policy_path.write_text("version = 1\n[overlay]\nunknown = 1\n", encoding="utf-8")
+
+    result = run_validator(tmp_path)
+
+    assert result.returncode == 1
+    assert "unknown policy key" in result.stdout
+
+
+def test_legacy_overlay_file_fails_validation(tmp_path: Path) -> None:
+    overlay_path = tmp_path / "score-context" / "overlay.json"
+    overlay_path.parent.mkdir()
+    overlay_path.write_text(
+        '{"version": 1, "nodes": [], "edges": []}\n', encoding="utf-8"
+    )
+
+    result = run_validator(tmp_path)
+
+    assert result.returncode == 1
+    assert "legacy single-file overlay must be migrated to shards" in result.stdout
+
+
 def test_bad_node_type_fails(tmp_path: Path) -> None:
     make_store(tmp_path)
     shard, payload = node_payload(tmp_path)
