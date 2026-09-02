@@ -189,8 +189,13 @@ def sanitize_prior_text(text: str, max_chars: int) -> str:
     return sanitized
 
 
+def _escape_rendered_payload(text: str) -> str:
+    """Output-encode payloads so foreign data cannot forge the delimiter."""
+    return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+
+
 def render_prior_context(items: Sequence[PriorContext], policy: Policy) -> str:
-    """Render prior reasoning as bounded, explicitly untrusted data."""
+    """Render bounded untrusted data with output-encoded payload values."""
     if not items:
         return ""
     header = (
@@ -203,21 +208,27 @@ def render_prior_context(items: Sequence[PriorContext], policy: Policy) -> str:
     )
     blocks: list[str] = []
     for index, item in enumerate(items, start=1):
-        session_id = sanitize_prior_text(
-            item.session_id, policy.privacy.max_prior_chars
+        session_id = _escape_rendered_payload(
+            sanitize_prior_text(item.session_id, policy.privacy.max_prior_chars)
         )
-        kind = sanitize_prior_text(item.kind, policy.privacy.max_prior_chars)
-        verdict = sanitize_prior_text(
-            item.verdict or "none", policy.privacy.max_prior_chars
+        kind = _escape_rendered_payload(
+            sanitize_prior_text(item.kind, policy.privacy.max_prior_chars)
+        )
+        verdict = _escape_rendered_payload(
+            sanitize_prior_text(item.verdict or "none", policy.privacy.max_prior_chars)
         )
         nodes = (
             ",".join(
-                sanitize_prior_text(node_id, policy.privacy.max_prior_chars)
+                _escape_rendered_payload(
+                    sanitize_prior_text(node_id, policy.privacy.max_prior_chars)
+                )
                 for node_id in item.grounded_nodes
             )
             or "none"
         )
-        text = sanitize_prior_text(item.text, policy.privacy.max_prior_chars)
+        text = _escape_rendered_payload(
+            sanitize_prior_text(item.text, policy.privacy.max_prior_chars)
+        )
         indented = "\n".join(f"    {line}" for line in text.split("\n"))
         blocks.append(
             f"[{index}] session={session_id} kind={kind} "
@@ -242,8 +253,6 @@ def render_prior_context(items: Sequence[PriorContext], policy: Policy) -> str:
     dropped = len(blocks)
     budget_line = f"[budget reached: {dropped} of {len(blocks)} items omitted]"
     rendered = f"{header}\n{budget_line}\n{closing}"
-    if len(rendered) > policy.privacy.max_prior_total_chars:
-        return rendered[: policy.privacy.max_prior_total_chars]
     return rendered
 
 
