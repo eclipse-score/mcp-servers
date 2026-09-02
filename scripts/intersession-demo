@@ -21,6 +21,7 @@ export PYTHONPATH="${repo_root}/packages/context-discipline/src${PYTHONPATH:+:${
 uv run --project "${repo_root}" python - <<'PY'
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from datetime import UTC, datetime
 
 from context_attention import get_prior_context, redundancy
 from context_sessions import (
@@ -92,6 +93,7 @@ with TemporaryDirectory() as directory:
         session_b.id,
         task_b.text,
         set(B_CANDIDATE_NODES),
+        now=datetime(2026, 1, 2, tzinfo=UTC),
     )
     if not prior:
         raise RuntimeError("demo expected prior context but none was surfaced")

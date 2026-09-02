@@ -11,6 +11,7 @@
 # SPDX-License-Identifier: Apache-2.0
 # *******************************************************************************
 
+from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
@@ -19,6 +20,8 @@ from context_sessions import (
     SessionLog,
     SessionRecord,
     TaskRecord,
+    agent_salt,
+    pseudonymize_agent,
 )
 
 
@@ -65,3 +68,39 @@ def test_session_log_rejects_unknown_record_type(tmp_path: Path) -> None:
 
     with pytest.raises(ValueError, match="unknown session record kind"):
         log.read_all()
+
+
+def test_agent_pseudonym_is_deterministic_and_salt_is_private(tmp_path: Path) -> None:
+    salt = agent_salt(tmp_path / ".score-local")
+    assert pseudonymize_agent("alice", salt) == pseudonymize_agent("alice", salt)
+    assert pseudonymize_agent("alice", salt) != pseudonymize_agent("alice", "other")
+    assert pseudonymize_agent("alice", salt) != "alice"
+    assert (tmp_path / ".score-local" / "agent-salt").stat().st_mode & 0o777 == 0o600
+
+
+def test_prune_drops_old_records_keeps_recent_and_unparsable(
+    tmp_path: Path,
+) -> None:
+    now = datetime(2026, 2, 1, tzinfo=UTC)
+    log = SessionLog(tmp_path)
+    records = (
+        SessionRecord(id="session__old", timestamp="2025-01-01T00:00:00+00:00"),
+        SessionRecord(id="session__recent", timestamp="2026-01-31T00:00:00+00:00"),
+        SessionRecord(id="session__bad", timestamp="unknown"),
+    )
+    for record in records:
+        log.append(record)
+
+    assert log.prune(30, now=now) == 1
+    assert [record.id for record in log.read_all()] == [
+        "session__recent",
+        "session__bad",
+    ]
+    assert log.path.read_text(encoding="utf-8").splitlines()[0].startswith('{"agent"')
+
+
+def test_prune_missing_log_returns_zero_without_creating_file(tmp_path: Path) -> None:
+    log = SessionLog(tmp_path)
+
+    assert log.prune(30, now=datetime(2026, 2, 1, tzinfo=UTC)) == 0
+    assert not log.path.exists()

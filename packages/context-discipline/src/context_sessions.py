@@ -24,9 +24,12 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
+import os
+import secrets
 from dataclasses import asdict, dataclass, field
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any, cast
 from uuid import uuid4
@@ -42,6 +45,32 @@ def _record_id(kind: str) -> str:
 
 def _empty_nodes() -> list[str]:
     return []
+
+
+def agent_salt(local_store_dir: Path) -> str:
+    """Read or create the local salt used for agent pseudonyms."""
+    local_store_dir.mkdir(parents=True, exist_ok=True)
+    local_store_dir.chmod(0o700)
+    salt_path = local_store_dir / "agent-salt"
+    try:
+        file_descriptor = os.open(
+            salt_path,
+            os.O_WRONLY | os.O_CREAT | os.O_EXCL,
+            0o600,
+        )
+    except FileExistsError:
+        salt_path.chmod(0o600)
+        return salt_path.read_text(encoding="utf-8").strip()
+    salt = secrets.token_hex(32)
+    with os.fdopen(file_descriptor, "w", encoding="utf-8") as stream:
+        stream.write(salt)
+    return salt
+
+
+def pseudonymize_agent(agent: str, salt: str) -> str:
+    """Return a deterministic local pseudonym for an agent name."""
+    digest = hashlib.sha256(f"{salt}\0{agent}".encode()).hexdigest()[:16]
+    return f"agent__{digest}"
 
 
 @dataclass(frozen=True)
@@ -150,6 +179,32 @@ class SessionLog:
         self.path.parent.mkdir(parents=True, exist_ok=True)
         with self.path.open("a", encoding="utf-8") as stream:
             stream.write(json.dumps(_record_dict(record), sort_keys=True) + "\n")
+
+    def prune(self, retention_days: int, now: datetime | None = None) -> int:
+        """Drop parseable records older than the retention cutoff atomically."""
+        if not self.path.exists():
+            return 0
+        now = now or datetime.now(tz=UTC)
+        cutoff = now - timedelta(days=retention_days)
+        records = self.read_all()
+        retained: list[Record] = []
+        dropped = 0
+        for record in records:
+            try:
+                timestamp = datetime.fromisoformat(record.timestamp)
+                is_old = timestamp < cutoff
+            except (OverflowError, TypeError, ValueError):
+                is_old = False
+            if is_old:
+                dropped += 1
+            else:
+                retained.append(record)
+        temporary = self.path.with_name(f"{self.path.name}.tmp")
+        with temporary.open("w", encoding="utf-8") as stream:
+            for record in retained:
+                stream.write(json.dumps(_record_dict(record), sort_keys=True) + "\n")
+        os.replace(temporary, self.path)
+        return dropped
 
     def read_all(self) -> tuple[Record, ...]:
         if not self.path.exists():

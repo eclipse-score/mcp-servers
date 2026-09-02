@@ -23,13 +23,27 @@ from context_discipline_mcp import (
 
 def test_initialize_session_writes_one_session_record(tmp_path: Path) -> None:
     manager = ContextDisciplineMCP(str(tmp_path))
-    session_id = manager.initialize_session("Goal", ["Subgoal"], agent="agent")
+    session_id = manager.initialize_session("Goal", ["Subgoal"], agent="alice")
 
     records = manager.session_log.read_all()
+    raw_log = manager.session_log.path.read_text(encoding="utf-8")
     sessions = [record for record in records if isinstance(record, SessionRecord)]
     assert session_id == manager.session_id
     assert len(sessions) == 1
     assert sessions[0].goal == "Goal"
+    assert "alice" not in raw_log
+    assert manager.local_store.joinpath("agent-salt").stat().st_mode & 0o777 == 0o600
+
+
+def test_get_prior_context_returns_items_and_untrusted_rendered_block(
+    tmp_path: Path,
+) -> None:
+    manager = ContextDisciplineMCP(str(tmp_path))
+    manager.initialize_session("Goal", [])
+
+    result = manager.get_prior_context("Goal", [])
+
+    assert result == {"items": [], "rendered": ""}
 
 
 def test_add_overlay_node_uses_repo_slug_and_wire_names(tmp_path: Path) -> None:
