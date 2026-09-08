@@ -173,12 +173,12 @@ def _measured_reasoning(
         (
             "attention__7b7a9192",
             [
-                ("reasoning__f1b56ce6", 4, 5),
-                ("reasoning__6a69df07", 3, 4),
+                ("reasoning__f1b56ce6", 3, 4),
+                ("reasoning__6a69df07", 4, 5),
             ],
             ["reasoning__f1b56ce6", "reasoning__6a69df07"],
             [],
-            0.0545454545,
+            0.0511363636,
         ),
         (
             "attention__575df4a7",
@@ -199,8 +199,8 @@ def _measured_reasoning(
             "attention__acb6fd00",
             [
                 ("reasoning__d510a950", 4, 5),
-                ("reasoning__f1b56ce6", 4, 5),
-                ("reasoning__6a69df07", 3, 4),
+                ("reasoning__f1b56ce6", 3, 4),
+                ("reasoning__6a69df07", 4, 5),
                 ("reasoning__55d99821", 0, 4),
             ],
             [
