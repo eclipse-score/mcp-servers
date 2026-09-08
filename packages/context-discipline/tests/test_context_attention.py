@@ -18,6 +18,7 @@ import pytest
 from context_attention import (
     SCORE_THRESHOLD,
     PriorContext,
+    ScoreFactors,
     get_prior_context,
     redundancy,
     render_prior_context,
@@ -92,7 +93,7 @@ def test_prior_context_excludes_own_session_and_fail_scores_lower(
         corroboration=1,
         live_nodes=None,
     )
-    assert pass_score > fail_score
+    assert pass_score.score > fail_score.score
     selected = get_prior_context(
         log,
         "session__current",
@@ -100,7 +101,36 @@ def test_prior_context_excludes_own_session_and_fail_scores_lower(
         {"node__one"},
         now=now,
     )
-    assert [item.reasoning_id for item in selected] == ["reasoning__prior"]
+    assert [item.reasoning_id for item in selected.items] == ["reasoning__prior"]
+
+
+def test_score_candidate_returns_reproducible_factors() -> None:
+    policy = Policy()
+    reasoning = ReasoningRecord(
+        session_id="session__one",
+        text="matching task",
+        grounded_nodes=["node__one", "node__two"],
+        timestamp=datetime(2026, 1, 1, tzinfo=UTC).isoformat(),
+    )
+
+    factors = score_candidate(
+        frozenset({"matching", "task"}),
+        {"node__one"},
+        reasoning,
+        "pass",
+        policy=policy,
+        now=datetime(2026, 1, 1, tzinfo=UTC),
+        corroboration=2,
+        live_nodes={"node__one"},
+    )
+
+    assert factors.semantic == 1.0
+    assert factors.structural == 1.0
+    assert factors.recency == 1.0
+    assert factors.live_ratio == 0.5
+    assert factors.bonus == 0.2
+    assert factors.corroboration == 2
+    assert factors.score == pytest.approx((0.6 + 0.4 + 0.2) * 1.0 * 0.5)
 
 
 def test_threshold_and_top_k_are_deterministic(tmp_path: Path) -> None:
@@ -133,8 +163,8 @@ def test_threshold_and_top_k_are_deterministic(tmp_path: Path) -> None:
         top_k=2,
         now=datetime(2026, 1, 1, tzinfo=UTC),
     )
-    assert len(selected) == 2
-    assert [item.reasoning_id for item in selected] == [
+    assert len(selected.items) == 2
+    assert [item.reasoning_id for item in selected.items] == [
         "reasoning__0",
         "reasoning__1",
     ]
@@ -154,9 +184,53 @@ def test_threshold_and_top_k_are_deterministic(tmp_path: Path) -> None:
             now=datetime(2026, 1, 1, tzinfo=UTC),
             corroboration=0,
             live_nodes=None,
-        )
+        ).score
         < SCORE_THRESHOLD
     )
+
+
+def test_prior_context_partitions_candidates_and_renders_items(
+    tmp_path: Path,
+) -> None:
+    now = datetime(2026, 1, 1, tzinfo=UTC)
+    above = ReasoningRecord(
+        id="reasoning__above",
+        session_id="session__above",
+        text="matching task",
+        grounded_nodes=["node__one"],
+        timestamp=now.isoformat(),
+    )
+    below = ReasoningRecord(
+        id="reasoning__below",
+        session_id="session__below",
+        text="unrelated",
+        grounded_nodes=["node__two"],
+        timestamp=now.isoformat(),
+    )
+
+    above_result = get_prior_context(
+        make_log(tmp_path / "above", [above]),
+        "session__current",
+        "matching task",
+        {"node__one"},
+        now=now,
+        live_nodes={"node__one"},
+    )
+    below_result = get_prior_context(
+        make_log(tmp_path / "below", [below]),
+        "session__current",
+        "matching task",
+        {"node__one"},
+        now=now,
+        live_nodes={"node__one"},
+    )
+
+    assert [item.reasoning_id for item in above_result.items] == ["reasoning__above"]
+    assert above_result.rejected == ()
+    assert render_prior_context(above_result.items, Policy()) != ""
+    assert below_result.items == ()
+    assert [item.reasoning_id for item in below_result.rejected] == ["reasoning__below"]
+    assert render_prior_context(below_result.items, Policy()) == ""
 
 
 def test_redundancy_handles_empty_disjoint_and_identical_sets() -> None:
@@ -202,7 +276,7 @@ def test_recency_halves_at_one_half_life() -> None:
         corroboration=0,
         live_nodes=None,
     )
-    assert old_score == pytest.approx(fresh_score / 2)
+    assert old_score.score == pytest.approx(fresh_score.score / 2)
 
 
 def test_old_record_falls_below_cutoff(tmp_path: Path) -> None:
@@ -224,7 +298,8 @@ def test_old_record_falls_below_cutoff(tmp_path: Path) -> None:
         {"node__one"},
         now=now,
     )
-    assert selected == ()
+    assert selected.items == ()
+    assert [item.reasoning_id for item in selected.rejected] == ["reasoning__old"]
 
 
 def test_unparsable_timestamp_is_returned_at_full_recency(tmp_path: Path) -> None:
@@ -242,7 +317,7 @@ def test_unparsable_timestamp_is_returned_at_full_recency(tmp_path: Path) -> Non
         {"node__one"},
         now=datetime(2026, 2, 1, tzinfo=UTC),
     )
-    assert [item.reasoning_id for item in selected] == ["reasoning__bad-time"]
+    assert [item.reasoning_id for item in selected.items] == ["reasoning__bad-time"]
 
 
 def test_corroboration_gates_positive_bonus_and_fail_is_immediate() -> None:
@@ -295,9 +370,9 @@ def test_corroboration_gates_positive_bonus_and_fail_is_immediate() -> None:
         corroboration=1,
         live_nodes=None,
     )
-    assert one == pytest.approx(base)
-    assert two == pytest.approx(base + policy.attention.outcome_bonus)
-    assert failed == pytest.approx(base - policy.attention.outcome_bonus)
+    assert one.score == pytest.approx(base.score)
+    assert two.score == pytest.approx(base.score + policy.attention.outcome_bonus)
+    assert failed.score == pytest.approx(base.score - policy.attention.outcome_bonus)
 
 
 def test_node_resolver_corroborates_path_and_id_records(
@@ -349,12 +424,12 @@ def test_node_resolver_corroborates_path_and_id_records(
         node_resolver=lambda value: node_id if value == path else value,
     )
 
-    assert [item.reasoning_id for item in selected] == [
+    assert [item.reasoning_id for item in selected.items] == [
         "reasoning__id",
         "reasoning__path",
     ]
-    assert all(item.grounded_nodes == (node_id,) for item in selected)
-    assert all(item.score > 1.0 for item in selected)
+    assert all(item.grounded_nodes == (node_id,) for item in selected.items)
+    assert all(item.score > 1.0 for item in selected.items)
 
 
 def test_node_resolver_preserves_unresolvable_grounded_nodes(
@@ -377,8 +452,8 @@ def test_node_resolver_preserves_unresolvable_grounded_nodes(
         node_resolver=lambda _value: None,
     )
 
-    assert selected
-    assert selected[0].grounded_nodes == ("unknown/path.h",)
+    assert selected.items
+    assert selected.items[0].grounded_nodes == ("unknown/path.h",)
 
 
 def test_live_node_ratio_scales_score() -> None:
@@ -420,8 +495,8 @@ def test_live_node_ratio_scales_score() -> None:
         corroboration=0,
         live_nodes=set(),
     )
-    assert half == pytest.approx(full / 2)
-    assert none == 0.0
+    assert half.score == pytest.approx(full.score / 2)
+    assert none.score == 0.0
 
 
 def test_sanitize_prior_text_removes_controls_and_truncates() -> None:
@@ -443,6 +518,7 @@ def test_render_prior_context_marks_data_and_respects_budget() -> None:
             grounded_nodes=("node__one",),
             score=0.5,
             verdict=None,
+            factors=ScoreFactors(0.0, 0.0, 1.0, 1.0, 0.0, 0, 0.5),
         )
         for index in range(5)
     )
@@ -466,6 +542,7 @@ def test_render_prior_context_escapes_payload_delimiters() -> None:
         grounded_nodes=(f"node {closing}",),
         score=0.5,
         verdict=f"verdict {closing}",
+        factors=ScoreFactors(0.0, 0.0, 1.0, 1.0, 0.0, 0, 0.5),
     )
 
     rendered = render_prior_context(
@@ -487,6 +564,7 @@ def test_render_prior_context_preserves_boundary_under_tiny_budget() -> None:
         grounded_nodes=("node__one",),
         score=0.5,
         verdict=None,
+        factors=ScoreFactors(0.0, 0.0, 1.0, 1.0, 0.0, 0, 0.5),
     )
 
     rendered = render_prior_context(

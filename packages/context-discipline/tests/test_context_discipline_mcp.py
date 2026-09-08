@@ -15,6 +15,7 @@ import json
 from pathlib import Path
 
 from context_discipline_mcp import (
+    AttentionRecord,
     ContextDisciplineMCP,
     ReasoningRecord,
     SessionRecord,
@@ -250,7 +251,45 @@ def test_get_prior_context_returns_items_and_untrusted_rendered_block(
 
     result = manager.get_prior_context("Goal", [])
 
-    assert result == {"items": [], "rendered": ""}
+    assert result == {
+        "items": [],
+        "rejected": [],
+        "threshold": 0.15,
+        "unresolved_nodes": [],
+        "rendered": "",
+    }
+
+
+def test_get_prior_context_logs_attention_factors_and_unresolved_nodes(
+    tmp_path: Path,
+) -> None:
+    _write_graph(tmp_path)
+    manager = ContextDisciplineMCP(str(tmp_path))
+    manager.initialize_session("Current task", [])
+    manager.session_log.append(
+        ReasoningRecord(
+            id="reasoning__rejected",
+            session_id="session__prior",
+            text="different finding",
+            grounded_nodes=["include_score_result_error_domain"],
+        )
+    )
+
+    result = manager.get_prior_context("unrelated query", ["unknown/node.h"])
+
+    assert result["items"] == []
+    assert result["unresolved_nodes"] == ["unknown/node.h"]
+    attention_records = [
+        record
+        for record in manager.session_log.read_all()
+        if isinstance(record, AttentionRecord)
+    ]
+    assert len(attention_records) == 1
+    attention = attention_records[0]
+    assert attention.current_nodes == ["unknown/node.h"]
+    assert attention.rejected[0]["score"] == 0.0
+    assert attention.rejected[0]["structural"] == 0.0
+    assert attention.rejected[0]["live_ratio"] == 1.0
 
 
 def test_add_overlay_node_uses_repo_slug_and_wire_names(tmp_path: Path) -> None:

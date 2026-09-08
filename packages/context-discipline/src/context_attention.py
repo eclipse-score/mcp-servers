@@ -49,6 +49,17 @@ def jaccard(a: frozenset[str], b: frozenset[str]) -> float:
     return len(a & b) / len(union) if union else 0.0
 
 
+@dataclass(frozen=True)
+class ScoreFactors:
+    semantic: float
+    structural: float
+    recency: float
+    live_ratio: float
+    bonus: float
+    corroboration: int
+    score: float
+
+
 def score_candidate(
     task_tokens: frozenset[str],
     current_nodes: set[str],
@@ -59,7 +70,7 @@ def score_candidate(
     now: datetime,
     corroboration: int,
     live_nodes: set[str] | None,
-) -> float:
+) -> ScoreFactors:
     semantic = jaccard(task_tokens, tokenize(reasoning.text))
     structural = (
         len(set(reasoning.grounded_nodes) & current_nodes) / len(current_nodes)
@@ -90,7 +101,7 @@ def score_candidate(
         bonus = -policy.attention.outcome_bonus
     else:
         bonus = 0.0
-    return (
+    score = (
         (
             policy.attention.w_semantic * semantic
             + policy.attention.w_structural * structural
@@ -98,6 +109,15 @@ def score_candidate(
         )
         * recency
         * live_ratio
+    )
+    return ScoreFactors(
+        semantic=semantic,
+        structural=structural,
+        recency=recency,
+        live_ratio=live_ratio,
+        bonus=bonus,
+        corroboration=corroboration,
+        score=score,
     )
 
 
@@ -110,6 +130,14 @@ class PriorContext:
     grounded_nodes: tuple[str, ...]
     score: float
     verdict: str | None
+    factors: ScoreFactors
+
+
+@dataclass(frozen=True)
+class PriorContextResult:
+    items: tuple[PriorContext, ...]
+    rejected: tuple[PriorContext, ...]
+    threshold: float
 
 
 def _resolve_grounded_nodes(
@@ -141,7 +169,7 @@ def get_prior_context(
     live_nodes: set[str] | None = None,
     top_k: int | None = None,
     node_resolver: Callable[[str], str | None] | None = None,
-) -> tuple[PriorContext, ...]:
+) -> PriorContextResult:
     policy = policy or Policy()
     now = now or datetime.now(tz=UTC)
     top_k = policy.attention.top_k if top_k is None else top_k
@@ -172,7 +200,7 @@ def get_prior_context(
             corroborating_sessions.update(node_sessions.get(node_id, set()))
         corroboration = len(corroborating_sessions)
         resolved_reasoning = replace(reasoning, grounded_nodes=list(grounded_nodes))
-        score = score_candidate(
+        factors = score_candidate(
             task_tokens,
             current_nodes,
             resolved_reasoning,
@@ -182,22 +210,36 @@ def get_prior_context(
             corroboration=corroboration,
             live_nodes=live_nodes,
         )
-        if score >= policy.attention.score_threshold:
-            candidates.append(
-                PriorContext(
-                    reasoning_id=reasoning.id,
-                    session_id=reasoning.session_id,
-                    text=sanitize_prior_text(
-                        reasoning.text, policy.privacy.max_prior_chars
-                    ),
-                    kind=reasoning.kind,
-                    grounded_nodes=grounded_nodes,
-                    score=score,
-                    verdict=verdict,
-                )
+        candidates.append(
+            PriorContext(
+                reasoning_id=reasoning.id,
+                session_id=reasoning.session_id,
+                text=sanitize_prior_text(
+                    reasoning.text, policy.privacy.max_prior_chars
+                ),
+                kind=reasoning.kind,
+                grounded_nodes=grounded_nodes,
+                score=factors.score,
+                verdict=verdict,
+                factors=factors,
             )
+        )
     candidates.sort(key=lambda item: (-item.score, item.reasoning_id))
-    return tuple(candidates[:top_k])
+    accepted = tuple(
+        item
+        for item in candidates
+        if item.factors.score >= policy.attention.score_threshold
+    )
+    rejected = tuple(
+        item
+        for item in candidates
+        if item.factors.score < policy.attention.score_threshold
+    )
+    return PriorContextResult(
+        items=accepted[:top_k],
+        rejected=rejected[:top_k],
+        threshold=policy.attention.score_threshold,
+    )
 
 
 def sanitize_prior_text(text: str, max_chars: int) -> str:

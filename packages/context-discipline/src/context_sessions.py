@@ -126,8 +126,31 @@ class OutcomeRecord:
     record_type: str = field(default="outcome", init=False)
 
 
+@dataclass(frozen=True)
+class AttentionRecord:
+    id: str = field(default_factory=lambda: _record_id("attention"))
+    session_id: str = ""
+    task_id: str = ""
+    query: str = ""
+    current_nodes: list[str] = field(default_factory=_empty_nodes)
+    surfaced: list[dict[str, Any]] = field(
+        default_factory=lambda: list[dict[str, Any]]()
+    )
+    rejected: list[dict[str, Any]] = field(
+        default_factory=lambda: list[dict[str, Any]]()
+    )
+    threshold: float = 0.0
+    timestamp: str = field(default_factory=_timestamp)
+    record_type: str = field(default="attention", init=False)
+
+
 type Record = (
-    SessionRecord | TaskRecord | ReasoningRecord | RetrievalRecord | OutcomeRecord
+    SessionRecord
+    | TaskRecord
+    | ReasoningRecord
+    | RetrievalRecord
+    | OutcomeRecord
+    | AttentionRecord
 )
 
 
@@ -156,6 +179,7 @@ def _record_from_dict(data: dict[str, Any]) -> Record:
         "task": TaskRecord,
         "retrieval": RetrievalRecord,
         "outcome": OutcomeRecord,
+        "attention": AttentionRecord,
     }
     if record_type is None:
         raise ValueError("missing session record type")

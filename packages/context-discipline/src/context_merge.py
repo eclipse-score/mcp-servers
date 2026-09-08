@@ -24,6 +24,7 @@ from pathlib import Path
 
 from context_overlay import OverlayStore
 from context_sessions import (
+    AttentionRecord,
     ReasoningRecord,
     Record,
     RetrievalRecord,
@@ -192,6 +193,9 @@ class MergedGraph:
             elif isinstance(record, RetrievalRecord):
                 label = record.query
                 record_type = "retrieval"
+            elif isinstance(record, AttentionRecord):
+                label = record.query
+                record_type = "attention"
             else:
                 label = record.verdict
                 record_type = "outcome"
