@@ -109,7 +109,7 @@ class MergedGraph:
     edges: dict[tuple[str, str, str], MergedEdge]
     conflicts: tuple[str, ...] = ()
     edge_conflicts: tuple[tuple[str, str, str], ...] = ()
-    source_file_index: dict[str, str] = field(default_factory=dict)
+    source_file_index: dict[str, str] = field(default_factory=lambda: dict[str, str]())
 
     @classmethod
     def build(cls, repo_path: str | Path) -> MergedGraph:
