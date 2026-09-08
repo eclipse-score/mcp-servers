@@ -19,6 +19,8 @@ Integrates with graphify-codegraph (wraps external graphify CLI).
 """
 
 import json
+import posixpath
+from contextlib import suppress
 from dataclasses import asdict, dataclass
 from datetime import UTC, datetime
 from pathlib import Path
@@ -73,6 +75,44 @@ class LocalObservation:
             self.timestamp = datetime.now().isoformat()
 
 
+def resolve_node_id(value: str, graph: MergedGraph, repo_path: Path) -> str | None:
+    """Resolve a node ID or source-file path against the merged graph."""
+    if graph.has_node(value):
+        return value
+
+    candidates = [value]
+    path = Path(value).expanduser()
+    if path.is_absolute():
+        with suppress(ValueError):
+            candidates.append(path.resolve().relative_to(repo_path).as_posix())
+
+    lookup_candidates = list(candidates)
+    for candidate in list(lookup_candidates):
+        normalized = posixpath.normpath(candidate.replace("\\", "/"))
+        lookup_candidates.extend((normalized, normalized.removeprefix("./")))
+
+    for candidate in lookup_candidates:
+        resolved = graph.source_file_index.get(candidate)
+        if resolved is not None:
+            return resolved
+    return None
+
+
+def _resolve_nodes(
+    values: list[str], graph: MergedGraph, repo_path: Path
+) -> tuple[list[str], list[str]]:
+    resolved: list[str] = []
+    unresolved: list[str] = []
+    for value in values:
+        canonical = resolve_node_id(value, graph, repo_path)
+        if canonical is None:
+            resolved.append(value)
+            unresolved.append(value)
+        else:
+            resolved.append(canonical)
+    return resolved, unresolved
+
+
 class ContextDisciplineMCP:
     """
     Manages working memory and local learning.
@@ -117,6 +157,9 @@ class ContextDisciplineMCP:
         Returns:
             Session identifier and graph setup status.
         """
+        self.session_id = f"session__{uuid4().hex[:8]}"
+        self.working_memory = []
+        self.goal_task_id = None
         self.session_log.prune(self.policy.privacy.retention_days)
         self.session_log.append(
             SessionRecord(
@@ -246,15 +289,19 @@ class ContextDisciplineMCP:
         reason: list[str],
         reversible: bool = True,
         grounded_nodes: list[str] | None = None,
-    ) -> None:
+    ) -> dict[str, Any]:
         """Record a decision with reasoning."""
+        graph = MergedGraph.build(self.repo_path)
+        resolved_nodes, unresolved_nodes = _resolve_nodes(
+            grounded_nodes or [], graph, self.repo_path
+        )
         self.session_log.append(
             ReasoningRecord(
                 session_id=self.session_id,
                 task_id=self.goal_task_id or "",
                 text=decision,
                 kind="decision",
-                grounded_nodes=grounded_nodes or [],
+                grounded_nodes=resolved_nodes,
             )
         )
         self.working_memory.append(
@@ -265,6 +312,7 @@ class ContextDisciplineMCP:
                 metadata={"reason": reason, "reversible": reversible},
             )
         )
+        return {"unresolved_nodes": unresolved_nodes}
 
     def record_outcome(
         self,
@@ -344,13 +392,15 @@ class ContextDisciplineMCP:
         self, task_text: str, current_nodes: list[str]
     ) -> dict[str, Any]:
         """Retrieve untrusted reasoning data from other sessions."""
+        graph = MergedGraph.build(self.repo_path)
+        resolved_nodes, _ = _resolve_nodes(current_nodes, graph, self.repo_path)
         items = get_prior_context(
             self.session_log,
             self.session_id,
             task_text,
-            set(current_nodes),
+            set(resolved_nodes),
             policy=self.policy,
-            live_nodes=set(MergedGraph.build(self.repo_path).nodes),
+            live_nodes=set(graph.nodes),
         )
         return {
             "items": [asdict(item) for item in items],

@@ -16,8 +16,10 @@
 from __future__ import annotations
 
 import json
+import posixpath
 from collections.abc import Iterable
-from dataclasses import dataclass
+from contextlib import suppress
+from dataclasses import dataclass, field
 from pathlib import Path
 
 from context_overlay import OverlayStore
@@ -107,12 +109,14 @@ class MergedGraph:
     edges: dict[tuple[str, str, str], MergedEdge]
     conflicts: tuple[str, ...] = ()
     edge_conflicts: tuple[tuple[str, str, str], ...] = ()
+    source_file_index: dict[str, str] = field(default_factory=dict)
 
     @classmethod
     def build(cls, repo_path: str | Path) -> MergedGraph:
         repo = Path(repo_path).expanduser().resolve()
         nodes: dict[str, MergedNode] = {}
         edges: dict[tuple[str, str, str], MergedEdge] = {}
+        source_file_candidates: dict[str, set[str]] = {}
         conflicts: set[str] = set()
         edge_conflicts: set[tuple[str, str, str]] = set()
 
@@ -130,6 +134,19 @@ class MergedGraph:
                     conflicts.add(node.id)
                 else:
                     nodes[node.id] = node
+                source_file = raw.get("source_file")
+                if source_file is not None:
+                    raw_source_file = str(source_file)
+                    normalized_source_file = posixpath.normpath(
+                        raw_source_file.replace("\\", "/")
+                    )
+                    keys = {raw_source_file, normalized_source_file}
+                    source_path = Path(normalized_source_file)
+                    if source_path.is_absolute():
+                        with suppress(ValueError):
+                            keys.add(source_path.resolve().relative_to(repo).as_posix())
+                    for key in keys:
+                        source_file_candidates.setdefault(key, set()).add(node.id)
             raw_edges = data.get("links", data.get("edges", []))
             for raw in raw_edges:
                 edge = MergedEdge(
@@ -194,6 +211,10 @@ class MergedGraph:
             edges,
             tuple(sorted(conflicts)),
             tuple(sorted(edge_conflicts)),
+            {
+                key: min(node_ids, key=lambda node_id: (len(node_id), node_id))
+                for key, node_ids in source_file_candidates.items()
+            },
         )
 
     def neighbors(self, node_id: str) -> tuple[MergedNode, ...]:

@@ -78,15 +78,18 @@ def score_candidate(
         if live_nodes is None or not reasoning.grounded_nodes
         else len(grounded_nodes & live_nodes) / len(reasoning.grounded_nodes)
     )
-    # Positive outcomes require independent corroboration to prevent
-    # self-reinforcement; negative outcomes apply immediately as warnings.
-    bonus = (
-        policy.attention.outcome_bonus
-        if verdict == "pass" and corroboration >= policy.attention.min_corroboration
-        else -policy.attention.outcome_bonus
-        if verdict == "fail"
-        else 0.0
-    )
+    # Uncorroborated positive outcomes are neutral; corroborated positives
+    # require independent evidence, while negative outcomes apply immediately.
+    if verdict == "pass":
+        bonus = (
+            policy.attention.outcome_bonus
+            if corroboration >= policy.attention.min_corroboration
+            else 0.0
+        )
+    elif verdict == "fail":
+        bonus = -policy.attention.outcome_bonus
+    else:
+        bonus = 0.0
     return (
         (
             policy.attention.w_semantic * semantic

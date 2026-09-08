@@ -45,6 +45,22 @@ apm install <path>/packages/context-discipline \
 apm compile -t copilot
 ```
 
+### Testing a branch
+
+Override the MCP server source in the installed package with the branch you
+want to test, then refresh the dependency:
+
+```yaml
+args:
+  - --from
+  - git+https://github.com/eclipse-score/mcp-servers@<branch>#subdirectory=packages/context-discipline
+  - context-discipline
+```
+
+Run `apm install ... --refresh` after applying the override.
+Restart VS Code because MCP servers are read only at startup. `apm update` can
+update instructions and skills, but it does not update the running MCP server.
+
 The `--trust-transitive-mcp` flag is required for the dependent
 `apm-setup` and `graphify-codegraph` MCP servers to be registered. Without it,
 `apm install` still exits successfully but registers only `context-discipline`.
