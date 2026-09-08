@@ -11,6 +11,7 @@
 # SPDX-License-Identifier: Apache-2.0
 # *******************************************************************************
 
+from collections.abc import Sequence
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
@@ -25,7 +26,7 @@ from context_attention import (
     sanitize_prior_text,
     score_candidate,
 )
-from context_policy import Policy, PrivacyPolicy
+from context_policy import AttentionPolicy, Policy, PrivacyPolicy
 from context_sessions import (
     OutcomeRecord,
     ReasoningRecord,
@@ -34,7 +35,7 @@ from context_sessions import (
 )
 
 
-def make_log(path: Path, records: list[Record]) -> SessionLog:
+def make_log(path: Path, records: Sequence[Record]) -> SessionLog:
     log = SessionLog(path)
     for record in records:
         log.append(record)
@@ -162,6 +163,7 @@ def test_threshold_and_top_k_are_deterministic(tmp_path: Path) -> None:
         {"node__one"},
         top_k=2,
         now=datetime(2026, 1, 1, tzinfo=UTC),
+        policy=Policy(attention=AttentionPolicy(selection="threshold")),
     )
     assert len(selected.items) == 2
     assert [item.reasoning_id for item in selected.items] == [
@@ -215,6 +217,7 @@ def test_prior_context_partitions_candidates_and_renders_items(
         {"node__one"},
         now=now,
         live_nodes={"node__one"},
+        policy=Policy(attention=AttentionPolicy(selection="threshold")),
     )
     below_result = get_prior_context(
         make_log(tmp_path / "below", [below]),
@@ -223,6 +226,7 @@ def test_prior_context_partitions_candidates_and_renders_items(
         {"node__one"},
         now=now,
         live_nodes={"node__one"},
+        policy=Policy(attention=AttentionPolicy(selection="threshold")),
     )
 
     assert [item.reasoning_id for item in above_result.items] == ["reasoning__above"]
@@ -265,6 +269,194 @@ def test_rejected_candidates_are_sanitized_and_capped(tmp_path: Path) -> None:
     ]
     assert result.rejected[0].kind == "kind"
     assert result.rejected[0].grounded_nodes == ("bad node",)
+
+
+def test_rank_selection_accepts_measured_subthreshold_score(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    reasoning = ReasoningRecord(
+        id="reasoning__measured",
+        session_id="session__prior",
+        text="foreign finding",
+    )
+    factors = ScoreFactors(
+        semantic=0.2,
+        structural=0.0,
+        recency=1.0,
+        live_ratio=1.0,
+        bonus=0.0,
+        corroboration=0,
+        score=0.107,
+    )
+
+    def fake_score(
+        _task_tokens: frozenset[str],
+        _current_nodes: set[str],
+        _reasoning: ReasoningRecord,
+        _verdict: str | None,
+        **_kwargs: object,
+    ) -> ScoreFactors:
+        return factors
+
+    monkeypatch.setattr("context_attention.score_candidate", fake_score)
+
+    rank_result = get_prior_context(
+        make_log(tmp_path / "rank", [reasoning]),
+        "session__current",
+        "unrelated query",
+        set(),
+        policy=Policy(),
+    )
+    threshold_result = get_prior_context(
+        make_log(tmp_path / "threshold", [reasoning]),
+        "session__current",
+        "unrelated query",
+        set(),
+        policy=Policy(attention=AttentionPolicy(selection="threshold")),
+    )
+
+    assert [item.reasoning_id for item in rank_result.items] == ["reasoning__measured"]
+    assert rank_result.threshold == pytest.approx(0.0535)
+    assert threshold_result.items == ()
+    assert [item.reasoning_id for item in threshold_result.rejected] == [
+        "reasoning__measured"
+    ]
+    assert threshold_result.threshold == 0.15
+
+
+def test_rank_selection_uses_gap_cutoff(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    scores = {
+        "reasoning__one": 0.40,
+        "reasoning__two": 0.35,
+        "reasoning__three": 0.10,
+    }
+    records: list[Record] = [
+        ReasoningRecord(
+            id=reasoning_id,
+            session_id=reasoning_id.replace("reasoning", "session"),
+            text="finding",
+        )
+        for reasoning_id in scores
+    ]
+
+    def fake_score(
+        _task_tokens: frozenset[str],
+        _current_nodes: set[str],
+        reasoning: ReasoningRecord,
+        _verdict: str | None,
+        **_kwargs: object,
+    ) -> ScoreFactors:
+        return ScoreFactors(
+            semantic=1.0,
+            structural=0.0,
+            recency=1.0,
+            live_ratio=1.0,
+            bonus=0.0,
+            corroboration=0,
+            score=scores[reasoning.id],
+        )
+
+    monkeypatch.setattr("context_attention.score_candidate", fake_score)
+    result = get_prior_context(
+        make_log(tmp_path, records),
+        "session__current",
+        "finding",
+        set(),
+        policy=Policy(),
+    )
+
+    assert [item.reasoning_id for item in result.items] == [
+        "reasoning__one",
+        "reasoning__two",
+    ]
+    assert [item.reasoning_id for item in result.rejected] == ["reasoning__three"]
+    assert result.threshold == pytest.approx(0.20)
+
+
+@pytest.mark.parametrize(
+    "factors",
+    [
+        ScoreFactors(0.0, 0.0, 1.0, 1.0, 0.0, 0, 0.5),
+        ScoreFactors(0.2, 0.0, 1.0, 1.0, -0.2, 0, -0.08),
+    ],
+)
+def test_rank_selection_rejects_noise_and_negative_scores(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    factors: ScoreFactors,
+) -> None:
+    reasoning = ReasoningRecord(
+        id="reasoning__candidate",
+        session_id="session__prior",
+        text="finding",
+    )
+
+    def fake_score(
+        _task_tokens: frozenset[str],
+        _current_nodes: set[str],
+        _reasoning: ReasoningRecord,
+        _verdict: str | None,
+        **_kwargs: object,
+    ) -> ScoreFactors:
+        return factors
+
+    monkeypatch.setattr("context_attention.score_candidate", fake_score)
+
+    result = get_prior_context(
+        make_log(tmp_path, [reasoning]),
+        "session__current",
+        "finding",
+        set(),
+        policy=Policy(),
+    )
+
+    assert result.items == ()
+    assert result.threshold == 0.0
+    assert [item.reasoning_id for item in result.rejected] == ["reasoning__candidate"]
+
+
+def test_rank_selection_matches_total_sort_key_and_caps_top_k(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    scores = {
+        "reasoning__b": 0.4,
+        "reasoning__a": 0.4,
+        "reasoning__d": 0.3,
+        "reasoning__c": 0.2,
+    }
+    records: list[Record] = [
+        ReasoningRecord(
+            id=reasoning_id,
+            session_id=reasoning_id.replace("reasoning", "session"),
+            text="finding",
+        )
+        for reasoning_id in reversed(scores)
+    ]
+
+    def fake_score(
+        _task_tokens: frozenset[str],
+        _current_nodes: set[str],
+        reasoning: ReasoningRecord,
+        _verdict: str | None,
+        **_kwargs: object,
+    ) -> ScoreFactors:
+        return ScoreFactors(1.0, 0.0, 1.0, 1.0, 0.0, 0, scores[reasoning.id])
+
+    monkeypatch.setattr("context_attention.score_candidate", fake_score)
+    result = get_prior_context(
+        make_log(tmp_path, records),
+        "session__current",
+        "finding",
+        set(),
+        top_k=2,
+        policy=Policy(),
+    )
+    expected = sorted(scores, key=lambda item: (-scores[item], item))
+
+    assert [item.reasoning_id for item in result.items] == expected[:2]
+    assert [item.reasoning_id for item in result.rejected] == expected[2:4]
 
 
 def test_redundancy_handles_empty_disjoint_and_identical_sets() -> None:
@@ -331,6 +523,7 @@ def test_old_record_falls_below_cutoff(tmp_path: Path) -> None:
         "matching task",
         {"node__one"},
         now=now,
+        policy=Policy(attention=AttentionPolicy(selection="threshold")),
     )
     assert selected.items == ()
     assert [item.reasoning_id for item in selected.rejected] == ["reasoning__old"]

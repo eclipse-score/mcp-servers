@@ -443,12 +443,14 @@ class ContextDisciplineMCP:
                 surfaced=[_attention_entry(item) for item in result.items],
                 rejected=[_attention_entry(item) for item in result.rejected],
                 threshold=result.threshold,
+                selection=result.selection,
             )
         )
         return {
             "items": [asdict(item) for item in result.items],
             "rejected": [asdict(item) for item in result.rejected],
             "threshold": result.threshold,
+            "selection": result.selection,
             "unresolved_nodes": unresolved_nodes,
             "rendered": render_prior_context(result.items, self.policy),
         }
@@ -606,11 +608,18 @@ TOOLS = [
                     "type": "array",
                     "items": {"type": "object"},
                     "description": (
-                        "Candidates below the attention threshold with score "
+                        "Candidates not selected by the active rule with score "
                         "factors only; reasoning text is omitted."
                     ),
                 },
-                "threshold": {"type": "number"},
+                "threshold": {
+                    "type": "number",
+                    "description": "Effective cutoff applied to this lookup.",
+                },
+                "selection": {
+                    "type": "string",
+                    "description": "Selection rule in force for this lookup.",
+                },
                 "unresolved_nodes": {
                     "type": "array",
                     "items": {"type": "string"},
@@ -622,6 +631,7 @@ TOOLS = [
                 "items",
                 "rejected",
                 "threshold",
+                "selection",
                 "unresolved_nodes",
                 "rendered",
             ],

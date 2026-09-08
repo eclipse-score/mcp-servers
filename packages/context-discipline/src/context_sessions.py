@@ -140,6 +140,7 @@ class AttentionRecord:
         default_factory=lambda: list[dict[str, Any]]()
     )
     threshold: float = 0.0
+    selection: str = ""
     timestamp: str = field(default_factory=_timestamp)
     record_type: str = field(default="attention", init=False)
 

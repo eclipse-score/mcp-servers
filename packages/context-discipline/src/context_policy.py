@@ -30,6 +30,8 @@ class AttentionPolicy:
     w_structural: float = 0.4
     outcome_bonus: float = 0.2
     score_threshold: float = 0.15
+    selection: str = "rank"
+    rank_gap_ratio: float = 0.5
     top_k: int = 5
     half_life_days: float = 30.0
     min_corroboration: int = 2
@@ -40,6 +42,7 @@ class AttentionPolicy:
             "w_structural",
             "outcome_bonus",
             "score_threshold",
+            "rank_gap_ratio",
         ):
             value = getattr(self, field_name)
             if (
@@ -49,6 +52,11 @@ class AttentionPolicy:
                 or not 0.0 <= value <= 1.0
             ):
                 raise ValueError(f"{field_name} must be between 0.0 and 1.0")
+        if type(self.selection) is not str or self.selection not in {
+            "rank",
+            "threshold",
+        }:
+            raise ValueError("selection must be 'rank' or 'threshold'")
         if type(self.top_k) is not int:
             raise ValueError("top_k must be an integer")
         if self.top_k < 1:
@@ -125,6 +133,8 @@ _SECTION_FIELDS: dict[str, dict[str, type]] = {
         "w_structural": float,
         "outcome_bonus": float,
         "score_threshold": float,
+        "selection": str,
+        "rank_gap_ratio": float,
         "top_k": int,
         "half_life_days": float,
         "min_corroboration": int,
@@ -156,6 +166,11 @@ def _validate_float(value: Any, field_name: str) -> None:
         raise ValueError(f"{field_name} must be a number")
 
 
+def _validate_str(value: Any, field_name: str) -> None:
+    if type(value) is not str:
+        raise ValueError(f"{field_name} must be a string")
+
+
 def _section_values(name: str, raw: Any) -> dict[str, Any]:
     if type(raw) is not dict:
         raise ValueError(f"{name} must be a TOML table")
@@ -170,8 +185,10 @@ def _section_values(name: str, raw: Any) -> dict[str, Any]:
             continue
         if field_type is int:
             _validate_int(values[field_name], f"{name}.{field_name}")
-        else:
+        elif field_type is float:
             _validate_float(values[field_name], f"{name}.{field_name}")
+        else:
+            _validate_str(values[field_name], f"{name}.{field_name}")
     return values
 
 

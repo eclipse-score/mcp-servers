@@ -38,6 +38,8 @@ version = 1
 [attention]
 top_k = 3
 half_life_days = 12
+selection = "threshold"
+rank_gap_ratio = 0.7
 [privacy]
 retention_days = 10
 [overlay]
@@ -48,6 +50,8 @@ max_nodes = 7
     policy = load_policy(tmp_path)
     assert policy.attention.top_k == 3
     assert policy.attention.half_life_days == 12
+    assert policy.attention.selection == "threshold"
+    assert policy.attention.rank_gap_ratio == 0.7
     assert policy.privacy.retention_days == 10
     assert policy.overlay.max_nodes == 7
 
@@ -97,4 +101,26 @@ def test_policy_rejects_float_for_integer_field(tmp_path: Path) -> None:
     path = tmp_path / "policy.toml"
     path.write_text("version = 1\n[overlay]\nmax_nodes = 1.0\n", encoding="utf-8")
     with pytest.raises(ValueError, match="max_nodes"):
+        load_policy(tmp_path, "policy.toml")
+
+
+@pytest.mark.parametrize("selection", ["invalid", 1, True])
+def test_policy_rejects_invalid_selection(tmp_path: Path, selection: object) -> None:
+    path = tmp_path / "policy.toml"
+    value = f'"{selection}"' if isinstance(selection, str) else str(selection).lower()
+    path.write_text(
+        f"version = 1\n[attention]\nselection = {value}\n",
+        encoding="utf-8",
+    )
+    with pytest.raises(ValueError, match="selection"):
+        load_policy(tmp_path, "policy.toml")
+
+
+def test_policy_rejects_out_of_range_rank_gap_ratio(tmp_path: Path) -> None:
+    path = tmp_path / "policy.toml"
+    path.write_text(
+        "version = 1\n[attention]\nrank_gap_ratio = 1.1\n",
+        encoding="utf-8",
+    )
+    with pytest.raises(ValueError, match="rank_gap_ratio"):
         load_policy(tmp_path, "policy.toml")

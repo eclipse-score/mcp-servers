@@ -111,6 +111,7 @@ def test_prior_context_is_available_after_reinitializing_manager(
     )
 
     assert result["items"]
+    assert result["selection"] == "rank"
     assert result["items"][0]["grounded_nodes"] == (
         "include_score_result_error_domain",
     )
@@ -259,7 +260,8 @@ def test_get_prior_context_returns_items_and_untrusted_rendered_block(
     assert result == {
         "items": [],
         "rejected": [],
-        "threshold": 0.15,
+        "threshold": 0.0,
+        "selection": "rank",
         "unresolved_nodes": [],
         "rendered": "",
     }
@@ -295,6 +297,10 @@ def test_get_prior_context_logs_attention_factors_and_unresolved_nodes(
     assert attention.rejected[0]["score"] == 0.0
     assert attention.rejected[0]["structural"] == 0.0
     assert attention.rejected[0]["live_ratio"] == 1.0
+    assert attention.selection == "rank"
+    assert attention.threshold == 0.0
+    assert result["selection"] == "rank"
+    assert result["threshold"] == 0.0
 
 
 def test_rejected_prior_context_omits_foreign_reasoning_text(
@@ -316,6 +322,49 @@ def test_rejected_prior_context_omits_foreign_reasoning_text(
 
     assert result["items"] == []
     assert "FOREIGN REASONING MUST NOT ESCAPE" not in json.dumps(result)
+
+
+def test_attention_record_round_trips_with_and_without_selection(
+    tmp_path: Path,
+) -> None:
+    manager = ContextDisciplineMCP(str(tmp_path))
+    manager.session_log.append(
+        AttentionRecord(
+            id="attention__rank",
+            threshold=0.2,
+            selection="rank",
+        )
+    )
+    manager.session_log.path.write_text(
+        manager.session_log.path.read_text(encoding="utf-8")
+        + json.dumps(
+            {
+                "id": "attention__legacy",
+                "record_type": "attention",
+                "session_id": "",
+                "task_id": "",
+                "query": "",
+                "current_nodes": [],
+                "surfaced": [],
+                "rejected": [],
+                "threshold": 0.15,
+                "timestamp": "2026-01-01T00:00:00+00:00",
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    records = [
+        record
+        for record in manager.session_log.read_all()
+        if isinstance(record, AttentionRecord)
+    ]
+
+    assert [(record.id, record.selection, record.threshold) for record in records] == [
+        ("attention__rank", "rank", 0.2),
+        ("attention__legacy", "", 0.15),
+    ]
 
 
 def test_add_overlay_node_uses_repo_slug_and_wire_names(tmp_path: Path) -> None:

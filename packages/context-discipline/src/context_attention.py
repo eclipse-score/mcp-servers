@@ -23,6 +23,7 @@ import re
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass, replace
 from datetime import UTC, datetime
+from heapq import nsmallest
 
 from context_policy import AttentionPolicy, Policy
 from context_sessions import OutcomeRecord, ReasoningRecord, SessionLog
@@ -148,6 +149,11 @@ class PriorContextResult:
     items: tuple[PriorContext, ...]
     rejected: tuple[RejectedCandidate, ...]
     threshold: float
+    selection: str
+
+
+def _has_signal(factors: ScoreFactors) -> bool:
+    return factors.score > 0.0 and (factors.semantic > 0.0 or factors.structural > 0.0)
 
 
 def _resolve_grounded_nodes(
@@ -247,21 +253,49 @@ def get_prior_context(
                 factors=factors,
             )
         )
-    candidates.sort(key=lambda item: (-item.score, item.reasoning_id))
-    accepted = tuple(
-        item
-        for item in candidates
-        if item.factors.score >= policy.attention.score_threshold
-    )
+
+    def key(item: PriorContext) -> tuple[float, str]:
+        return -item.factors.score, item.reasoning_id
+
+    if policy.attention.selection == "threshold":
+        pool = [
+            candidate
+            for candidate in candidates
+            if candidate.factors.score >= policy.attention.score_threshold
+        ]
+        cutoff = policy.attention.score_threshold
+    else:
+        eligible = [
+            candidate for candidate in candidates if _has_signal(candidate.factors)
+        ]
+        if eligible:
+            top = max(candidate.factors.score for candidate in eligible)
+            cutoff = policy.attention.rank_gap_ratio * top
+            pool = [
+                candidate for candidate in eligible if candidate.factors.score >= cutoff
+            ]
+        else:
+            cutoff = 0.0
+            pool = []
+    accepted = tuple(nsmallest(top_k, pool, key=key))
+    accepted_ids = {item.reasoning_id for item in accepted}
     rejected = tuple(
         _rejected_candidate(item, policy.privacy.max_prior_chars)
-        for item in candidates
-        if item.factors.score < policy.attention.score_threshold
+        for item in nsmallest(
+            top_k,
+            (
+                candidate
+                for candidate in candidates
+                if candidate.reasoning_id not in accepted_ids
+            ),
+            key=key,
+        )
     )
     return PriorContextResult(
-        items=accepted[:top_k],
-        rejected=rejected[:top_k],
-        threshold=policy.attention.score_threshold,
+        items=accepted,
+        rejected=rejected,
+        threshold=cutoff,
+        selection=policy.attention.selection,
     )
 
 
