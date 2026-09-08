@@ -134,9 +134,19 @@ class PriorContext:
 
 
 @dataclass(frozen=True)
+class RejectedCandidate:
+    reasoning_id: str
+    session_id: str
+    kind: str
+    grounded_nodes: tuple[str, ...]
+    verdict: str | None
+    factors: ScoreFactors
+
+
+@dataclass(frozen=True)
 class PriorContextResult:
     items: tuple[PriorContext, ...]
-    rejected: tuple[PriorContext, ...]
+    rejected: tuple[RejectedCandidate, ...]
     threshold: float
 
 
@@ -156,6 +166,19 @@ def _resolve_grounded_nodes(
             resolved.append(node_id)
             seen.add(node_id)
     return tuple(resolved)
+
+
+def _rejected_candidate(item: PriorContext, max_chars: int) -> RejectedCandidate:
+    return RejectedCandidate(
+        reasoning_id=item.reasoning_id,
+        session_id=sanitize_prior_text(item.session_id, max_chars),
+        kind=sanitize_prior_text(item.kind, max_chars),
+        grounded_nodes=tuple(
+            sanitize_prior_text(node_id, max_chars) for node_id in item.grounded_nodes
+        ),
+        verdict=item.verdict,
+        factors=item.factors,
+    )
 
 
 def get_prior_context(
@@ -231,7 +254,7 @@ def get_prior_context(
         if item.factors.score >= policy.attention.score_threshold
     )
     rejected = tuple(
-        item
+        _rejected_candidate(item, policy.privacy.max_prior_chars)
         for item in candidates
         if item.factors.score < policy.attention.score_threshold
     )

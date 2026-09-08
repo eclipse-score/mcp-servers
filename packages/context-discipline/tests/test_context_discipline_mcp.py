@@ -115,6 +115,11 @@ def test_prior_context_is_available_after_reinitializing_manager(
         "include_score_result_error_domain",
     )
     assert result["items"][0]["score"] > 0.0
+    assert (
+        "The error domain is shared by result construction."
+        in result["items"][0]["text"]
+    )
+    assert "The error domain is shared by result construction." in result["rendered"]
 
 
 def test_prior_context_resolves_legacy_grounded_nodes(
@@ -290,6 +295,27 @@ def test_get_prior_context_logs_attention_factors_and_unresolved_nodes(
     assert attention.rejected[0]["score"] == 0.0
     assert attention.rejected[0]["structural"] == 0.0
     assert attention.rejected[0]["live_ratio"] == 1.0
+
+
+def test_rejected_prior_context_omits_foreign_reasoning_text(
+    tmp_path: Path,
+) -> None:
+    _write_graph(tmp_path)
+    manager = ContextDisciplineMCP(str(tmp_path))
+    manager.initialize_session("Current task", [])
+    manager.session_log.append(
+        ReasoningRecord(
+            id="reasoning__hostile",
+            session_id="session__prior",
+            text="FOREIGN REASONING MUST NOT ESCAPE",
+            grounded_nodes=["include_score_result_error_domain"],
+        )
+    )
+
+    result = manager.get_prior_context("unrelated query", [])
+
+    assert result["items"] == []
+    assert "FOREIGN REASONING MUST NOT ESCAPE" not in json.dumps(result)
 
 
 def test_add_overlay_node_uses_repo_slug_and_wire_names(tmp_path: Path) -> None:

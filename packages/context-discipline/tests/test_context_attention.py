@@ -233,6 +233,40 @@ def test_prior_context_partitions_candidates_and_renders_items(
     assert render_prior_context(below_result.items, Policy()) == ""
 
 
+def test_rejected_candidates_are_sanitized_and_capped(tmp_path: Path) -> None:
+    now = datetime(2026, 1, 1, tzinfo=UTC)
+    records: list[Record] = [
+        ReasoningRecord(
+            id=f"reasoning__{index}",
+            session_id=f"session__{index}",
+            text=f"foreign prose {index}",
+            kind="kind\x1b",
+            grounded_nodes=["bad\x00node"],
+            timestamp=now.isoformat(),
+        )
+        for index in (2, 1, 3)
+    ]
+
+    result = get_prior_context(
+        make_log(tmp_path, records),
+        "session__current",
+        "unrelated query",
+        set(),
+        top_k=2,
+        now=now,
+        live_nodes=set(),
+        node_resolver=lambda _value: None,
+    )
+
+    assert result.items == ()
+    assert [item.reasoning_id for item in result.rejected] == [
+        "reasoning__1",
+        "reasoning__2",
+    ]
+    assert result.rejected[0].kind == "kind"
+    assert result.rejected[0].grounded_nodes == ("bad node",)
+
+
 def test_redundancy_handles_empty_disjoint_and_identical_sets() -> None:
     assert redundancy(set(), set()) == 0.0
     assert redundancy({"other"}, {"node"}) == 0.0
