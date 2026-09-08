@@ -54,5 +54,9 @@ marketplace:
       source: ./packages/graphify-codegraph
       version: "0.1.0"
       category: Productivity
-
+    - name: metamodel-flow
+      description: Normative S-CORE artifact model guidance generated from the metamodel projection.
+      source: ./packages/metamodel-flow
+      version: "0.1.0"
+      category: Productivity
 
