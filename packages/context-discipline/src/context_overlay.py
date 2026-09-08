@@ -37,6 +37,14 @@ OVERLAY_NODE_TYPES = frozenset(
         "workproduct",
         "issue",
         "pull_request",
+        "workflow",
+        "role",
+        "gd_req",
+        "gd_temp",
+        "gd_guidl",
+        "gd_chklst",
+        "std_req",
+        "std_wp",
     }
 )
 
@@ -58,6 +66,11 @@ OVERLAY_RELATIONS = frozenset(
         "supported_by",
         "fully_verifies",
         "partially_verifies",
+        "responsible",
+        "approved_by",
+        "input",
+        "output",
+        "complies",
     }
 )
 

@@ -144,6 +144,22 @@ def test_overlay_rejects_unknown_values() -> None:
         OverlayEdge("x", "", "affects", provenance())
 
 
+def test_process_overlay_values_are_accepted() -> None:
+    for node_type in (
+        "workflow",
+        "role",
+        "gd_req",
+        "gd_temp",
+        "gd_guidl",
+        "gd_chklst",
+        "std_req",
+        "std_wp",
+    ):
+        assert OverlayNode(f"{node_type}__1", node_type, "Node", provenance())
+    for relation in ("responsible", "approved_by", "input", "output", "complies"):
+        assert OverlayEdge("source", "target", relation, provenance())
+
+
 def test_overlay_save_is_deterministic(tmp_path: Path) -> None:
     first = OverlayStore(tmp_path / "first")
     first.upsert_node(node("b"))
