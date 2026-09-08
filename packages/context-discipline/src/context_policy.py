@@ -31,7 +31,8 @@ class AttentionPolicy:
     outcome_bonus: float = 0.2
     outcome_reward: float = 0.0
     score_threshold: float = 0.15
-    noise_floor: float = 0.038
+    noise_floor: float = 0.037
+    live_ratio_floor: float = 0.25
     selection: str = "rank"
     rank_gap_ratio: float = 0.5
     top_k: int = 5
@@ -46,6 +47,7 @@ class AttentionPolicy:
             "outcome_reward",
             "score_threshold",
             "noise_floor",
+            "live_ratio_floor",
             "rank_gap_ratio",
         ):
             value = getattr(self, field_name)
@@ -139,6 +141,7 @@ _SECTION_FIELDS: dict[str, dict[str, type]] = {
         "outcome_reward": float,
         "score_threshold": float,
         "noise_floor": float,
+        "live_ratio_floor": float,
         "selection": str,
         "rank_gap_ratio": float,
         "top_k": int,

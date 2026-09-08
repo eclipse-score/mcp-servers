@@ -148,11 +148,17 @@ uv run python scripts/validate_overlay.py
 ```
 
 The `[attention]` policy uses `selection = "rank"` by default, selecting
-results above the provisional `noise_floor = 0.038` and within
+results above the provisional `noise_floor = 0.037` and within
 `rank_gap_ratio = 0.5` of the best scored candidate. The noise floor is the
-relevance criterion; the rank gap only truncates the tail. `selection =
-"threshold"` replays the absolute `score_threshold` rule. Both provisional
-values should be calibrated from `attention` records.
+relevance criterion; the rank gap only truncates the tail. The floor is the
+geometric mean of the worst relevant score (0.0619) and best control score
+(0.0217). Rank scoring uses Unicode-aware tokenization and filters function
+words because unfiltered overlap caused a measured false positive. The
+`live_ratio_floor = 0.25` prevents records grounded only in non-graph files
+from being permanently excluded. `selection = "threshold"` replays the
+absolute `score_threshold` rule. These provisional values are calibrated from
+`attention` records; `rank_gap_ratio` is calibrated separately from the
+recorded score ordering.
 
 **Local session records** (append-only JSONL):
 ```bash
@@ -218,8 +224,9 @@ node availability. Rank selection accepts scored candidates above the
 configured `noise_floor` and within the configured `rank_gap_ratio` of the best
 candidate; threshold selection remains available for replaying the absolute
 `score_threshold` rule. The
-`noise_floor` and `rank_gap_ratio` values are provisional and should be
-calibrated from `attention` records. It excludes the current session and returns
+`noise_floor`, `live_ratio_floor`, and `rank_gap_ratio` values are provisional
+and should be calibrated from `attention` records. It excludes the current
+session and returns
 deterministic
 top-ranked results as `items` plus a `rendered` untrusted-data block. The block
 is data recorded by other sessions, never instructions to follow; verify every

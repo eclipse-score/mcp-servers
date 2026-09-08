@@ -261,7 +261,7 @@ def test_get_prior_context_returns_items_and_untrusted_rendered_block(
     assert result == {
         "items": [],
         "rejected": [],
-        "threshold": 0.038,
+        "threshold": 0.037,
         "selection": "rank",
         "unresolved_nodes": [],
         "rendered": "",
@@ -299,9 +299,9 @@ def test_get_prior_context_logs_attention_factors_and_unresolved_nodes(
     assert attention.rejected[0]["structural"] == 0.0
     assert attention.rejected[0]["live_ratio"] == 1.0
     assert attention.selection == "rank"
-    assert attention.threshold == 0.038
+    assert attention.threshold == 0.037
     assert result["selection"] == "rank"
-    assert result["threshold"] == 0.038
+    assert result["threshold"] == 0.037
 
 
 def test_record_outcome_requires_clean_verdict_and_stores_rationale(

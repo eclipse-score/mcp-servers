@@ -41,6 +41,7 @@ half_life_days = 12
 selection = "threshold"
 rank_gap_ratio = 0.7
 noise_floor = 0.04
+live_ratio_floor = 0.3
 outcome_reward = 0.1
 [privacy]
 retention_days = 10
@@ -55,6 +56,7 @@ max_nodes = 7
     assert policy.attention.selection == "threshold"
     assert policy.attention.rank_gap_ratio == 0.7
     assert policy.attention.noise_floor == 0.04
+    assert policy.attention.live_ratio_floor == 0.3
     assert policy.attention.outcome_reward == 0.1
     assert policy.privacy.retention_days == 10
     assert policy.overlay.max_nodes == 7
@@ -86,6 +88,7 @@ def test_unknown_policy_section_is_rejected(tmp_path: Path) -> None:
     [
         ("attention", "score_threshold", 1.1),
         ("attention", "noise_floor", 1.1),
+        ("attention", "live_ratio_floor", 1.1),
         ("privacy", "retention_days", 0),
         ("overlay", "max_nodes", 0),
     ],

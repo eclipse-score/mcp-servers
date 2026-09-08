@@ -21,11 +21,13 @@ from context_attention import (
     PriorContext,
     ScoreFactors,
     get_prior_context,
+    jaccard,
     normalize_verdict,
     redundancy,
     render_prior_context,
     sanitize_prior_text,
     score_candidate,
+    tokenize,
 )
 from context_policy import AttentionPolicy, Policy, PrivacyPolicy
 from context_sessions import (
@@ -41,6 +43,256 @@ def make_log(path: Path, records: Sequence[Record]) -> SessionLog:
     for record in records:
         log.append(record)
     return log
+
+
+_MEASURED_RECORDS = {
+    "reasoning__f1b56ce6": (
+        "score/filesystem als zweiten Consumer auswählen und seine "
+        "FilesystemErrorDomain als programmweit eindeutig, nicht pro "
+        "Übersetzungseinheit dupliziert bewerten."
+    ),
+    "reasoning__6a69df07": (
+        "Die Fehlerdomäne von score/concurrency/future ist im normal "
+        "gelinkten Programm nicht pro Consumer-Übersetzungseinheit "
+        "dupliziert, sondern liegt als genau eine Instanz aus error.cpp "
+        "vor; alle Consumer erreichen sie über die extern definierte "
+        "Funktion score::concurrency::MakeError()."
+    ),
+    "reasoning__d510a950": (
+        "Die Fehlerdomäne von score/mw/log/detail liegt im normal "
+        "gelinkten Programm als genau eine Instanz pro eingebundener "
+        "types_and_errors-Bibliothekskopie vor und wird nicht pro "
+        "Consumer-Übersetzungseinheit dupliziert."
+    ),
+    "reasoning__55d99821": (
+        "Unter score/ wird //visibility:public ausschließlich für "
+        "Bibliotheksziele verwendet, deren API von score_baselibs-Nutzern "
+        "konsumiert werden soll; interne Hilfsbibliotheken werden auf das "
+        "benötigte Paket oder höchstens dessen Unterpakete beschränkt. Als "
+        "Beispiele belegen //score/result:error die öffentliche und "
+        "//score/language/safecpp/scoped_function/details:allocator_wrapper "
+        "die paketinterne Variante."
+    ),
+    "reasoning__a9798d59": (
+        "Die SigEvent-Fehlerdomäne des score::Result-Consumers score/os "
+        "liegt im normal gelinkten Programm als eine Instanz vor und wird "
+        "nicht pro Consumer-Übersetzungseinheit dupliziert."
+    ),
+}
+
+_MEASURED_QUERIES = {
+    "attention__7b7a9192": (
+        "Prüfen, ob die Fehlerdomäneninstanz kMwLogErrorDomain des "
+        "score::Result-Consumers score/mw/log programmweit genau einmal "
+        "existiert oder wegen interner Linkage pro Übersetzungseinheit "
+        "dupliziert wird."
+    ),
+    "attention__575df4a7": (
+        "Bazel visibility unter score/: öffentliche Bibliotheken gegenüber "
+        "internen Bibliotheken, mit zwei konkreten Beispielen"
+    ),
+    "attention__acb6fd00": (
+        "Prüfe für den score::Result-Consumer score/os, ob dessen "
+        "Fehlerdomäne programmweit als eine Instanz vorliegt oder pro "
+        "Übersetzungseinheit dupliziert wird. Keine Repository-Dateien "
+        "ändern; Identität über zwei Übersetzungseinheiten empirisch prüfen."
+    ),
+    "attention__d7cf66c8": (
+        "Ermittle read-only, wie in score/ die Testabdeckung für Rust-Ziele "
+        "konfiguriert ist und welche Bazel-Konfiguration dafür verwendet wird."
+    ),
+}
+
+
+@pytest.mark.parametrize(
+    ("attention_id", "reasoning_id", "expected"),
+    [
+        ("attention__7b7a9192", "reasoning__f1b56ce6", 0.2273),
+        ("attention__7b7a9192", "reasoning__6a69df07", 0.1290),
+        ("attention__575df4a7", "reasoning__f1b56ce6", 0.0476),
+        ("attention__575df4a7", "reasoning__d510a950", 0.0385),
+        ("attention__575df4a7", "reasoning__6a69df07", 0.0345),
+        ("attention__acb6fd00", "reasoning__d510a950", 0.2414),
+        ("attention__acb6fd00", "reasoning__f1b56ce6", 0.2400),
+        ("attention__acb6fd00", "reasoning__6a69df07", 0.2188),
+        ("attention__acb6fd00", "reasoning__55d99821", 0.0417),
+        ("attention__d7cf66c8", "reasoning__f1b56ce6", 0.0476),
+        ("attention__d7cf66c8", "reasoning__a9798d59", 0.0435),
+        ("attention__d7cf66c8", "reasoning__d510a950", 0.0385),
+        ("attention__d7cf66c8", "reasoning__6a69df07", 0.0345),
+        ("attention__d7cf66c8", "reasoning__55d99821", 0.0513),
+    ],
+)
+def test_measured_unicode_semantic_similarity(
+    attention_id: str, reasoning_id: str, expected: float
+) -> None:
+    assert jaccard(
+        tokenize(_MEASURED_QUERIES[attention_id]),
+        tokenize(_MEASURED_RECORDS[reasoning_id]),
+    ) == pytest.approx(expected, abs=0.00005)
+
+
+def test_tokenize_preserves_unicode_words_and_filters_function_words() -> None:
+    tokens = tokenize(
+        "Fehlerdomäne Übersetzungseinheit die und wird über für the and with"
+    )
+
+    assert "fehlerdomäne" in tokens
+    assert "übersetzungseinheit" in tokens
+    assert not tokens.intersection({"die", "und", "wird", "über", "für"})
+    assert not tokens.intersection({"the", "and", "with"})
+
+
+def _measured_reasoning(
+    reasoning_id: str,
+    session_number: int,
+    live_count: int,
+    node_count: int,
+    now: datetime,
+) -> ReasoningRecord:
+    grounded_nodes = [f"node__{reasoning_id}__{index}" for index in range(node_count)]
+    return ReasoningRecord(
+        id=reasoning_id,
+        session_id=f"session__measured_{session_number}",
+        task_id=f"task__measured_{session_number}",
+        text=_MEASURED_RECORDS[reasoning_id],
+        grounded_nodes=grounded_nodes,
+        timestamp=now.isoformat(),
+    )
+
+
+@pytest.mark.parametrize(
+    (
+        "query_id",
+        "records",
+        "expected_items",
+        "expected_rejected",
+        "expected_cutoff",
+    ),
+    [
+        (
+            "attention__7b7a9192",
+            [
+                ("reasoning__f1b56ce6", 4, 5),
+                ("reasoning__6a69df07", 3, 4),
+            ],
+            ["reasoning__f1b56ce6", "reasoning__6a69df07"],
+            [],
+            0.0545454545,
+        ),
+        (
+            "attention__575df4a7",
+            [
+                ("reasoning__f1b56ce6", 3, 4),
+                ("reasoning__d510a950", 4, 5),
+                ("reasoning__6a69df07", 4, 5),
+            ],
+            [],
+            [
+                "reasoning__f1b56ce6",
+                "reasoning__d510a950",
+                "reasoning__6a69df07",
+            ],
+            0.037,
+        ),
+        (
+            "attention__acb6fd00",
+            [
+                ("reasoning__d510a950", 4, 5),
+                ("reasoning__f1b56ce6", 4, 5),
+                ("reasoning__6a69df07", 3, 4),
+                ("reasoning__55d99821", 0, 4),
+            ],
+            [
+                "reasoning__d510a950",
+                "reasoning__f1b56ce6",
+                "reasoning__6a69df07",
+            ],
+            ["reasoning__55d99821"],
+            0.0579310345,
+        ),
+        (
+            "attention__d7cf66c8",
+            [
+                ("reasoning__f1b56ce6", 3, 4),
+                ("reasoning__a9798d59", 5, 6),
+                ("reasoning__d510a950", 4, 5),
+                ("reasoning__6a69df07", 4, 5),
+                ("reasoning__55d99821", 0, 4),
+            ],
+            [],
+            [
+                "reasoning__a9798d59",
+                "reasoning__f1b56ce6",
+                "reasoning__d510a950",
+                "reasoning__6a69df07",
+                "reasoning__55d99821",
+            ],
+            0.037,
+        ),
+    ],
+)
+def test_measured_runs_use_stopwords_and_live_ratio_floor(
+    tmp_path: Path,
+    query_id: str,
+    records: list[tuple[str, int, int]],
+    expected_items: list[str],
+    expected_rejected: list[str],
+    expected_cutoff: float,
+) -> None:
+    now = datetime(2026, 1, 1, tzinfo=UTC)
+    reasoning_records = [
+        _measured_reasoning(reasoning_id, index, live_count, node_count, now)
+        for index, (reasoning_id, live_count, node_count) in enumerate(records)
+    ]
+    live_nodes = {
+        node
+        for reasoning in reasoning_records
+        for node in reasoning.grounded_nodes[
+            : next(
+                live_count
+                for reasoning_id, live_count, _node_count in records
+                if reasoning_id == reasoning.id
+            )
+        ]
+    }
+
+    result = get_prior_context(
+        make_log(tmp_path, reasoning_records),
+        "session__current",
+        _MEASURED_QUERIES[query_id],
+        {"current__node"},
+        live_nodes=live_nodes,
+        now=now,
+    )
+
+    assert [item.reasoning_id for item in result.items] == expected_items
+    assert [item.reasoning_id for item in result.rejected] == expected_rejected
+    assert result.threshold == pytest.approx(expected_cutoff, abs=0.000001)
+
+
+def test_live_ratio_floor_keeps_non_graph_records_scoreable() -> None:
+    now = datetime(2026, 1, 1, tzinfo=UTC)
+    reasoning = ReasoningRecord(
+        session_id="session__prior",
+        text="matching task",
+        grounded_nodes=["non_graph_file"],
+        timestamp=now.isoformat(),
+    )
+
+    factors = score_candidate(
+        frozenset({"matching", "task"}),
+        {"current__node"},
+        reasoning,
+        None,
+        policy=Policy(),
+        now=now,
+        corroboration=0,
+        live_nodes=set(),
+    )
+
+    assert factors.live_ratio == 0.25
+    assert factors.score == pytest.approx(0.15)
 
 
 def test_prior_context_excludes_own_session_and_fail_scores_lower(
@@ -366,7 +618,7 @@ def test_rank_selection_rejects_measured_control_scores(
         "reasoning__two",
         "reasoning__three",
     ]
-    assert result.threshold == pytest.approx(0.038)
+    assert result.threshold == pytest.approx(0.037)
 
 
 def test_rank_selection_uses_gap_cutoff(
@@ -458,7 +710,7 @@ def test_rank_selection_rejects_noise_and_negative_scores(
     )
 
     assert result.items == ()
-    assert result.threshold == pytest.approx(0.038)
+    assert result.threshold == pytest.approx(0.037)
     assert [item.reasoning_id for item in result.rejected] == ["reasoning__candidate"]
 
 
@@ -827,7 +1079,8 @@ def test_live_node_ratio_scales_score() -> None:
         live_nodes=set(),
     )
     assert half.score == pytest.approx(full.score / 2)
-    assert none.score == 0.0
+    assert none.live_ratio == 0.25
+    assert none.score == pytest.approx(0.25)
 
 
 def test_sanitize_prior_text_removes_controls_and_truncates() -> None:
