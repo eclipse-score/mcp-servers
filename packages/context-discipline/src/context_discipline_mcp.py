@@ -409,6 +409,7 @@ class ContextDisciplineMCP:
             set(resolved_nodes),
             policy=self.policy,
             live_nodes=set(graph.nodes),
+            node_resolver=lambda value: resolve_node_id(value, graph, self.repo_path),
         )
         return {
             "items": [asdict(item) for item in items],

@@ -116,6 +116,34 @@ def test_prior_context_is_available_after_reinitializing_manager(
     assert result["items"][0]["score"] > 0.0
 
 
+def test_prior_context_resolves_legacy_grounded_nodes(
+    tmp_path: Path,
+) -> None:
+    _write_graph(tmp_path)
+    manager = ContextDisciplineMCP(str(tmp_path))
+    manager.initialize_session("Inspect error domain", [])
+    manager.session_log.append(
+        ReasoningRecord(
+            id="reasoning__legacy",
+            session_id="session__legacy",
+            text="The error domain is shared by result construction.",
+            grounded_nodes=["include/score/result/error_domain.h"],
+        )
+    )
+
+    manager.initialize_session("Inspect error domain", [])
+    result = manager.get_prior_context(
+        "The error domain is shared by result construction.",
+        ["include/score/result/error_domain.h"],
+    )
+
+    assert result["items"]
+    assert result["items"][0]["grounded_nodes"] == (
+        "include_score_result_error_domain",
+    )
+    assert result["items"][0]["score"] > 0.0
+
+
 def test_record_decision_resolves_nodes_and_reports_unknown_values(
     tmp_path: Path,
 ) -> None:

@@ -300,6 +300,87 @@ def test_corroboration_gates_positive_bonus_and_fail_is_immediate() -> None:
     assert failed == pytest.approx(base - policy.attention.outcome_bonus)
 
 
+def test_node_resolver_corroborates_path_and_id_records(
+    tmp_path: Path,
+) -> None:
+    now = datetime(2026, 2, 1, tzinfo=UTC)
+    path = "include/score/result/error_domain.h"
+    node_id = "include_score_result_error_domain"
+    records: list[Record] = [
+        ReasoningRecord(
+            id="reasoning__path",
+            session_id="session__path",
+            task_id="task__path",
+            text="matching task",
+            grounded_nodes=[path],
+            timestamp=now.isoformat(),
+        ),
+        ReasoningRecord(
+            id="reasoning__id",
+            session_id="session__id",
+            task_id="task__id",
+            text="matching task",
+            grounded_nodes=[node_id],
+            timestamp=now.isoformat(),
+        ),
+        OutcomeRecord(
+            id="outcome__path",
+            session_id="session__path",
+            task_id="task__path",
+            verdict="pass",
+            coverage=1.0,
+        ),
+        OutcomeRecord(
+            id="outcome__id",
+            session_id="session__id",
+            task_id="task__id",
+            verdict="pass",
+            coverage=1.0,
+        ),
+    ]
+
+    selected = get_prior_context(
+        make_log(tmp_path, records),
+        "session__current",
+        "matching task",
+        {node_id},
+        now=now,
+        live_nodes={node_id},
+        node_resolver=lambda value: node_id if value == path else value,
+    )
+
+    assert [item.reasoning_id for item in selected] == [
+        "reasoning__id",
+        "reasoning__path",
+    ]
+    assert all(item.grounded_nodes == (node_id,) for item in selected)
+    assert all(item.score > 1.0 for item in selected)
+
+
+def test_node_resolver_preserves_unresolvable_grounded_nodes(
+    tmp_path: Path,
+) -> None:
+    reasoning = ReasoningRecord(
+        id="reasoning__raw",
+        session_id="session__raw",
+        text="matching task",
+        grounded_nodes=["unknown/path.h"],
+        timestamp=datetime(2026, 2, 1, tzinfo=UTC).isoformat(),
+    )
+
+    selected = get_prior_context(
+        make_log(tmp_path, [reasoning]),
+        "session__current",
+        "matching task",
+        {"unknown/path.h"},
+        now=datetime(2026, 2, 1, tzinfo=UTC),
+        node_resolver=lambda _value: None,
+    )
+
+    assert selected
+    assert selected[0].grounded_nodes == ("unknown/path.h",)
+
+
 def test_live_node_ratio_scales_score() -> None:
     now = datetime(2026, 2, 1, tzinfo=UTC)
     reasoning = ReasoningRecord(

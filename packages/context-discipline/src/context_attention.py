@@ -20,8 +20,8 @@ records fall out of attention without being deleted from the session log.
 from __future__ import annotations
 
 import re
-from collections.abc import Sequence
-from dataclasses import dataclass
+from collections.abc import Callable, Sequence
+from dataclasses import dataclass, replace
 from datetime import UTC, datetime
 
 from context_policy import AttentionPolicy, Policy
@@ -112,6 +112,24 @@ class PriorContext:
     verdict: str | None
 
 
+def _resolve_grounded_nodes(
+    grounded_nodes: Sequence[str],
+    node_resolver: Callable[[str], str | None] | None,
+) -> tuple[str, ...]:
+    if node_resolver is None:
+        return tuple(grounded_nodes)
+
+    resolved: list[str] = []
+    seen: set[str] = set()
+    for value in grounded_nodes:
+        canonical = node_resolver(value)
+        node_id = canonical if canonical is not None else value
+        if node_id not in seen:
+            resolved.append(node_id)
+            seen.add(node_id)
+    return tuple(resolved)
+
+
 def get_prior_context(
     log: SessionLog,
     session_id: str,
@@ -122,6 +140,7 @@ def get_prior_context(
     now: datetime | None = None,
     live_nodes: set[str] | None = None,
     top_k: int | None = None,
+    node_resolver: Callable[[str], str | None] | None = None,
 ) -> tuple[PriorContext, ...]:
     policy = policy or Policy()
     now = now or datetime.now(tz=UTC)
@@ -132,27 +151,31 @@ def get_prior_context(
         for record in records
         if isinstance(record, OutcomeRecord)
     }
+    resolved_records: list[tuple[ReasoningRecord, tuple[str, ...]]] = []
     node_sessions: dict[str, set[str]] = {}
     for record in records:
         if isinstance(record, ReasoningRecord):
-            for node_id in record.grounded_nodes:
+            grounded_nodes = _resolve_grounded_nodes(
+                record.grounded_nodes, node_resolver
+            )
+            resolved_records.append((record, grounded_nodes))
+            for node_id in grounded_nodes:
                 node_sessions.setdefault(node_id, set()).add(record.session_id)
     candidates: list[PriorContext] = []
     task_tokens = tokenize(task_text)
-    for reasoning in records:
-        if not isinstance(reasoning, ReasoningRecord):
-            continue
+    for reasoning, grounded_nodes in resolved_records:
         if reasoning.session_id == session_id:
             continue
         verdict = outcomes.get(reasoning.task_id)
         corroborating_sessions: set[str] = set()
-        for node_id in reasoning.grounded_nodes:
+        for node_id in grounded_nodes:
             corroborating_sessions.update(node_sessions.get(node_id, set()))
         corroboration = len(corroborating_sessions)
+        resolved_reasoning = replace(reasoning, grounded_nodes=list(grounded_nodes))
         score = score_candidate(
             task_tokens,
             current_nodes,
-            reasoning,
+            resolved_reasoning,
             verdict,
             policy=policy,
             now=now,
@@ -168,7 +191,7 @@ def get_prior_context(
                         reasoning.text, policy.privacy.max_prior_chars
                     ),
                     kind=reasoning.kind,
-                    grounded_nodes=tuple(reasoning.grounded_nodes),
+                    grounded_nodes=grounded_nodes,
                     score=score,
                     verdict=verdict,
                 )
