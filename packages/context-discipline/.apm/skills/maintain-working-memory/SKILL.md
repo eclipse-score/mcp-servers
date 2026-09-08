@@ -85,7 +85,7 @@ if unverified:
 
 ```python
 # Document what you decide and why (with reversibility)
-wm.record_decision(
+decision_result = wm.record_decision(
     decision="Implement async in auth.py first, then update callers",
     reason=[
         "Minimizes risk of partial refactoring",
@@ -93,7 +93,12 @@ wm.record_decision(
         "Can test refactored functions independently",
     ],
     reversible=True,
+    grounded_nodes=["auth.py", "auth_module"],
 )
+# Returns {"unresolved_nodes": []}
+# Grounded nodes accept repo-relative source paths or canonical graph node IDs.
+# Non-empty unresolved_nodes entries do not contribute to retrieval; restate
+# them as real paths or graph IDs.
 ```
 
 ### Update progress

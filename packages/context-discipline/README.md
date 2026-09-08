@@ -93,10 +93,15 @@ auth_structure = wm.query_graph("Show me auth.py structure")
 # Returns {"query": "...", "matches": [...], "setup": {...}}
 
 # Agent records findings
-wm.record_decision(
+decision_result = wm.record_decision(
     decision="Use existing auth module",
     reason=["Reduces complexity", "Proven in production"],
+    grounded_nodes=["lib/auth.py", "auth_module"],
 )
+# Returns {"unresolved_nodes": []}
+# Grounded nodes accept repo-relative source paths or canonical graph node IDs.
+# If unresolved_nodes is non-empty, those entries do not contribute to
+# retrieval; restate them as real paths or graph IDs.
 
 # At the end: record what worked
 wm.record_outcome(

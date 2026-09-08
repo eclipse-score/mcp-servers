@@ -103,13 +103,21 @@ def _resolve_nodes(
 ) -> tuple[list[str], list[str]]:
     resolved: list[str] = []
     unresolved: list[str] = []
+    seen_resolved: set[str] = set()
+    seen_unresolved: set[str] = set()
     for value in values:
         canonical = resolve_node_id(value, graph, repo_path)
         if canonical is None:
-            resolved.append(value)
-            unresolved.append(value)
+            if value not in seen_resolved:
+                resolved.append(value)
+                seen_resolved.add(value)
+            if value not in seen_unresolved:
+                unresolved.append(value)
+                seen_unresolved.add(value)
         else:
-            resolved.append(canonical)
+            if canonical not in seen_resolved:
+                resolved.append(canonical)
+                seen_resolved.add(canonical)
     return resolved, unresolved
 
 
@@ -470,7 +478,11 @@ TOOLS = [
     },
     {
         "name": "record_decision",
-        "description": "Record a decision and its reasons.",
+        "description": (
+            "Record a decision and its reasons. Grounded nodes may be "
+            "repo-relative source paths or canonical graph node IDs; paths "
+            "are resolved against the graph."
+        ),
         "inputSchema": {
             "type": "object",
             "properties": {
@@ -480,9 +492,25 @@ TOOLS = [
                 "grounded_nodes": {
                     "type": "array",
                     "items": {"type": "string"},
+                    "description": (
+                        "Repo-relative source paths or canonical graph node "
+                        "IDs grounding the decision; paths are resolved "
+                        "against the graph."
+                    ),
                 },
             },
             "required": ["decision", "reason"],
+        },
+        "outputSchema": {
+            "type": "object",
+            "properties": {
+                "unresolved_nodes": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "description": "Grounded entries that could not be resolved.",
+                }
+            },
+            "required": ["unresolved_nodes"],
         },
     },
     {

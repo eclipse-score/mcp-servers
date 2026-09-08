@@ -20,6 +20,7 @@ from context_discipline_mcp import (
     SessionRecord,
     call_tool,
 )
+from context_merge import MergedGraph
 
 
 def _write_graph(tmp_path: Path) -> Path:
@@ -129,6 +130,7 @@ def test_record_decision_resolves_nodes_and_reports_unknown_values(
             "include/score/result/error_domain.h",
             "include_score_result_error_domain",
             "unknown/path.h",
+            "unknown/path.h",
         ],
     )
 
@@ -139,7 +141,6 @@ def test_record_decision_resolves_nodes_and_reports_unknown_values(
         if isinstance(record, ReasoningRecord)
     ][0]
     assert reasoning.grounded_nodes == [
-        "include_score_result_error_domain",
         "include_score_result_error_domain",
         "unknown/path.h",
     ]
@@ -161,8 +162,6 @@ def test_record_decision_resolves_absolute_paths(tmp_path: Path) -> None:
 
 def test_graph_source_file_index_picks_shortest_id(tmp_path: Path) -> None:
     _write_graph(tmp_path)
-
-    from context_merge import MergedGraph
 
     graph = MergedGraph.build(tmp_path)
 

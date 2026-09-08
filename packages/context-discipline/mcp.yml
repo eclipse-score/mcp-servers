@@ -55,7 +55,7 @@ tools:
         - query
 
   - name: record_decision
-    description: Record a decision with reasoning
+    description: Record a decision with reasoning; grounded nodes may be repo-relative source paths or canonical graph node IDs, and paths are resolved against the graph
     input_schema:
       type: object
       properties:
@@ -74,10 +74,20 @@ tools:
           type: array
           items:
             type: string
-          description: Graph nodes grounding the decision
+          description: Repo-relative source paths or canonical graph node IDs grounding the decision; paths are resolved against the graph
       required:
         - decision
         - reason
+    output_schema:
+      type: object
+      properties:
+        unresolved_nodes:
+          type: array
+          items:
+            type: string
+          description: Grounded entries that could not be resolved
+      required:
+        - unresolved_nodes
 
   - name: record_outcome
     description: Record final outcome for local learning
