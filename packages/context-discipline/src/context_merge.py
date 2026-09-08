@@ -147,7 +147,7 @@ class MergedGraph:
                 label_casefold_candidates.setdefault(node.label.casefold(), set()).add(
                     node.id
                 )
-                label_tail_candidates.setdefault(_label_tail(node.label), set()).add(
+                label_tail_candidates.setdefault(label_tail(node.label), set()).add(
                     node.id
                 )
                 source_file = raw.get("source_file")
@@ -189,9 +189,7 @@ class MergedGraph:
             label_casefold_candidates.setdefault(node.label.casefold(), set()).add(
                 node.id
             )
-            label_tail_candidates.setdefault(_label_tail(node.label), set()).add(
-                node.id
-            )
+            label_tail_candidates.setdefault(label_tail(node.label), set()).add(node.id)
         for raw in overlay.edges:
             edge = MergedEdge(raw.source, raw.target, raw.relation, "domain")
             key = (edge.source, edge.target, edge.relation)
@@ -268,7 +266,8 @@ class MergedGraph:
         )
 
 
-def _label_tail(value: str) -> str:
+def label_tail(value: str) -> str:
+    """Normalize a label tail by stripping ``()`` and template arguments."""
     segment = value.rsplit("::", 1)[-1].strip()
     if segment.endswith("()"):
         segment = segment[:-2].rstrip()

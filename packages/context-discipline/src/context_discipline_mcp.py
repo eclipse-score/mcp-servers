@@ -34,7 +34,7 @@ from context_attention import (
     render_prior_context,
     sanitize_prior_text,
 )
-from context_merge import MergedGraph, _label_tail
+from context_merge import MergedGraph, label_tail
 from context_overlay import OverlayEdge, OverlayNode, OverlayStore, Provenance
 from context_policy import load_policy
 from context_sessions import (
@@ -108,7 +108,7 @@ def resolve_node_id(value: str, graph: MergedGraph, repo_path: Path) -> str | No
     resolved = graph.label_casefold_index.get(value.casefold())
     if resolved is not None:
         return resolved
-    return graph.label_tail_index.get(_label_tail(value))
+    return graph.label_tail_index.get(label_tail(value))
 
 
 def _resolve_nodes(
