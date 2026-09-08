@@ -20,7 +20,8 @@ description: Use context-discipline MCP tools to track goals, assumptions, and d
 
 Use the `context-discipline` MCP tools to track your session explicitly without custom YAML maintenance.
 
-Simple, self-contained implementation. Works standalone. Designed to integrate with Phase 2 LocalObservationManager without breaking changes.
+Simple, self-contained implementation. Works standalone. Session records and
+durable context overlays are stored locally.
 
 ## When to invoke
 
@@ -41,9 +42,9 @@ wm.initialize_session(
         "Identify all auth functions",
         "Map dependencies on sync calls",
         "Implement async versions",
-        "Update call sites"
+        "Update call sites",
     ],
-    assumptions=["auth.py is the only auth module"]
+    assumptions=["auth.py is the only auth module"],
 )
 ```
 
@@ -61,7 +62,10 @@ wm.query_graph("All functions in lib/auth.py")
 wm.initialize_session(
     goal="Track assumptions",
     subgoals=[],
-    assumptions={"auth.py is only auth module": "high", "No external code imports auth": "medium"},
+    assumptions={
+        "auth.py is only auth module": "high",
+        "No external code imports auth": "medium",
+    },
 )
 
 # Before risky decisions, check for unverified ones
@@ -70,7 +74,9 @@ if unverified:
     print(f"WARNING: {len(unverified)} unverified assumptions")
     for a in unverified:
         if a.confidence in ["low", "medium"]:
-            print(f"  - {a.key} (confidence: {a.confidence}) - VERIFY BEFORE PROCEEDING")
+            print(
+                f"  - {a.key} (confidence: {a.confidence}) - VERIFY BEFORE PROCEEDING"
+            )
 ```
 
 ### Record decisions
@@ -82,9 +88,9 @@ wm.record_decision(
     reason=[
         "Minimizes risk of partial refactoring",
         "Only 3 call sites to update",
-        "Can test refactored functions independently"
+        "Can test refactored functions independently",
     ],
-    reversible=True
+    reversible=True,
 )
 ```
 
@@ -120,7 +126,7 @@ if unverified:
 The six MCP tools are the complete current API: `initialize_session`,
 `query_graph`, `record_decision`, `record_outcome`, `get_working_memory`, and
 `get_unverified_assumptions`. Working memory is held for the running server
-session; completed outcomes are persisted to `.score-local/observations.jsonl`.
+session; collaboration records are persisted to `.score-local/sessions.jsonl`.
 
 ## Automatic Benefits
 
@@ -129,4 +135,4 @@ session; completed outcomes are persisted to `.score-local/observations.jsonl`.
 - ✅ **Fast queries** — O(1) lookups via session index
 - ✅ **Importance/coverage filtering** — Automatic signal vs. noise detection
 - ✅ **No maintenance burden** — Simple Python class, no YAML to maintain
-- ✅ **Global learning ready** — Integrates with Phase 2 experience aggregation
+- ✅ **Intersession retrieval** — Reuses relevant reasoning from prior sessions
