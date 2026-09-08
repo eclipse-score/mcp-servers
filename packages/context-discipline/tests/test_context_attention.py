@@ -21,6 +21,7 @@ from context_attention import (
     PriorContext,
     ScoreFactors,
     get_prior_context,
+    normalize_verdict,
     redundancy,
     render_prior_context,
     sanitize_prior_text,
@@ -129,9 +130,9 @@ def test_score_candidate_returns_reproducible_factors() -> None:
     assert factors.structural == 1.0
     assert factors.recency == 1.0
     assert factors.live_ratio == 0.5
-    assert factors.bonus == 0.2
+    assert factors.bonus == 0.0
     assert factors.corroboration == 2
-    assert factors.score == pytest.approx((0.6 + 0.4 + 0.2) * 1.0 * 0.5)
+    assert factors.score == pytest.approx((0.6 + 0.4) * 1.0 * 0.5)
 
 
 def test_threshold_and_top_k_are_deterministic(tmp_path: Path) -> None:
@@ -324,6 +325,50 @@ def test_rank_selection_accepts_measured_subthreshold_score(
     assert threshold_result.threshold == 0.15
 
 
+def test_rank_selection_rejects_measured_control_scores(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    scores = {
+        "reasoning__one": 0.0218,
+        "reasoning__two": 0.0155,
+        "reasoning__three": 0.0123,
+    }
+    records: list[Record] = [
+        ReasoningRecord(
+            id=reasoning_id,
+            session_id=reasoning_id.replace("reasoning", "session"),
+            text="finding",
+        )
+        for reasoning_id in scores
+    ]
+
+    def fake_score(
+        _task_tokens: frozenset[str],
+        _current_nodes: set[str],
+        reasoning: ReasoningRecord,
+        _verdict: str | None,
+        **_kwargs: object,
+    ) -> ScoreFactors:
+        return ScoreFactors(1.0, 0.0, 1.0, 1.0, 0.0, 0, scores[reasoning.id])
+
+    monkeypatch.setattr("context_attention.score_candidate", fake_score)
+    result = get_prior_context(
+        make_log(tmp_path, records),
+        "session__current",
+        "finding",
+        set(),
+        policy=Policy(),
+    )
+
+    assert result.items == ()
+    assert [item.reasoning_id for item in result.rejected] == [
+        "reasoning__one",
+        "reasoning__two",
+        "reasoning__three",
+    ]
+    assert result.threshold == pytest.approx(0.038)
+
+
 def test_rank_selection_uses_gap_cutoff(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -378,7 +423,7 @@ def test_rank_selection_uses_gap_cutoff(
 @pytest.mark.parametrize(
     "factors",
     [
-        ScoreFactors(0.0, 0.0, 1.0, 1.0, 0.0, 0, 0.5),
+        ScoreFactors(0.0, 0.0, 1.0, 1.0, 0.0, 0, 0.02),
         ScoreFactors(0.2, 0.0, 1.0, 1.0, -0.2, 0, -0.08),
     ],
 )
@@ -413,7 +458,7 @@ def test_rank_selection_rejects_noise_and_negative_scores(
     )
 
     assert result.items == ()
-    assert result.threshold == 0.0
+    assert result.threshold == pytest.approx(0.038)
     assert [item.reasoning_id for item in result.rejected] == ["reasoning__candidate"]
 
 
@@ -598,8 +643,67 @@ def test_corroboration_gates_positive_bonus_and_fail_is_immediate() -> None:
         live_nodes=None,
     )
     assert one.score == pytest.approx(base.score)
-    assert two.score == pytest.approx(base.score + policy.attention.outcome_bonus)
+    assert two.score == pytest.approx(base.score)
     assert failed.score == pytest.approx(base.score - policy.attention.outcome_bonus)
+
+
+def test_outcome_reward_requires_corroboration() -> None:
+    now = datetime(2026, 1, 1, tzinfo=UTC)
+    reasoning = ReasoningRecord(
+        session_id="session__one",
+        text="matching task",
+        grounded_nodes=["node__one"],
+        timestamp=now.isoformat(),
+    )
+    policy = Policy(attention=AttentionPolicy(outcome_reward=0.1))
+    base = score_candidate(
+        frozenset({"matching", "task"}),
+        {"node__one"},
+        reasoning,
+        None,
+        policy=policy,
+        now=now,
+        corroboration=0,
+        live_nodes=None,
+    )
+    uncorroborated = score_candidate(
+        frozenset({"matching", "task"}),
+        {"node__one"},
+        reasoning,
+        "pass",
+        policy=policy,
+        now=now,
+        corroboration=1,
+        live_nodes=None,
+    )
+    corroborated = score_candidate(
+        frozenset({"matching", "task"}),
+        {"node__one"},
+        reasoning,
+        "pass",
+        policy=policy,
+        now=now,
+        corroboration=2,
+        live_nodes=None,
+    )
+    assert uncorroborated.score == pytest.approx(base.score)
+    assert corroborated.bonus == pytest.approx(0.1)
+
+
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [
+        (None, None),
+        ("", None),
+        ("PASS: FutureErrorDomain liegt im Zentrum", "pass"),
+        ("pass: FilesystemErrorDomain ist zentralisiert", "pass"),
+        ("PASS: kMwLogErrorDomain wird nicht dupliziert", "pass"),
+        ("fail: this is counter evidence", "fail"),
+        ("unknown prose", None),
+    ],
+)
+def test_normalize_verdict(value: str | None, expected: str | None) -> None:
+    assert normalize_verdict(value) == expected
 
 
 def test_node_resolver_corroborates_path_and_id_records(
@@ -656,7 +760,7 @@ def test_node_resolver_corroborates_path_and_id_records(
         "reasoning__path",
     ]
     assert all(item.grounded_nodes == (node_id,) for item in selected.items)
-    assert all(item.score > 1.0 for item in selected.items)
+    assert all(item.score == pytest.approx(1.0) for item in selected.items)
 
 
 def test_node_resolver_preserves_unresolvable_grounded_nodes(

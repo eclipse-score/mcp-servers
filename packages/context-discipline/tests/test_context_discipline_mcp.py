@@ -17,6 +17,7 @@ from pathlib import Path
 from context_discipline_mcp import (
     AttentionRecord,
     ContextDisciplineMCP,
+    OutcomeRecord,
     ReasoningRecord,
     SessionRecord,
     call_tool,
@@ -260,7 +261,7 @@ def test_get_prior_context_returns_items_and_untrusted_rendered_block(
     assert result == {
         "items": [],
         "rejected": [],
-        "threshold": 0.0,
+        "threshold": 0.038,
         "selection": "rank",
         "unresolved_nodes": [],
         "rendered": "",
@@ -298,9 +299,128 @@ def test_get_prior_context_logs_attention_factors_and_unresolved_nodes(
     assert attention.rejected[0]["structural"] == 0.0
     assert attention.rejected[0]["live_ratio"] == 1.0
     assert attention.selection == "rank"
-    assert attention.threshold == 0.0
+    assert attention.threshold == 0.038
     assert result["selection"] == "rank"
-    assert result["threshold"] == 0.0
+    assert result["threshold"] == 0.038
+
+
+def test_record_outcome_requires_clean_verdict_and_stores_rationale(
+    tmp_path: Path,
+) -> None:
+    manager = ContextDisciplineMCP(str(tmp_path))
+    manager.initialize_session("Goal", [])
+
+    for verdict in ("PASS: prose", "Pass", ""):
+        try:
+            manager.record_outcome("Goal", verdict, 1.0, [], [])
+        except ValueError:
+            pass
+        else:
+            raise AssertionError(f"{verdict!r} should be rejected")
+    try:
+        manager.record_outcome("Goal", 1, 1.0, [], [])  # type: ignore[arg-type]
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("non-string verdict should be rejected")
+
+    manager.record_outcome(
+        "Goal",
+        "pass",
+        1.0,
+        [],
+        [],
+        rationale="RATIONALE MARKER\x00",
+    )
+    outcome = next(
+        record
+        for record in manager.session_log.read_all()
+        if isinstance(record, OutcomeRecord)
+    )
+    assert outcome.verdict == "pass"
+    assert outcome.rationale == "RATIONALE MARKER"
+
+    result = manager.get_prior_context("unrelated", [])
+    assert "RATIONALE MARKER" not in json.dumps(result)
+
+
+def test_outcome_record_round_trips_with_and_without_rationale(
+    tmp_path: Path,
+) -> None:
+    manager = ContextDisciplineMCP(str(tmp_path))
+    manager.session_log.append(
+        OutcomeRecord(
+            id="outcome__new",
+            verdict="pass",
+            rationale="documented",
+        )
+    )
+    manager.session_log.path.write_text(
+        manager.session_log.path.read_text(encoding="utf-8")
+        + json.dumps(
+            {
+                "id": "outcome__legacy",
+                "record_type": "outcome",
+                "session_id": "",
+                "task_id": "",
+                "verdict": "fail",
+                "coverage": 0.2,
+                "timestamp": "2026-01-01T00:00:00+00:00",
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    outcomes = [
+        record
+        for record in manager.session_log.read_all()
+        if isinstance(record, OutcomeRecord)
+    ]
+    assert [(record.id, record.rationale) for record in outcomes] == [
+        ("outcome__new", "documented"),
+        ("outcome__legacy", ""),
+    ]
+
+
+def test_record_decision_resolves_labels_and_rejects_ambiguous_labels(
+    tmp_path: Path,
+) -> None:
+    graph_path = tmp_path / "graphify-out" / "graph.json"
+    graph_path.parent.mkdir()
+    graph_path.write_text(
+        json.dumps(
+            {
+                "nodes": [
+                    {"id": "error_domain", "label": "ErrorDomain"},
+                    {"id": "make_error", "label": "MakeError"},
+                    {"id": "duplicate_one", "label": "Duplicate"},
+                    {"id": "duplicate_two", "label": "Duplicate"},
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+    manager = ContextDisciplineMCP(str(tmp_path))
+    manager.initialize_session("Goal", [])
+    result = manager.record_decision(
+        "Use graph labels.",
+        [],
+        grounded_nodes=["ErrorDomain", "errordomain", "score::detail::MakeError()"],
+    )
+    assert result == {"unresolved_nodes": []}
+    reasoning = next(
+        record
+        for record in manager.session_log.read_all()
+        if isinstance(record, ReasoningRecord)
+    )
+    assert reasoning.grounded_nodes == ["error_domain", "make_error"]
+
+    unresolved = manager.record_decision(
+        "Reject ambiguity.",
+        [],
+        grounded_nodes=["Duplicate", "unknown"],
+    )
+    assert unresolved == {"unresolved_nodes": ["Duplicate", "unknown"]}
 
 
 def test_rejected_prior_context_omits_foreign_reasoning_text(

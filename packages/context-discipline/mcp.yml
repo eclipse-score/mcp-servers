@@ -101,6 +101,9 @@ tools:
           type: string
           enum: ["pass", "fail"]
           description: Did the task succeed?
+        rationale:
+          type: string
+          description: Free-text justification stored for audit only
         coverage:
           type: number
           minimum: 0.0

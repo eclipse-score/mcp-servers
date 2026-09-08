@@ -50,6 +50,14 @@ def jaccard(a: frozenset[str], b: frozenset[str]) -> float:
     return len(a & b) / len(union) if union else 0.0
 
 
+def normalize_verdict(value: str | None) -> str | None:
+    """Map recorded verdicts to ``pass``, ``fail``, or ``None``."""
+    if not value:
+        return None
+    token = re.split(r"[:\s]", value.strip().lower(), maxsplit=1)[0]
+    return token if token in {"pass", "fail"} else None
+
+
 @dataclass(frozen=True)
 class ScoreFactors:
     semantic: float
@@ -90,11 +98,12 @@ def score_candidate(
         if live_nodes is None or not reasoning.grounded_nodes
         else len(grounded_nodes & live_nodes) / len(reasoning.grounded_nodes)
     )
+    verdict = normalize_verdict(verdict)
     # Uncorroborated positive outcomes are neutral; corroborated positives
     # require independent evidence, while negative outcomes apply immediately.
     if verdict == "pass":
         bonus = (
-            policy.attention.outcome_bonus
+            policy.attention.outcome_reward
             if corroboration >= policy.attention.min_corroboration
             else 0.0
         )
@@ -150,10 +159,6 @@ class PriorContextResult:
     rejected: tuple[RejectedCandidate, ...]
     threshold: float
     selection: str
-
-
-def _has_signal(factors: ScoreFactors) -> bool:
-    return factors.score > 0.0 and (factors.semantic > 0.0 or factors.structural > 0.0)
 
 
 def _resolve_grounded_nodes(
@@ -223,7 +228,7 @@ def get_prior_context(
     for reasoning, grounded_nodes in resolved_records:
         if reasoning.session_id == session_id:
             continue
-        verdict = outcomes.get(reasoning.task_id)
+        verdict = normalize_verdict(outcomes.get(reasoning.task_id))
         corroborating_sessions: set[str] = set()
         for node_id in grounded_nodes:
             corroborating_sessions.update(node_sessions.get(node_id, set()))
@@ -265,18 +270,13 @@ def get_prior_context(
         ]
         cutoff = policy.attention.score_threshold
     else:
-        eligible = [
-            candidate for candidate in candidates if _has_signal(candidate.factors)
+        top = max((candidate.factors.score for candidate in candidates), default=0.0)
+        cutoff = max(
+            policy.attention.noise_floor, policy.attention.rank_gap_ratio * top
+        )
+        pool = [
+            candidate for candidate in candidates if candidate.factors.score >= cutoff
         ]
-        if eligible:
-            top = max(candidate.factors.score for candidate in eligible)
-            cutoff = policy.attention.rank_gap_ratio * top
-            pool = [
-                candidate for candidate in eligible if candidate.factors.score >= cutoff
-            ]
-        else:
-            cutoff = 0.0
-            pool = []
     accepted = tuple(nsmallest(top_k, pool, key=key))
     accepted_ids = {item.reasoning_id for item in accepted}
     rejected = tuple(

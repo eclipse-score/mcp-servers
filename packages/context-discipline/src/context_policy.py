@@ -29,7 +29,9 @@ class AttentionPolicy:
     w_semantic: float = 0.6
     w_structural: float = 0.4
     outcome_bonus: float = 0.2
+    outcome_reward: float = 0.0
     score_threshold: float = 0.15
+    noise_floor: float = 0.038
     selection: str = "rank"
     rank_gap_ratio: float = 0.5
     top_k: int = 5
@@ -41,7 +43,9 @@ class AttentionPolicy:
             "w_semantic",
             "w_structural",
             "outcome_bonus",
+            "outcome_reward",
             "score_threshold",
+            "noise_floor",
             "rank_gap_ratio",
         ):
             value = getattr(self, field_name)
@@ -132,7 +136,9 @@ _SECTION_FIELDS: dict[str, dict[str, type]] = {
         "w_semantic": float,
         "w_structural": float,
         "outcome_bonus": float,
+        "outcome_reward": float,
         "score_threshold": float,
+        "noise_floor": float,
         "selection": str,
         "rank_gap_ratio": float,
         "top_k": int,

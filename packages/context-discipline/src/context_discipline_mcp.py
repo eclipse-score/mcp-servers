@@ -32,8 +32,9 @@ from context_attention import (
     RejectedCandidate,
     get_prior_context,
     render_prior_context,
+    sanitize_prior_text,
 )
-from context_merge import MergedGraph
+from context_merge import MergedGraph, _label_tail
 from context_overlay import OverlayEdge, OverlayNode, OverlayStore, Provenance
 from context_policy import load_policy
 from context_sessions import (
@@ -101,7 +102,13 @@ def resolve_node_id(value: str, graph: MergedGraph, repo_path: Path) -> str | No
         resolved = graph.source_file_index.get(candidate)
         if resolved is not None:
             return resolved
-    return None
+    resolved = graph.label_index.get(value)
+    if resolved is not None:
+        return resolved
+    resolved = graph.label_casefold_index.get(value.casefold())
+    if resolved is not None:
+        return resolved
+    return graph.label_tail_index.get(_label_tail(value))
 
 
 def _resolve_nodes(
@@ -350,6 +357,7 @@ class ContextDisciplineMCP:
         coverage: float,
         surfaced_nodes: list[str],
         missing_nodes: list[str],
+        rationale: str = "",
     ) -> None:
         """
         Record final outcome for local learning.
@@ -357,10 +365,14 @@ class ContextDisciplineMCP:
         Args:
             task: Task description
             verdict: "pass" or "fail"
+            rationale: Free-text justification, stored for audit only
             coverage: Coverage ratio (0.0-1.0)
             surfaced_nodes: Nodes surfaced in solution
             missing_nodes: Nodes missed/not addressed
         """
+        if type(verdict) is not str or verdict not in {"pass", "fail"}:
+            raise ValueError("verdict must be exactly one of 'pass' or 'fail'")
+        rationale = sanitize_prior_text(rationale, self.policy.privacy.max_prior_chars)
         # Record to working memory
         self.working_memory.append(
             WorkingMemoryEntry(
@@ -385,6 +397,7 @@ class ContextDisciplineMCP:
                 session_id=self.session_id,
                 task_id=task_id,
                 verdict=verdict,
+                rationale=rationale,
                 coverage=coverage,
             )
         )
@@ -560,7 +573,11 @@ TOOLS = [
             "type": "object",
             "properties": {
                 "task": {"type": "string"},
-                "verdict": {"type": "string"},
+                "verdict": {"type": "string", "enum": ["pass", "fail"]},
+                "rationale": {
+                    "type": "string",
+                    "description": "Free-text justification stored for audit only.",
+                },
                 "coverage": {"type": "number", "minimum": 0.0, "maximum": 1.0},
                 "surfaced_nodes": {"type": "array", "items": {"type": "string"}},
                 "missing_nodes": {"type": "array", "items": {"type": "string"}},

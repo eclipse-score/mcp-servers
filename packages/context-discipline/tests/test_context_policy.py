@@ -40,6 +40,8 @@ top_k = 3
 half_life_days = 12
 selection = "threshold"
 rank_gap_ratio = 0.7
+noise_floor = 0.04
+outcome_reward = 0.1
 [privacy]
 retention_days = 10
 [overlay]
@@ -52,6 +54,8 @@ max_nodes = 7
     assert policy.attention.half_life_days == 12
     assert policy.attention.selection == "threshold"
     assert policy.attention.rank_gap_ratio == 0.7
+    assert policy.attention.noise_floor == 0.04
+    assert policy.attention.outcome_reward == 0.1
     assert policy.privacy.retention_days == 10
     assert policy.overlay.max_nodes == 7
 
@@ -81,6 +85,7 @@ def test_unknown_policy_section_is_rejected(tmp_path: Path) -> None:
     ("section", "field", "value"),
     [
         ("attention", "score_threshold", 1.1),
+        ("attention", "noise_floor", 1.1),
         ("privacy", "retention_days", 0),
         ("overlay", "max_nodes", 0),
     ],
@@ -123,4 +128,14 @@ def test_policy_rejects_out_of_range_rank_gap_ratio(tmp_path: Path) -> None:
         encoding="utf-8",
     )
     with pytest.raises(ValueError, match="rank_gap_ratio"):
+        load_policy(tmp_path, "policy.toml")
+
+
+def test_policy_rejects_out_of_range_noise_floor(tmp_path: Path) -> None:
+    path = tmp_path / "policy.toml"
+    path.write_text(
+        "version = 1\n[attention]\nnoise_floor = -0.1\n",
+        encoding="utf-8",
+    )
+    with pytest.raises(ValueError, match="noise_floor"):
         load_policy(tmp_path, "policy.toml")

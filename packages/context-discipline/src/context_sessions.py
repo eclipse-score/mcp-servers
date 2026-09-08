@@ -19,7 +19,7 @@
 | task | Decompose | id, session_id, text, parent_id, timestamp |
 | reasoning | Deduce | id, session_id, task_id, text, kind, grounded_nodes, timestamp |
 | retrieval | Distribute | id, session_id, task_id, query, returned_nodes, timestamp |
-| outcome | — | id, session_id, task_id, verdict, coverage, timestamp |
+| outcome | — | id, session_id, task_id, verdict, rationale, coverage, timestamp |
 """
 
 from __future__ import annotations
@@ -121,6 +121,7 @@ class OutcomeRecord:
     session_id: str = ""
     task_id: str = ""
     verdict: str = "fail"
+    rationale: str = ""
     coverage: float = 0.0
     timestamp: str = field(default_factory=_timestamp)
     record_type: str = field(default="outcome", init=False)

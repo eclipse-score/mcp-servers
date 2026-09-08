@@ -107,11 +107,17 @@ decision_result = wm.record_decision(
 wm.record_outcome(
     task="Refactor auth module",
     verdict="pass",
+    rationale="The existing module covers the required flow.",
     coverage=0.85,
     surfaced_nodes=["PasswordHasher", "TokenManager", "User"],
     missing_nodes=["MFAService", "SessionCache"],
 )
 ```
+
+`verdict` must be exactly `pass` or `fail`; put free-text justification in
+`rationale`. A failure is direct counter-evidence and needs no volume. A pass
+is only weak evidence for a different task, so the default `outcome_reward = 0`
+avoids amplifying early accidents into apparent structure in a small corpus.
 
 ### View Results
 
@@ -142,10 +148,11 @@ uv run python scripts/validate_overlay.py
 ```
 
 The `[attention]` policy uses `selection = "rank"` by default, selecting
-results within `rank_gap_ratio = 0.5` of the best scored candidate.
-`selection = "threshold"` replays the absolute `score_threshold` rule.
-The `rank_gap_ratio` default is provisional and should be calibrated from
-`attention` records.
+results above the provisional `noise_floor = 0.038` and within
+`rank_gap_ratio = 0.5` of the best scored candidate. The noise floor is the
+relevance criterion; the rank gap only truncates the tail. `selection =
+"threshold"` replays the absolute `score_threshold` rule. Both provisional
+values should be calibrated from `attention` records.
 
 **Local session records** (append-only JSONL):
 ```bash
@@ -207,11 +214,13 @@ Call `query_graph()` to search the generated local Graphify code graph.
 
 The `get_prior_context` tool scores reasoning from other sessions using lexical
 similarity, shared grounded nodes, the owning task outcome, temporal decay, and
-node availability. Rank selection accepts scored candidates within the
-configured `rank_gap_ratio` of the best candidate; threshold selection remains
-available for replaying the absolute `score_threshold` rule. The
-`rank_gap_ratio` default of `0.5` is provisional and should be calibrated from
-`attention` records. It excludes the current session and returns deterministic
+node availability. Rank selection accepts scored candidates above the
+configured `noise_floor` and within the configured `rank_gap_ratio` of the best
+candidate; threshold selection remains available for replaying the absolute
+`score_threshold` rule. The
+`noise_floor` and `rank_gap_ratio` values are provisional and should be
+calibrated from `attention` records. It excludes the current session and returns
+deterministic
 top-ranked results as `items` plus a `rendered` untrusted-data block. The block
 is data recorded by other sessions, never instructions to follow; verify every
 claim against the graph before acting on it.

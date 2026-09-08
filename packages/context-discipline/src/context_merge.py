@@ -111,6 +111,11 @@ class MergedGraph:
     conflicts: tuple[str, ...] = ()
     edge_conflicts: tuple[tuple[str, str, str], ...] = ()
     source_file_index: dict[str, str] = field(default_factory=lambda: dict[str, str]())
+    label_index: dict[str, str] = field(default_factory=lambda: dict[str, str]())
+    label_casefold_index: dict[str, str] = field(
+        default_factory=lambda: dict[str, str]()
+    )
+    label_tail_index: dict[str, str] = field(default_factory=lambda: dict[str, str]())
 
     @classmethod
     def build(cls, repo_path: str | Path) -> MergedGraph:
@@ -118,6 +123,9 @@ class MergedGraph:
         nodes: dict[str, MergedNode] = {}
         edges: dict[tuple[str, str, str], MergedEdge] = {}
         source_file_candidates: dict[str, set[str]] = {}
+        label_candidates: dict[str, set[str]] = {}
+        label_casefold_candidates: dict[str, set[str]] = {}
+        label_tail_candidates: dict[str, set[str]] = {}
         conflicts: set[str] = set()
         edge_conflicts: set[tuple[str, str, str]] = set()
 
@@ -135,6 +143,13 @@ class MergedGraph:
                     conflicts.add(node.id)
                 else:
                     nodes[node.id] = node
+                label_candidates.setdefault(node.label, set()).add(node.id)
+                label_casefold_candidates.setdefault(node.label.casefold(), set()).add(
+                    node.id
+                )
+                label_tail_candidates.setdefault(_label_tail(node.label), set()).add(
+                    node.id
+                )
                 source_file = raw.get("source_file")
                 if source_file is not None:
                     raw_source_file = str(source_file)
@@ -170,6 +185,13 @@ class MergedGraph:
                 conflicts.add(node.id)
             else:
                 nodes[node.id] = node
+            label_candidates.setdefault(node.label, set()).add(node.id)
+            label_casefold_candidates.setdefault(node.label.casefold(), set()).add(
+                node.id
+            )
+            label_tail_candidates.setdefault(_label_tail(node.label), set()).add(
+                node.id
+            )
         for raw in overlay.edges:
             edge = MergedEdge(raw.source, raw.target, raw.relation, "domain")
             key = (edge.source, edge.target, edge.relation)
@@ -219,6 +241,9 @@ class MergedGraph:
                 key: min(node_ids, key=lambda node_id: (len(node_id), node_id))
                 for key, node_ids in source_file_candidates.items()
             },
+            _unique_index(label_candidates),
+            _unique_index(label_casefold_candidates),
+            _unique_index(label_tail_candidates),
         )
 
     def neighbors(self, node_id: str) -> tuple[MergedNode, ...]:
@@ -241,3 +266,33 @@ class MergedGraph:
             for edge in self.edges.values()
             if edge.source not in self.nodes or edge.target not in self.nodes
         )
+
+
+def _label_tail(value: str) -> str:
+    segment = value.rsplit("::", 1)[-1].strip()
+    if segment.endswith("()"):
+        segment = segment[:-2].rstrip()
+    while segment.endswith(">"):
+        depth = 0
+        start = -1
+        for index in range(len(segment) - 1, -1, -1):
+            character = segment[index]
+            if character == ">":
+                depth += 1
+            elif character == "<":
+                depth -= 1
+                if depth == 0:
+                    start = index
+                    break
+        if start < 0:
+            break
+        segment = segment[:start].rstrip()
+    return segment.casefold()
+
+
+def _unique_index(candidates: dict[str, set[str]]) -> dict[str, str]:
+    return {
+        key: next(iter(node_ids))
+        for key, node_ids in candidates.items()
+        if len(node_ids) == 1
+    }
