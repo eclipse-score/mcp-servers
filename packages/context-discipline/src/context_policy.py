@@ -34,7 +34,7 @@ class AttentionPolicy:
     noise_floor: float = 0.037
     live_ratio_floor: float = 0.25
     selection: str = "rank"
-    rank_gap_ratio: float = 0.5
+    rank_gap_ratio: float = 0.35
     top_k: int = 5
     half_life_days: float = 30.0
     min_corroboration: int = 2

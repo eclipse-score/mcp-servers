@@ -149,7 +149,7 @@ uv run python scripts/validate_overlay.py
 
 The `[attention]` policy uses `selection = "rank"` by default, selecting
 results above the provisional `noise_floor = 0.037` and within
-`rank_gap_ratio = 0.5` of the best scored candidate. The noise floor is the
+`rank_gap_ratio = 0.35` of the best scored candidate. The noise floor is the
 relevance criterion; the rank gap only truncates the tail. The floor is the
 geometric mean of the worst relevant score (0.0619) and best control score
 (0.0217). Rank scoring uses Unicode-aware tokenization and filters function
@@ -237,6 +237,12 @@ to the nodes underneath them, and widens the focus by one undirected graph hop.
 Its score is the share of a prior record's graph-resident grounded nodes inside
 that focus, with at least two such nodes required. The earlier exact-intersection
 measure was zero by construction when related records grounded different modules.
+Agents should include the module or directory paths touched by a task in
+`current_nodes` (for example, `score/os` and `score/result`) rather than only
+symbol names, because graph locality provides no structural contribution for
+symbol-only input at the relevant granularity. A named value that expands to a
+very large subtree can dilute containment; no specificity cap is implemented
+because the tested 25% graph cap dropped `score/os` and lost the measured signal.
 
 ## Durable Context Overlay
 

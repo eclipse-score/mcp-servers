@@ -178,7 +178,7 @@ def _measured_reasoning(
             ],
             ["reasoning__f1b56ce6", "reasoning__6a69df07"],
             [],
-            0.0511363636,
+            0.037,
         ),
         (
             "attention__575df4a7",
@@ -209,7 +209,7 @@ def _measured_reasoning(
                 "reasoning__6a69df07",
             ],
             ["reasoning__55d99821"],
-            0.0579310345,
+            0.0405516720,
         ),
         (
             "attention__d7cf66c8",
@@ -618,7 +618,7 @@ def test_rank_selection_accepts_measured_subthreshold_score(
     )
 
     assert [item.reasoning_id for item in rank_result.items] == ["reasoning__measured"]
-    assert rank_result.threshold == pytest.approx(0.0535)
+    assert rank_result.threshold == pytest.approx(0.03745)
     assert threshold_result.items == ()
     assert [item.reasoning_id for item in threshold_result.rejected] == [
         "reasoning__measured"
@@ -718,7 +718,58 @@ def test_rank_selection_uses_gap_cutoff(
         "reasoning__two",
     ]
     assert [item.reasoning_id for item in result.rejected] == ["reasoning__three"]
-    assert result.threshold == pytest.approx(0.20)
+    assert result.threshold == pytest.approx(0.14)
+
+
+def test_rank_gap_keeps_relevant_structural_tail(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    scores = {
+        "reasoning__top": 0.49,
+        "reasoning__tail": 0.21,
+        "reasoning__control": 0.05,
+    }
+    records: list[Record] = [
+        ReasoningRecord(
+            id=reasoning_id,
+            session_id=reasoning_id.replace("reasoning", "session"),
+            text="finding",
+        )
+        for reasoning_id in scores
+    ]
+
+    def fake_score(
+        _task_tokens: frozenset[str],
+        _current_nodes: set[str],
+        reasoning: ReasoningRecord,
+        _verdict: str | None,
+        **_kwargs: object,
+    ) -> ScoreFactors:
+        return ScoreFactors(1.0, 0.0, 1.0, 1.0, 0.0, 0, scores[reasoning.id])
+
+    monkeypatch.setattr("context_attention.score_candidate", fake_score)
+    rank_result = get_prior_context(
+        make_log(tmp_path / "rank", records),
+        "session__current",
+        "finding",
+        set(),
+        policy=Policy(attention=AttentionPolicy(rank_gap_ratio=0.35)),
+    )
+    previous_result = get_prior_context(
+        make_log(tmp_path / "previous", records),
+        "session__current",
+        "finding",
+        set(),
+        policy=Policy(attention=AttentionPolicy(rank_gap_ratio=0.5)),
+    )
+
+    assert [item.reasoning_id for item in rank_result.items] == [
+        "reasoning__top",
+        "reasoning__tail",
+    ]
+    assert [item.reasoning_id for item in previous_result.items] == ["reasoning__top"]
+    assert rank_result.threshold == pytest.approx(0.1715)
+    assert previous_result.threshold == pytest.approx(0.245)
 
 
 @pytest.mark.parametrize(
@@ -1107,9 +1158,9 @@ def test_structural_ground_ignores_unresolvable_nodes(
         {"node__one", "node__two"},
         now=now,
         live_nodes={"node__one", "node__two"},
-        node_resolver=lambda value: value
-        if value in {"node__one", "node__two"}
-        else None,
+        node_resolver=lambda value: (
+            value if value in {"node__one", "node__two"} else None
+        ),
     )
 
     assert selected.items[0].grounded_nodes == (
