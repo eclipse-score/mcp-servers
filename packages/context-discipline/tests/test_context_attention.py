@@ -1088,6 +1088,38 @@ def test_node_resolver_preserves_unresolvable_grounded_nodes(
     assert selected.items[0].grounded_nodes == ("unknown/path.h",)
 
 
+def test_structural_ground_ignores_unresolvable_nodes(
+    tmp_path: Path,
+) -> None:
+    now = datetime(2026, 2, 1, tzinfo=UTC)
+    reasoning = ReasoningRecord(
+        id="reasoning__mixed",
+        session_id="session__mixed",
+        text="matching task",
+        grounded_nodes=["node__one", "node__two", "unknown/path.h"],
+        timestamp=now.isoformat(),
+    )
+
+    selected = get_prior_context(
+        make_log(tmp_path, [reasoning]),
+        "session__current",
+        "matching task",
+        {"node__one", "node__two"},
+        now=now,
+        live_nodes={"node__one", "node__two"},
+        node_resolver=lambda value: value
+        if value in {"node__one", "node__two"}
+        else None,
+    )
+
+    assert selected.items[0].grounded_nodes == (
+        "node__one",
+        "node__two",
+        "unknown/path.h",
+    )
+    assert selected.items[0].factors.structural == 1.0
+
+
 def test_live_node_ratio_scales_score() -> None:
     now = datetime(2026, 2, 1, tzinfo=UTC)
     reasoning = ReasoningRecord(

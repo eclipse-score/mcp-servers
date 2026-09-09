@@ -467,12 +467,17 @@ def get_prior_context(
             corroborating_sessions.update(node_sessions.get(node_id, set()))
         corroboration = len(corroborating_sessions)
         resolved_reasoning = replace(reasoning, grounded_nodes=list(grounded_nodes))
+        resolved_ground = (
+            set(grounded_nodes)
+            if live_nodes is None
+            else set(grounded_nodes) & live_nodes
+        )
         factors = score_candidate(
             task_tokens,
             current_nodes,
             resolved_reasoning,
             verdict,
-            resolved_ground=set(grounded_nodes),
+            resolved_ground=resolved_ground,
             policy=policy,
             now=now,
             corroboration=corroboration,

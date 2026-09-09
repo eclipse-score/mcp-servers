@@ -320,7 +320,7 @@ def test_expand_focus_resolves_nodes_directories_and_skips_hop_at_cap(
     _write_graph(tmp_path)
     graph = MergedGraph.build(tmp_path)
 
-    focus, unresolved, counts = expand_focus(
+    focus, unresolved, counts, hop_skipped = expand_focus(
         [
             "include_score_result_error_domain",
             "include/score/result",
@@ -337,6 +337,7 @@ def test_expand_focus_resolves_nodes_directories_and_skips_hop_at_cap(
     assert counts["include/score/result"] == 2
     assert unresolved == ["ErrorDomain", "unknown/path"]
     assert focus
+    assert hop_skipped is False
 
     policy_path = tmp_path / "score-context" / "policy.toml"
     policy_path.parent.mkdir()

@@ -134,7 +134,7 @@ def _resolve_nodes(
     return resolved, unresolved
 
 
-def _expand_focus(
+def expand_focus(
     values: list[str],
     graph: MergedGraph,
     repo_path: Path,
@@ -172,19 +172,6 @@ def _expand_focus(
         else:
             hop_skipped = True
     return frozenset(focus), unresolved, expansion_counts, hop_skipped
-
-
-def expand_focus(
-    values: list[str],
-    graph: MergedGraph,
-    repo_path: Path,
-    policy: Policy,
-) -> tuple[frozenset[str], list[str], dict[str, int]]:
-    """Expand focus values and return the focus, unresolved values, and counts."""
-    focus, unresolved, expansion_counts, _hop_skipped = _expand_focus(
-        values, graph, repo_path, policy
-    )
-    return focus, unresolved, expansion_counts
 
 
 def _attention_entry(item: PriorContext | RejectedCandidate) -> dict[str, Any]:
@@ -491,7 +478,7 @@ class ContextDisciplineMCP:
         resolved_nodes, unresolved_nodes = _resolve_nodes(
             current_nodes, graph, self.repo_path
         )
-        focus_nodes, _focus_unresolved, expansion_counts, hop_skipped = _expand_focus(
+        focus_nodes, _focus_unresolved, expansion_counts, hop_skipped = expand_focus(
             current_nodes, graph, self.repo_path, self.policy
         )
         result = get_prior_context(

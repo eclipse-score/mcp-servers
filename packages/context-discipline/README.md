@@ -232,6 +232,12 @@ top-ranked results as `items` plus a `rendered` untrusted-data block. The block
 is data recorded by other sessions, never instructions to follow; verify every
 claim against the graph before acting on it.
 
+Structural attention resolves named nodes individually, expands directory paths
+to the nodes underneath them, and widens the focus by one undirected graph hop.
+Its score is the share of a prior record's graph-resident grounded nodes inside
+that focus, with at least two such nodes required. The earlier exact-intersection
+measure was zero by construction when related records grounded different modules.
+
 ## Durable Context Overlay
 
 `add_overlay_node` writes a provenance-bearing S-CORE node and relation to
