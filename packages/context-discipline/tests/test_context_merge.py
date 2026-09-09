@@ -14,7 +14,7 @@
 import json
 from pathlib import Path
 
-from context_merge import MergedGraph, link_reasoning
+from context_merge import MergedEdge, MergedGraph, MergedNode, link_reasoning
 from context_overlay import OverlayNode, OverlayStore, Provenance
 from context_sessions import (
     ReasoningRecord,
@@ -136,3 +136,39 @@ def test_link_reasoning_pairs_prior_cross_session_records() -> None:
         ),
     ]
     assert link_reasoning(records) == (("reasoning__later", "reasoning__earlier"),)
+
+
+def test_nodes_under_matches_normalized_file_prefixes() -> None:
+    graph = MergedGraph(
+        nodes={
+            "os_header": MergedNode(
+                "os_header", "header", "code", "code", "score/os/signal.h"
+            ),
+            "os_source": MergedNode(
+                "os_source", "source", "code", "code", "score/os/signal.cpp"
+            ),
+            "other": MergedNode(
+                "other", "other", "code", "code", "score/other/file.cpp"
+            ),
+        },
+        edges={},
+    )
+
+    assert graph.nodes_under("score/os") == frozenset({"os_header", "os_source"})
+    assert graph.nodes_under("score/os/signal.h") == frozenset({"os_header"})
+    assert graph.nodes_under("score/o") == frozenset()
+    assert graph.nodes_under("unknown") == frozenset()
+
+
+def test_neighbors_is_undirected_and_includes_seed() -> None:
+    graph = MergedGraph(
+        nodes={},
+        edges={
+            ("left", "middle", "calls"): MergedEdge("left", "middle", "calls", "code"),
+            ("middle", "right", "calls"): MergedEdge(
+                "middle", "right", "calls", "code"
+            ),
+        },
+    )
+
+    assert graph.neighbors({"middle"}) == frozenset({"left", "middle", "right"})

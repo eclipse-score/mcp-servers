@@ -303,15 +303,19 @@ def score_candidate(
     reasoning: ReasoningRecord,
     verdict: str | None,
     *,
+    resolved_ground: set[str] | None = None,
     policy: Policy,
     now: datetime,
     corroboration: int,
     live_nodes: set[str] | None,
 ) -> ScoreFactors:
     semantic = jaccard(task_tokens, tokenize(reasoning.text))
+    resolved_ground = (
+        set(reasoning.grounded_nodes) if resolved_ground is None else resolved_ground
+    )
     structural = (
-        len(set(reasoning.grounded_nodes) & current_nodes) / len(current_nodes)
-        if current_nodes
+        len(resolved_ground & current_nodes) / len(resolved_ground)
+        if len(resolved_ground) >= policy.attention.min_structural_ground
         else 0.0
     )
     try:
@@ -468,6 +472,7 @@ def get_prior_context(
             current_nodes,
             resolved_reasoning,
             verdict,
+            resolved_ground=set(grounded_nodes),
             policy=policy,
             now=now,
             corroboration=corroboration,

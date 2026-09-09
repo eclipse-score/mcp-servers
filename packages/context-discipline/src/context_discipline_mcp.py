@@ -36,7 +36,7 @@ from context_attention import (
 )
 from context_merge import MergedGraph, label_tail
 from context_overlay import OverlayEdge, OverlayNode, OverlayStore, Provenance
-from context_policy import load_policy
+from context_policy import Policy, load_policy
 from context_sessions import (
     AttentionRecord,
     OutcomeRecord,
@@ -132,6 +132,59 @@ def _resolve_nodes(
                 resolved.append(canonical)
                 seen_resolved.add(canonical)
     return resolved, unresolved
+
+
+def _expand_focus(
+    values: list[str],
+    graph: MergedGraph,
+    repo_path: Path,
+    policy: Policy,
+) -> tuple[frozenset[str], list[str], dict[str, int], bool]:
+    """Expand current-node values into a bounded structural focus set."""
+    focus: set[str] = set()
+    unresolved: list[str] = []
+    seen_unresolved: set[str] = set()
+    expansion_counts: dict[str, int] = {}
+    for value in values:
+        canonical = resolve_node_id(value, graph, repo_path)
+        if canonical is not None:
+            expanded = {canonical}
+        else:
+            prefix = value
+            path = Path(value).expanduser()
+            if path.is_absolute():
+                with suppress(ValueError):
+                    prefix = path.resolve().relative_to(repo_path).as_posix()
+            expanded = set(graph.nodes_under(prefix))
+        if expanded:
+            focus.update(expanded)
+            expansion_counts[value] = len(expanded)
+        else:
+            expansion_counts[value] = 0
+            if value not in seen_unresolved:
+                unresolved.append(value)
+                seen_unresolved.add(value)
+
+    hop_skipped = False
+    if policy.attention.structural_hops == 1:
+        if len(focus) <= policy.attention.max_focus_nodes:
+            focus = set(graph.neighbors(focus))
+        else:
+            hop_skipped = True
+    return frozenset(focus), unresolved, expansion_counts, hop_skipped
+
+
+def expand_focus(
+    values: list[str],
+    graph: MergedGraph,
+    repo_path: Path,
+    policy: Policy,
+) -> tuple[frozenset[str], list[str], dict[str, int]]:
+    """Expand focus values and return the focus, unresolved values, and counts."""
+    focus, unresolved, expansion_counts, _hop_skipped = _expand_focus(
+        values, graph, repo_path, policy
+    )
+    return focus, unresolved, expansion_counts
 
 
 def _attention_entry(item: PriorContext | RejectedCandidate) -> dict[str, Any]:
@@ -438,11 +491,14 @@ class ContextDisciplineMCP:
         resolved_nodes, unresolved_nodes = _resolve_nodes(
             current_nodes, graph, self.repo_path
         )
+        focus_nodes, _focus_unresolved, expansion_counts, hop_skipped = _expand_focus(
+            current_nodes, graph, self.repo_path, self.policy
+        )
         result = get_prior_context(
             self.session_log,
             self.session_id,
             task_text,
-            set(resolved_nodes),
+            set(focus_nodes),
             policy=self.policy,
             live_nodes=set(graph.nodes),
             node_resolver=lambda value: resolve_node_id(value, graph, self.repo_path),
@@ -457,6 +513,9 @@ class ContextDisciplineMCP:
                 rejected=[_attention_entry(item) for item in result.rejected],
                 threshold=result.threshold,
                 selection=result.selection,
+                focus_size=len(focus_nodes),
+                focus_expansion_counts=expansion_counts,
+                focus_hop_skipped=hop_skipped,
             )
         )
         return {

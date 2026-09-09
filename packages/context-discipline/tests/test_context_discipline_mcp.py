@@ -21,8 +21,10 @@ from context_discipline_mcp import (
     ReasoningRecord,
     SessionRecord,
     call_tool,
+    expand_focus,
 )
 from context_merge import MergedGraph
+from context_policy import Policy
 
 
 def _write_graph(tmp_path: Path) -> Path:
@@ -41,6 +43,11 @@ def _write_graph(tmp_path: Path) -> Path:
                         "id": "include_score_result_error_domain_errordomain",
                         "label": "ErrorDomain",
                         "source_file": "include/score/result/error_domain.h",
+                    },
+                    {
+                        "id": "include_score_other_error_domain",
+                        "label": "ErrorDomain",
+                        "source_file": "include/score/other/error_domain.h",
                     },
                     {
                         "id": "long_source_symbol",
@@ -300,8 +307,191 @@ def test_get_prior_context_logs_attention_factors_and_unresolved_nodes(
     assert attention.rejected[0]["live_ratio"] == 1.0
     assert attention.selection == "rank"
     assert attention.threshold == 0.037
+    assert attention.focus_size == 0
+    assert attention.focus_expansion_counts == {"unknown/node.h": 0}
+    assert attention.focus_hop_skipped is False
     assert result["selection"] == "rank"
     assert result["threshold"] == 0.037
+
+
+def test_expand_focus_resolves_nodes_directories_and_skips_hop_at_cap(
+    tmp_path: Path,
+) -> None:
+    _write_graph(tmp_path)
+    graph = MergedGraph.build(tmp_path)
+
+    focus, unresolved, counts = expand_focus(
+        [
+            "include_score_result_error_domain",
+            "include/score/result",
+            "ErrorDomain",
+            "unknown/path",
+        ],
+        graph,
+        tmp_path,
+        Policy(),
+    )
+
+    assert "include_score_result_error_domain" in focus
+    assert counts["include_score_result_error_domain"] == 1
+    assert counts["include/score/result"] == 2
+    assert unresolved == ["ErrorDomain", "unknown/path"]
+    assert focus
+
+    policy_path = tmp_path / "score-context" / "policy.toml"
+    policy_path.parent.mkdir()
+    policy_path.write_text(
+        "version = 1\n[attention]\nmax_focus_nodes = 1\n",
+        encoding="utf-8",
+    )
+    capped_manager = ContextDisciplineMCP(str(tmp_path))
+    capped_manager.initialize_session("Current task", [])
+    capped_manager.get_prior_context("matching", ["include/score/result"])
+    attention = next(
+        record
+        for record in capped_manager.session_log.read_all()
+        if isinstance(record, AttentionRecord)
+    )
+    assert attention.focus_hop_skipped is True
+
+
+def test_structural_focus_orders_module_and_neighbor_records(tmp_path: Path) -> None:
+    graph_path = tmp_path / "graphify-out" / "graph.json"
+    graph_path.parent.mkdir()
+    graph_path.write_text(
+        json.dumps(
+            {
+                "nodes": [
+                    {"id": "os_a", "label": "os_a", "source_file": "score/os/a.cpp"},
+                    {"id": "os_b", "label": "os_b", "source_file": "score/os/b.cpp"},
+                    {
+                        "id": "result_a",
+                        "label": "result_a",
+                        "source_file": "score/result/a.cpp",
+                    },
+                    {
+                        "id": "result_b",
+                        "label": "result_b",
+                        "source_file": "score/result/b.cpp",
+                    },
+                    {
+                        "id": "fs_a",
+                        "label": "fs_a",
+                        "source_file": "score/filesystem/a.cpp",
+                    },
+                    {
+                        "id": "fs_b",
+                        "label": "fs_b",
+                        "source_file": "score/filesystem/b.cpp",
+                    },
+                    {
+                        "id": "fs_c",
+                        "label": "fs_c",
+                        "source_file": "score/filesystem/c.cpp",
+                    },
+                    *[
+                        {
+                            "id": f"fs_{suffix}",
+                            "label": f"fs_{suffix}",
+                            "source_file": f"score/filesystem/{suffix}.cpp",
+                        }
+                        for suffix in "defgh"
+                    ],
+                    {
+                        "id": "tooling",
+                        "label": "tooling",
+                        "source_file": "tools/coverage/check.py",
+                    },
+                ],
+                "edges": [
+                    {"source": "os_a", "target": "fs_a"},
+                    {"source": "os_a", "target": "fs_b"},
+                    {"source": "os_b", "target": "fs_c"},
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+    manager = ContextDisciplineMCP(str(tmp_path))
+    manager.initialize_session("Current task", [])
+    records = [
+        ReasoningRecord(
+            id="reasoning__os",
+            session_id="session__os",
+            text="matching finding",
+            grounded_nodes=["os_a", "os_b"],
+            timestamp="2026-01-01T00:00:00+00:00",
+        ),
+        ReasoningRecord(
+            id="reasoning__result",
+            session_id="session__result",
+            text="matching finding",
+            grounded_nodes=["os_a", "result_a"],
+            timestamp="2026-01-01T00:00:00+00:00",
+        ),
+        ReasoningRecord(
+            id="reasoning__result_b",
+            session_id="session__result_b",
+            text="matching finding",
+            grounded_nodes=["os_a", "result_b"],
+            timestamp="2026-01-01T00:00:00+00:00",
+        ),
+        ReasoningRecord(
+            id="reasoning__filesystem",
+            session_id="session__filesystem",
+            text="matching finding",
+            grounded_nodes=[
+                "fs_a",
+                "fs_b",
+                "fs_c",
+                "fs_d",
+                "fs_e",
+                "fs_f",
+                "fs_g",
+                "fs_h",
+            ],
+            timestamp="2026-01-01T00:00:00+00:00",
+        ),
+        ReasoningRecord(
+            id="reasoning__tooling",
+            session_id="session__tooling",
+            text="matching finding",
+            grounded_nodes=["tooling"],
+            timestamp="2026-01-01T00:00:00+00:00",
+        ),
+    ]
+    for record in records:
+        manager.session_log.append(record)
+
+    result = manager.get_prior_context("matching finding", ["score/os"])
+    ordered = [item["reasoning_id"] for item in (*result["items"], *result["rejected"])]
+    factors = {
+        item["reasoning_id"]: item["factors"]["structural"]
+        for item in (*result["items"], *result["rejected"])
+    }
+    attention = next(
+        record
+        for record in manager.session_log.read_all()
+        if isinstance(record, AttentionRecord)
+    )
+
+    assert ordered == [
+        "reasoning__os",
+        "reasoning__result",
+        "reasoning__result_b",
+        "reasoning__filesystem",
+        "reasoning__tooling",
+    ]
+    assert factors == {
+        "reasoning__os": 1.0,
+        "reasoning__result": 0.5,
+        "reasoning__result_b": 0.5,
+        "reasoning__filesystem": 0.375,
+        "reasoning__tooling": 0.0,
+    }
+    assert attention.focus_expansion_counts == {"score/os": 2}
+    assert attention.focus_size >= 2
+    assert attention.focus_hop_skipped is False
 
 
 def test_record_outcome_requires_clean_verdict_and_stores_rationale(

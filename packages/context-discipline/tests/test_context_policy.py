@@ -43,6 +43,9 @@ rank_gap_ratio = 0.7
 noise_floor = 0.04
 live_ratio_floor = 0.3
 outcome_reward = 0.1
+structural_hops = 0
+max_focus_nodes = 42
+min_structural_ground = 3
 [privacy]
 retention_days = 10
 [overlay]
@@ -58,6 +61,9 @@ max_nodes = 7
     assert policy.attention.noise_floor == 0.04
     assert policy.attention.live_ratio_floor == 0.3
     assert policy.attention.outcome_reward == 0.1
+    assert policy.attention.structural_hops == 0
+    assert policy.attention.max_focus_nodes == 42
+    assert policy.attention.min_structural_ground == 3
     assert policy.privacy.retention_days == 10
     assert policy.overlay.max_nodes == 7
 
@@ -89,6 +95,8 @@ def test_unknown_policy_section_is_rejected(tmp_path: Path) -> None:
         ("attention", "score_threshold", 1.1),
         ("attention", "noise_floor", 1.1),
         ("attention", "live_ratio_floor", 1.1),
+        ("attention", "max_focus_nodes", 0),
+        ("attention", "min_structural_ground", 0),
         ("privacy", "retention_days", 0),
         ("overlay", "max_nodes", 0),
     ],
@@ -141,4 +149,16 @@ def test_policy_rejects_out_of_range_noise_floor(tmp_path: Path) -> None:
         encoding="utf-8",
     )
     with pytest.raises(ValueError, match="noise_floor"):
+        load_policy(tmp_path, "policy.toml")
+
+
+@pytest.mark.parametrize("hops", [-1, 2, 1.0, True])
+def test_policy_rejects_invalid_structural_hops(tmp_path: Path, hops: object) -> None:
+    path = tmp_path / "policy.toml"
+    value = str(hops).lower() if not isinstance(hops, str) else f'"{hops}"'
+    path.write_text(
+        f"version = 1\n[attention]\nstructural_hops = {value}\n",
+        encoding="utf-8",
+    )
+    with pytest.raises(ValueError, match="structural_hops"):
         load_policy(tmp_path, "policy.toml")

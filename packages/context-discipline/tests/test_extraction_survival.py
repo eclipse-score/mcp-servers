@@ -58,7 +58,7 @@ def test_overlay_survives_graphify_extraction(tmp_path: Path) -> None:
     overlay.save()
     merged = MergedGraph.build(tmp_path)
     assert merged.nodes["dec_rec__one"].layer == "domain"
-    assert any(node.id == code_node for node in merged.neighbors("dec_rec__one"))
+    assert code_node in merged.neighbors({"dec_rec__one"})
 
     (tmp_path / "one.py").write_text(
         "def one():\n    return 2\n\ndef extra():\n    return 3\n",

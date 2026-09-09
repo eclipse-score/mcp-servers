@@ -379,12 +379,61 @@ def test_score_candidate_returns_reproducible_factors() -> None:
     )
 
     assert factors.semantic == 1.0
-    assert factors.structural == 1.0
+    assert factors.structural == 0.5
     assert factors.recency == 1.0
     assert factors.live_ratio == 0.5
     assert factors.bonus == 0.0
     assert factors.corroboration == 2
-    assert factors.score == pytest.approx((0.6 + 0.4) * 1.0 * 0.5)
+    assert factors.score == pytest.approx((0.6 + 0.2) * 1.0 * 0.5)
+
+
+def test_structural_ground_guard_and_empty_focus() -> None:
+    now = datetime(2026, 1, 1, tzinfo=UTC)
+    policy = Policy()
+    reasoning = ReasoningRecord(
+        session_id="session__one",
+        text="matching task",
+        grounded_nodes=["node__one", "node__two"],
+        timestamp=now.isoformat(),
+    )
+
+    contained = score_candidate(
+        frozenset({"matching", "task"}),
+        {"node__one", "node__three"},
+        reasoning,
+        None,
+        resolved_ground={"node__one", "node__two"},
+        policy=policy,
+        now=now,
+        corroboration=0,
+        live_nodes=None,
+    )
+    single_ground = score_candidate(
+        frozenset({"matching", "task"}),
+        {"node__one"},
+        reasoning,
+        None,
+        resolved_ground={"node__one"},
+        policy=policy,
+        now=now,
+        corroboration=0,
+        live_nodes=None,
+    )
+    empty_focus = score_candidate(
+        frozenset({"matching", "task"}),
+        set(),
+        reasoning,
+        None,
+        resolved_ground={"node__one", "node__two"},
+        policy=policy,
+        now=now,
+        corroboration=0,
+        live_nodes=None,
+    )
+
+    assert contained.structural == 0.5
+    assert single_ground.structural == 0.0
+    assert empty_focus.structural == 0.0
 
 
 def test_threshold_and_top_k_are_deterministic(tmp_path: Path) -> None:
@@ -1012,7 +1061,7 @@ def test_node_resolver_corroborates_path_and_id_records(
         "reasoning__path",
     ]
     assert all(item.grounded_nodes == (node_id,) for item in selected.items)
-    assert all(item.score == pytest.approx(1.0) for item in selected.items)
+    assert all(item.score == pytest.approx(0.6) for item in selected.items)
 
 
 def test_node_resolver_preserves_unresolvable_grounded_nodes(
@@ -1080,7 +1129,7 @@ def test_live_node_ratio_scales_score() -> None:
     )
     assert half.score == pytest.approx(full.score / 2)
     assert none.live_ratio == 0.25
-    assert none.score == pytest.approx(0.25)
+    assert none.score == pytest.approx(0.2)
 
 
 def test_sanitize_prior_text_removes_controls_and_truncates() -> None:

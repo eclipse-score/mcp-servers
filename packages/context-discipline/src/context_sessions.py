@@ -142,6 +142,11 @@ class AttentionRecord:
     )
     threshold: float = 0.0
     selection: str = ""
+    focus_size: int = 0
+    focus_expansion_counts: dict[str, int] = field(
+        default_factory=lambda: dict[str, int]()
+    )
+    focus_hop_skipped: bool = False
     timestamp: str = field(default_factory=_timestamp)
     record_type: str = field(default="attention", init=False)
 

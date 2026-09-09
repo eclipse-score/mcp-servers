@@ -40,6 +40,7 @@ class MergedNode:
     label: str
     type: str
     layer: str
+    source_file: str = ""
 
 
 @dataclass(frozen=True)
@@ -133,11 +134,25 @@ class MergedGraph:
         if graph_path.exists():
             data = json.loads(graph_path.read_text(encoding="utf-8"))
             for raw in data.get("nodes", []):
+                source_file = raw.get("source_file")
+                normalized_source_file = ""
+                if source_file is not None:
+                    raw_source_file = str(source_file)
+                    normalized_source_file = posixpath.normpath(
+                        raw_source_file.replace("\\", "/")
+                    )
+                    source_path = Path(normalized_source_file)
+                    if source_path.is_absolute():
+                        with suppress(ValueError):
+                            normalized_source_file = (
+                                source_path.resolve().relative_to(repo).as_posix()
+                            )
                 node = MergedNode(
                     id=str(raw["id"]),
                     label=str(raw.get("label", raw["id"])),
                     type=str(raw.get("type") or raw.get("file_type", "")),
                     layer="code",
+                    source_file=normalized_source_file,
                 )
                 if node.id in nodes:
                     conflicts.add(node.id)
@@ -150,12 +165,8 @@ class MergedGraph:
                 label_tail_candidates.setdefault(label_tail(node.label), set()).add(
                     node.id
                 )
-                source_file = raw.get("source_file")
                 if source_file is not None:
                     raw_source_file = str(source_file)
-                    normalized_source_file = posixpath.normpath(
-                        raw_source_file.replace("\\", "/")
-                    )
                     keys = {raw_source_file, normalized_source_file}
                     source_path = Path(normalized_source_file)
                     if source_path.is_absolute():
@@ -244,15 +255,25 @@ class MergedGraph:
             _unique_index(label_tail_candidates),
         )
 
-    def neighbors(self, node_id: str) -> tuple[MergedNode, ...]:
-        neighbor_ids = {
-            edge.target for edge in self.edges.values() if edge.source == node_id
-        } | {edge.source for edge in self.edges.values() if edge.target == node_id}
-        return tuple(
-            self.nodes[neighbor_id]
-            for neighbor_id in sorted(neighbor_ids)
-            if neighbor_id in self.nodes
+    def nodes_under(self, prefix: str) -> frozenset[str]:
+        """Return node IDs whose source files are at or below a path prefix."""
+        normalized = posixpath.normpath(prefix.replace("\\", "/")).removeprefix("./")
+        subtree = f"{normalized.rstrip('/')}/"
+        return frozenset(
+            node_id
+            for node_id, node in self.nodes.items()
+            if node.source_file == normalized or node.source_file.startswith(subtree)
         )
+
+    def neighbors(self, node_ids: set[str]) -> frozenset[str]:
+        """Return the input node IDs and all nodes adjacent in either direction."""
+        neighbors = set(node_ids)
+        for edge in self.edges.values():
+            if edge.source in node_ids:
+                neighbors.add(edge.target)
+            if edge.target in node_ids:
+                neighbors.add(edge.source)
+        return frozenset(neighbors)
 
     def has_node(self, node_id: str) -> bool:
         return node_id in self.nodes

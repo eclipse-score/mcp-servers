@@ -38,6 +38,9 @@ class AttentionPolicy:
     top_k: int = 5
     half_life_days: float = 30.0
     min_corroboration: int = 2
+    structural_hops: int = 1
+    max_focus_nodes: int = 25000
+    min_structural_ground: int = 2
 
     def __post_init__(self) -> None:
         for field_name in (
@@ -77,6 +80,15 @@ class AttentionPolicy:
             raise ValueError("min_corroboration must be an integer")
         if self.min_corroboration < 1:
             raise ValueError("min_corroboration must be at least 1")
+        if type(self.structural_hops) is not int or self.structural_hops not in {0, 1}:
+            raise ValueError("structural_hops must be 0 or 1")
+        if type(self.max_focus_nodes) is not int or self.max_focus_nodes < 1:
+            raise ValueError("max_focus_nodes must be at least 1")
+        if (
+            type(self.min_structural_ground) is not int
+            or self.min_structural_ground < 1
+        ):
+            raise ValueError("min_structural_ground must be at least 1")
 
 
 @dataclass(frozen=True)
@@ -147,6 +159,9 @@ _SECTION_FIELDS: dict[str, dict[str, type]] = {
         "top_k": int,
         "half_life_days": float,
         "min_corroboration": int,
+        "structural_hops": int,
+        "max_focus_nodes": int,
+        "min_structural_ground": int,
     },
     "privacy": {
         "retention_days": int,
