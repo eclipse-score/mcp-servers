@@ -271,6 +271,7 @@ def test_get_prior_context_returns_items_and_untrusted_rendered_block(
         "threshold": 0.037,
         "selection": "rank",
         "unresolved_nodes": [],
+        "focus_size": 0,
         "rendered": "",
     }
 
@@ -294,6 +295,7 @@ def test_get_prior_context_logs_attention_factors_and_unresolved_nodes(
 
     assert result["items"] == []
     assert result["unresolved_nodes"] == ["unknown/node.h"]
+    assert result["focus_size"] == 0
     attention_records = [
         record
         for record in manager.session_log.read_all()
@@ -492,6 +494,8 @@ def test_structural_focus_orders_module_and_neighbor_records(tmp_path: Path) -> 
     }
     assert attention.focus_expansion_counts == {"score/os": 2}
     assert attention.focus_size >= 2
+    assert result["focus_size"] == attention.focus_size
+    assert result["focus_size"] > 0
     assert attention.focus_hop_skipped is False
 
 

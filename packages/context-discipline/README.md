@@ -240,7 +240,8 @@ measure was zero by construction when related records grounded different modules
 Agents should include the module or directory paths touched by a task in
 `current_nodes` (for example, `score/os` and `score/result`) rather than only
 symbol names, because graph locality provides no structural contribution for
-symbol-only input at the relevant granularity. A named value that expands to a
+symbol-only input at the relevant granularity; `focus_size == 0` in the response
+means the structural axis was silent. A named value that expands to a
 very large subtree can dilute containment; no specificity cap is implemented
 because the tested 25% graph cap dropped `score/os` and lost the measured signal.
 

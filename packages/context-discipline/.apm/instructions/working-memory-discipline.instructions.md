@@ -48,7 +48,8 @@ When calling `get_prior_context`, include the module or directory paths touched
 by the task in `current_nodes`, such as `score/os` and `score/result`, rather
 than only symbol names. Structural attention follows graph locality, so
 symbol-only input can contribute no structural signal at the relevant graph
-granularity.
+granularity; `focus_size == 0` in the response means the structural axis was
+silent.
 
 ## Pattern: Initialize → Navigate → Decide → Record
 

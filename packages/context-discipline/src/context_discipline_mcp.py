@@ -490,27 +490,27 @@ class ContextDisciplineMCP:
             live_nodes=set(graph.nodes),
             node_resolver=lambda value: resolve_node_id(value, graph, self.repo_path),
         )
-        self.session_log.append(
-            AttentionRecord(
-                session_id=self.session_id,
-                task_id=self.goal_task_id or "",
-                query=task_text,
-                current_nodes=resolved_nodes,
-                surfaced=[_attention_entry(item) for item in result.items],
-                rejected=[_attention_entry(item) for item in result.rejected],
-                threshold=result.threshold,
-                selection=result.selection,
-                focus_size=len(focus_nodes),
-                focus_expansion_counts=expansion_counts,
-                focus_hop_skipped=hop_skipped,
-            )
+        attention = AttentionRecord(
+            session_id=self.session_id,
+            task_id=self.goal_task_id or "",
+            query=task_text,
+            current_nodes=resolved_nodes,
+            surfaced=[_attention_entry(item) for item in result.items],
+            rejected=[_attention_entry(item) for item in result.rejected],
+            threshold=result.threshold,
+            selection=result.selection,
+            focus_size=len(focus_nodes),
+            focus_expansion_counts=expansion_counts,
+            focus_hop_skipped=hop_skipped,
         )
+        self.session_log.append(attention)
         return {
             "items": [asdict(item) for item in result.items],
             "rejected": [asdict(item) for item in result.rejected],
             "threshold": result.threshold,
             "selection": result.selection,
             "unresolved_nodes": unresolved_nodes,
+            "focus_size": attention.focus_size,
             "rendered": render_prior_context(result.items, self.policy),
         }
 
@@ -659,7 +659,18 @@ TOOLS = [
             "type": "object",
             "properties": {
                 "task_text": {"type": "string"},
-                "current_nodes": {"type": "array", "items": {"type": "string"}},
+                "current_nodes": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "description": (
+                        "Repository paths the task touches, such as score/os or "
+                        "score/result/error.h, together with any symbol names. "
+                        "Include module or directory paths: structural attention "
+                        "follows graph locality, and symbol names alone contribute "
+                        "no structural signal because the code graph has no edge "
+                        "from a symbol to the module whose error domain it uses."
+                    ),
+                },
             },
             "required": ["task_text", "current_nodes"],
         },
@@ -688,6 +699,14 @@ TOOLS = [
                     "items": {"type": "string"},
                     "description": "Current nodes that could not be resolved.",
                 },
+                "focus_size": {
+                    "type": "integer",
+                    "description": (
+                        "Number of graph nodes the named current_nodes expanded to; "
+                        "0 means structural attention contributed nothing to this "
+                        "lookup."
+                    ),
+                },
                 "rendered": {"type": "string"},
             },
             "required": [
@@ -696,6 +715,7 @@ TOOLS = [
                 "threshold",
                 "selection",
                 "unresolved_nodes",
+                "focus_size",
                 "rendered",
             ],
         },
