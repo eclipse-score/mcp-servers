@@ -221,9 +221,10 @@ Call `query_graph()` to search the generated local Graphify code graph.
 The `get_prior_context` tool scores reasoning from other sessions using lexical
 similarity, shared grounded nodes, the owning task outcome, temporal decay, and
 node availability. Recency decay is off by default (`recency_decay = false`),
-so `recency` is `1.0`; it overlaps with `privacy.retention_days = 90`, and on
-a small corpus age does not discriminate while still-valid architectural
-decisions. Rank selection accepts scored candidates above the
+so `recency` is `1.0`: it overlaps with `privacy.retention_days = 90`, while
+on a small corpus age does not discriminate reliably and decay would erode
+still-valid architectural decisions. Rank selection accepts scored candidates
+above the
 configured `noise_floor` and within the configured `rank_gap_ratio` of the best
 candidate; threshold selection remains available for replaying the absolute
 `score_threshold` rule. The
