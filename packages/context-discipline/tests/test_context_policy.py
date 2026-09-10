@@ -25,6 +25,7 @@ from context_policy import (
 def test_missing_policy_uses_defaults(tmp_path: Path) -> None:
     policy = load_policy(tmp_path)
     assert policy.attention == AttentionPolicy()
+    assert policy.attention.recency_decay is False
     assert policy.privacy == PrivacyPolicy()
     assert policy.overlay == OverlayPolicy()
 
@@ -37,6 +38,7 @@ def test_policy_loads_written_values(tmp_path: Path) -> None:
 version = 1
 [attention]
 top_k = 3
+recency_decay = true
 half_life_days = 12
 selection = "threshold"
 rank_gap_ratio = 0.7
@@ -55,6 +57,7 @@ max_nodes = 7
     )
     policy = load_policy(tmp_path)
     assert policy.attention.top_k == 3
+    assert policy.attention.recency_decay is True
     assert policy.attention.half_life_days == 12
     assert policy.attention.selection == "threshold"
     assert policy.attention.rank_gap_ratio == 0.7
@@ -139,6 +142,16 @@ def test_policy_rejects_out_of_range_rank_gap_ratio(tmp_path: Path) -> None:
         encoding="utf-8",
     )
     with pytest.raises(ValueError, match="rank_gap_ratio"):
+        load_policy(tmp_path, "policy.toml")
+
+
+def test_policy_rejects_non_boolean_recency_decay(tmp_path: Path) -> None:
+    path = tmp_path / "policy.toml"
+    path.write_text(
+        "version = 1\n[attention]\nrecency_decay = 1\n",
+        encoding="utf-8",
+    )
+    with pytest.raises(ValueError, match="recency_decay"):
         load_policy(tmp_path, "policy.toml")
 
 

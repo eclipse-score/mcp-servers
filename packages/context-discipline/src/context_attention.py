@@ -318,12 +318,15 @@ def score_candidate(
         if len(resolved_ground) >= policy.attention.min_structural_ground
         else 0.0
     )
-    try:
-        timestamp = datetime.fromisoformat(reasoning.timestamp)
-        age_days = max(0.0, (now - timestamp).total_seconds() / 86400.0)
-        recency = 0.5 ** (age_days / policy.attention.half_life_days)
-    except (OverflowError, TypeError, ValueError):
+    if not policy.attention.recency_decay:
         recency = 1.0
+    else:
+        try:
+            timestamp = datetime.fromisoformat(reasoning.timestamp)
+            age_days = max(0.0, (now - timestamp).total_seconds() / 86400.0)
+            recency = 0.5 ** (age_days / policy.attention.half_life_days)
+        except (OverflowError, TypeError, ValueError):
+            recency = 1.0
     grounded_nodes = set(reasoning.grounded_nodes)
     live_ratio = (
         1.0

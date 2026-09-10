@@ -862,9 +862,51 @@ def test_redundancy_handles_empty_disjoint_and_identical_sets() -> None:
     assert redundancy({"node"}, {"node"}) == 1.0
 
 
-def test_recency_halves_at_one_half_life() -> None:
+def test_recency_decay_is_disabled_by_default() -> None:
     now = datetime(2026, 2, 1, tzinfo=UTC)
     policy = Policy()
+    fresh = ReasoningRecord(
+        id="reasoning__fresh",
+        session_id="session__one",
+        text="matching task",
+        grounded_nodes=["node__one"],
+        timestamp=now.isoformat(),
+    )
+    old = ReasoningRecord(
+        id="reasoning__old",
+        session_id="session__one",
+        text="matching task",
+        grounded_nodes=["node__one"],
+        timestamp=(now - timedelta(days=policy.attention.half_life_days)).isoformat(),
+    )
+    fresh_score = score_candidate(
+        frozenset({"matching", "task"}),
+        {"node__one"},
+        fresh,
+        None,
+        policy=policy,
+        now=now,
+        corroboration=0,
+        live_nodes=None,
+    )
+    old_score = score_candidate(
+        frozenset({"matching", "task"}),
+        {"node__one"},
+        old,
+        None,
+        policy=policy,
+        now=now,
+        corroboration=0,
+        live_nodes=None,
+    )
+    assert fresh_score.recency == 1.0
+    assert old_score.recency == 1.0
+    assert old_score.score == fresh_score.score
+
+
+def test_recency_decay_halves_at_one_half_life() -> None:
+    now = datetime(2026, 2, 1, tzinfo=UTC)
+    policy = Policy(attention=AttentionPolicy(recency_decay=True))
     fresh = ReasoningRecord(
         id="reasoning__fresh",
         session_id="session__one",
@@ -920,7 +962,12 @@ def test_old_record_falls_below_cutoff(tmp_path: Path) -> None:
         "matching task",
         {"node__one"},
         now=now,
-        policy=Policy(attention=AttentionPolicy(selection="threshold")),
+        policy=Policy(
+            attention=AttentionPolicy(
+                selection="threshold",
+                recency_decay=True,
+            )
+        ),
     )
     assert selected.items == ()
     assert [item.reasoning_id for item in selected.rejected] == ["reasoning__old"]

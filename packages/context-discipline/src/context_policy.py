@@ -36,6 +36,7 @@ class AttentionPolicy:
     selection: str = "rank"
     rank_gap_ratio: float = 0.35
     top_k: int = 5
+    recency_decay: bool = False
     half_life_days: float = 30.0
     min_corroboration: int = 2
     structural_hops: int = 1
@@ -70,6 +71,8 @@ class AttentionPolicy:
             raise ValueError("top_k must be an integer")
         if self.top_k < 1:
             raise ValueError("top_k must be at least 1")
+        if type(self.recency_decay) is not bool:
+            raise ValueError("recency_decay must be a boolean")
         if (
             type(self.half_life_days) not in (int, float)
             or not isfinite(self.half_life_days)
@@ -157,6 +160,7 @@ _SECTION_FIELDS: dict[str, dict[str, type]] = {
         "selection": str,
         "rank_gap_ratio": float,
         "top_k": int,
+        "recency_decay": bool,
         "half_life_days": float,
         "min_corroboration": int,
         "structural_hops": int,
@@ -190,6 +194,11 @@ def _validate_float(value: Any, field_name: str) -> None:
         raise ValueError(f"{field_name} must be a number")
 
 
+def _validate_bool(value: Any, field_name: str) -> None:
+    if type(value) is not bool:
+        raise ValueError(f"{field_name} must be a boolean")
+
+
 def _validate_str(value: Any, field_name: str) -> None:
     if type(value) is not str:
         raise ValueError(f"{field_name} must be a string")
@@ -207,7 +216,9 @@ def _section_values(name: str, raw: Any) -> dict[str, Any]:
     for field_name, field_type in expected.items():
         if field_name not in values:
             continue
-        if field_type is int:
+        if field_type is bool:
+            _validate_bool(values[field_name], f"{name}.{field_name}")
+        elif field_type is int:
             _validate_int(values[field_name], f"{name}.{field_name}")
         elif field_type is float:
             _validate_float(values[field_name], f"{name}.{field_name}")
