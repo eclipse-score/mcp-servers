@@ -12,11 +12,19 @@ build-backend = "hatchling.build"
 name = "score-context-discipline"
 version = "0.1.0"
 description = "Working memory and local learning MCP server"
-requires-python = ">=3.11"
+requires-python = ">=3.12"
 
 [project.scripts]
 context-discipline = "context_discipline_mcp:main"
 
 [tool.hatch.build.targets.wheel]
-only-include = ["src/context_discipline_mcp.py"]
+only-include = [
+  "src/__init__.py",
+  "src/context_attention.py",
+  "src/context_discipline_mcp.py",
+  "src/context_merge.py",
+  "src/context_overlay.py",
+  "src/context_policy.py",
+  "src/context_sessions.py",
+]
 sources = ["src"]
