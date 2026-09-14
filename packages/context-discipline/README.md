@@ -178,6 +178,14 @@ recorded score ordering.
 cat .score-local/sessions.jsonl | jq
 ```
 
+The process graph is resolved in this order: `SCORE_PROCESS_GRAPH` (absolute
+or repository-relative), `[process] path` from `score-context/policy.toml`,
+the first sorted match under
+`apm_modules/**/metamodel-flow/model/process_graph.json`, the installed
+monorepo sibling package, and finally
+`score-context/process_graph.json`. Use `SCORE_PROCESS_GRAPH` as the escape
+hatch when a consumer needs to override the packaged process graph.
+
 ## Local Learning Loop
 
 ```

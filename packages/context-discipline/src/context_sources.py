@@ -242,6 +242,11 @@ class ProcessSource:
                 if configured_path.is_absolute()
                 else repo / configured_path
             )
+        consumer_copies = sorted(
+            (repo / "apm_modules").glob("**/metamodel-flow/model/process_graph.json")
+        )
+        if consumer_copies:
+            return consumer_copies[0]
         installed = (
             Path(__file__).resolve().parents[2]
             / "metamodel-flow"

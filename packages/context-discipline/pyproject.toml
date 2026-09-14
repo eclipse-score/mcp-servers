@@ -26,5 +26,7 @@ only-include = [
   "src/context_overlay.py",
   "src/context_policy.py",
   "src/context_sessions.py",
+  "src/context_sources.py",
+  "src/context_taskclass.py",
 ]
 sources = ["src"]

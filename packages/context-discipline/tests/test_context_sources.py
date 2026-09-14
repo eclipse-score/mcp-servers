@@ -192,6 +192,28 @@ def test_relative_environment_process_path_is_repository_relative(
     assert "gd_req__one" in graph.nodes
 
 
+def test_consumer_apm_module_process_graph_precedes_sibling(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    path = (
+        tmp_path
+        / "apm_modules"
+        / "_local"
+        / "deadbeef"
+        / "metamodel-flow"
+        / "model"
+        / "process_graph.json"
+    )
+    path.parent.mkdir(parents=True)
+    _process_graph(path)
+
+    monkeypatch.delenv("SCORE_PROCESS_GRAPH", raising=False)
+    graph = MergedGraph.build(tmp_path)
+
+    assert "process" in graph.loaded_layers
+    assert "gd_req__one" in graph.nodes
+
+
 def test_graph_build_loads_policy_once(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
