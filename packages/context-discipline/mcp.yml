@@ -57,6 +57,32 @@ tools:
       required:
         - query
 
+  - name: set_task_class
+    description: Record a user-selected process workflow for a task
+    input_schema:
+      type: object
+      properties:
+        task_class:
+          type: string
+          description: Workflow identifier from the process layer, or empty or none to continue without a process class.
+        task_id:
+          type: string
+          description: Task identifier; defaults to the session goal.
+      required:
+        - task_class
+    output_schema:
+      type: object
+      properties:
+        task_id:
+          type: string
+        task_class:
+          type: string
+        source:
+          type: string
+          enum: [user]
+        error:
+          type: string
+
   - name: record_decision
     description: Record a decision with reasoning; grounded nodes may be repo-relative source paths or canonical graph node IDs, and paths are resolved against the graph
     input_schema:

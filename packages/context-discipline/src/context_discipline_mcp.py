@@ -44,10 +44,12 @@ from context_sessions import (
     RetrievalRecord,
     SessionLog,
     SessionRecord,
+    TaskClassRecord,
     TaskRecord,
     agent_salt,
     pseudonymize_agent,
 )
+from context_taskclass import Detection, detect_task_class, process_facts
 
 
 @dataclass
@@ -189,6 +191,57 @@ def _attention_entry(item: PriorContext | RejectedCandidate) -> dict[str, Any]:
     }
 
 
+def _detection_payload(
+    detection: Detection,
+    graph: MergedGraph,
+    repo_name: str,
+) -> dict[str, Any]:
+    facts: dict[str, list[str]]
+    if detection.task_class:
+        facts = process_facts(graph, detection.task_class)
+    else:
+        facts = {
+            "responsible": [],
+            "approved_by": [],
+            "supported_by": [],
+            "input": [],
+            "output": [],
+            "contains": [],
+            "satisfied_by": [],
+        }
+    if detection.status == "unknown":
+        announcement = f"Repository {repo_name} | task class unknown"
+    elif detection.status == "ambiguous":
+        announcement = f"Repository {repo_name} | task class ambiguous"
+    else:
+        announcement = (
+            f"Repository {repo_name} | task class {detection.title} "
+            f"({detection.task_class})"
+        )
+        if facts["responsible"]:
+            announcement += f" | responsible {', '.join(facts['responsible'])}"
+        if facts["approved_by"]:
+            announcement += f" | approval {', '.join(facts['approved_by'])}"
+    payload: dict[str, Any] = {
+        "status": detection.status,
+        "task_class": detection.task_class,
+        "title": detection.title,
+        "gap": detection.gap,
+        **facts,
+        "announcement": announcement,
+    }
+    if detection.status in {"ambiguous", "unknown"}:
+        payload["question"] = {
+            "text": "Which process task class should be used?",
+            "options": [
+                {"id": candidate.id, "title": candidate.title}
+                for candidate in detection.candidates
+            ]
+            + [{"id": "none", "title": "Continue without a process class"}],
+        }
+    return payload
+
+
 class ContextDisciplineMCP:
     """
     Manages working memory and local learning.
@@ -237,6 +290,17 @@ class ContextDisciplineMCP:
         self.session_id = f"session__{uuid4().hex[:8]}"
         self.working_memory = []
         self.goal_task_id = None
+        detection_payload: dict[str, Any] | None = None
+        detected_task_class = ""
+        graph: MergedGraph | None = None
+        if not task_class:
+            graph = MergedGraph.build(self.repo_path)
+            if "process" in graph.loaded_layers:
+                detection = detect_task_class(goal, graph, self.policy)
+                detected_task_class = detection.task_class
+                detection_payload = _detection_payload(
+                    detection, graph, self.repo_path.name
+                )
         self.session_log.prune(self.policy.privacy.retention_days)
         self.session_log.append(
             SessionRecord(
@@ -248,17 +312,26 @@ class ContextDisciplineMCP:
         goal_task = TaskRecord(
             session_id=self.session_id,
             text=goal,
-            task_class=task_class,
+            task_class=task_class or detected_task_class,
         )
         self.goal_task_id = goal_task.id
         self.session_log.append(goal_task)
+        if detected_task_class:
+            self.session_log.append(
+                TaskClassRecord(
+                    session_id=self.session_id,
+                    task_id=goal_task.id,
+                    task_class=detected_task_class,
+                    source="detector",
+                )
+            )
         for subgoal in subgoals:
             self.session_log.append(
                 TaskRecord(
                     session_id=self.session_id,
                     text=subgoal,
                     parent_id=goal_task.id,
-                    task_class=task_class,
+                    task_class=task_class or detected_task_class,
                 )
             )
         self.working_memory.append(
@@ -294,10 +367,42 @@ class ContextDisciplineMCP:
                         )
                     )
 
-        return {
+        result = {
             "session_id": self.session_id,
-            "task_class": task_class,
+            "task_class": task_class or detected_task_class,
             "setup": self._graph_setup_status(),
+        }
+        if detection_payload is not None:
+            result["detection"] = detection_payload
+        return result
+
+    def set_task_class(self, task_class: str, task_id: str = "") -> dict[str, Any]:
+        """Record a user-selected process workflow for a task."""
+        graph = MergedGraph.build(self.repo_path)
+        selected = "" if task_class == "none" else task_class
+        workflow_ids = {
+            node.id
+            for node in graph.nodes.values()
+            if node.layer == "process" and node.type == "workflow"
+        }
+        if selected and selected not in workflow_ids:
+            return {
+                "error": "task_class is not a known process workflow",
+                "task_class": task_class,
+            }
+        resolved_task_id = task_id or self.goal_task_id or ""
+        self.session_log.append(
+            TaskClassRecord(
+                session_id=self.session_id,
+                task_id=resolved_task_id,
+                task_class=selected,
+                source="user",
+            )
+        )
+        return {
+            "task_id": resolved_task_id,
+            "task_class": selected,
+            "source": "user",
         }
 
     def _graph_setup_status(self) -> dict[str, Any]:
@@ -605,6 +710,27 @@ TOOLS = [
         },
     },
     {
+        "name": "set_task_class",
+        "description": "Record a user-selected process workflow for a task.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "task_class": {
+                    "type": "string",
+                    "description": (
+                        "Workflow identifier from the process layer, or empty "
+                        "or none to continue without a process class."
+                    ),
+                },
+                "task_id": {
+                    "type": "string",
+                    "description": "Task identifier; defaults to the session goal.",
+                },
+            },
+            "required": ["task_class"],
+        },
+    },
+    {
         "name": "record_decision",
         "description": (
             "Record a decision and its reasons. Grounded nodes may be "
@@ -799,6 +925,8 @@ def call_tool(
         return manager.initialize_session(**arguments)
     if name == "query_graph":
         return manager.query_graph(**arguments)
+    if name == "set_task_class":
+        return manager.set_task_class(**arguments)
     if name == "record_decision":
         return manager.record_decision(**arguments)
     if name == "record_outcome":

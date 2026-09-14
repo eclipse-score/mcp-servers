@@ -88,7 +88,7 @@ def test_session_log_reports_malformed_line_number(tmp_path: Path) -> None:
         log.read_all()
 
 
-def test_session_log_rejects_unknown_record_type(tmp_path: Path) -> None:
+def test_session_log_skips_unknown_record_type(tmp_path: Path) -> None:
     log = SessionLog(tmp_path)
     log.path.parent.mkdir(parents=True)
     log.path.write_text(
@@ -96,8 +96,7 @@ def test_session_log_rejects_unknown_record_type(tmp_path: Path) -> None:
         encoding="utf-8",
     )
 
-    with pytest.raises(ValueError, match="unknown session record kind"):
-        log.read_all()
+    assert log.read_all() == ()
 
 
 def test_agent_pseudonym_is_deterministic_and_salt_is_private(tmp_path: Path) -> None:

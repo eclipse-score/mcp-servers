@@ -20,6 +20,7 @@
 | reasoning | Deduce | id, session_id, task_id, text, kind, grounded_nodes, timestamp |
 | retrieval | Distribute | id, session_id, task_id, query, returned_nodes, timestamp |
 | outcome | — | id, session_id, task_id, verdict, rationale, coverage, timestamp |
+| task_class | — | id, session_id, task_id, task_class, source, timestamp |
 """
 
 from __future__ import annotations
@@ -152,6 +153,21 @@ class AttentionRecord:
     record_type: str = field(default="attention", init=False)
 
 
+@dataclass(frozen=True)
+class TaskClassRecord:
+    id: str = field(default_factory=lambda: _record_id("task_class"))
+    session_id: str = ""
+    task_id: str = ""
+    task_class: str = ""
+    source: str = "user"
+    timestamp: str = field(default_factory=_timestamp)
+    record_type: str = field(default="task_class", init=False)
+
+    def __post_init__(self) -> None:
+        if self.source not in {"user", "detector"}:
+            raise ValueError("source must be 'user' or 'detector'")
+
+
 type Record = (
     SessionRecord
     | TaskRecord
@@ -159,6 +175,7 @@ type Record = (
     | RetrievalRecord
     | OutcomeRecord
     | AttentionRecord
+    | TaskClassRecord
 )
 
 
@@ -168,7 +185,7 @@ def _record_dict(record: Record) -> dict[str, Any]:
     return data
 
 
-def _record_from_dict(data: dict[str, Any]) -> Record:
+def _record_from_dict(data: dict[str, Any]) -> Record | None:
     record_type = cast(str | None, data.get("record_type"))
     values = dict(data)
     values.pop("record_type", None)
@@ -188,12 +205,13 @@ def _record_from_dict(data: dict[str, Any]) -> Record:
         "retrieval": RetrievalRecord,
         "outcome": OutcomeRecord,
         "attention": AttentionRecord,
+        "task_class": TaskClassRecord,
     }
     if record_type is None:
         raise ValueError("missing session record type")
     constructor = constructors.get(record_type)
     if constructor is None:
-        raise ValueError(f"unknown session record kind: {record_type!r}")
+        return None
     values.pop("kind", None)
     return constructor(**values)
 
@@ -252,7 +270,9 @@ class SessionLog:
                 if not isinstance(raw_data, dict):
                     raise TypeError("record must be an object")
                 data = cast(dict[str, Any], raw_data)
-                records.append(_record_from_dict(data))
+                record = _record_from_dict(data)
+                if record is not None:
+                    records.append(record)
             except (json.JSONDecodeError, KeyError, TypeError, ValueError) as exc:
                 raise ValueError(
                     f"malformed session record on line {line_number}: {exc}"

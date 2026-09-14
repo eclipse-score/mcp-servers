@@ -25,6 +25,7 @@ Provides an MCP server with these tools:
 | Tool | Purpose |
 |------|----------|
 | `initialize_session` | Start with goal, subgoals, assumptions |
+| `set_task_class` | Record a user-selected process workflow or continue without one |
 | `query_graph` | Ask the merged code, domain, and collaboration graph |
 | `record_decision` | Track a decision + reasoning |
 | `record_outcome` | Record pass/fail + coverage for learning |
@@ -85,6 +86,11 @@ Free-text fields are recorded in English. The optional `task_class` argument
 to `initialize_session` accepts a process workflow identifier such as
 `wf__verification_unit_test`; leave it empty when unknown.
 
+When process data is available, initialization may return a deterministic task
+class detection. Print its `announcement` verbatim. If it includes a
+`question`, ask the user before continuing and record the answer with
+`set_task_class`; never silently classify a task.
+
 ```python
 # Agent initializes a session
 wm.initialize_session(
@@ -92,7 +98,8 @@ wm.initialize_session(
     subgoals=["Understand current flow", "Identify dependencies"],
     assumptions={"Password hashing uses bcrypt": "high", "No 2FA": "low"},
 )
-# Returns {"session_id": "...", "setup": {"ok": ..., ...}}
+# Print detection.announcement verbatim when detection is returned. Ask the
+# user when detection.question is present, then call set_task_class.
 
 # Agent explores code
 auth_structure = wm.query_graph("Show me auth.py structure")

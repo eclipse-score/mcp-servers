@@ -51,6 +51,11 @@ symbol-only input can contribute no structural signal at the relevant graph
 granularity; `focus_size == 0` in the response means the structural axis was
 silent.
 
+When `initialize_session` returns `detection`, print
+`detection.announcement` verbatim to the user. If `detection.question` is
+present, ask the user before continuing and record the answer with
+`set_task_class`.
+
 ## Pattern: Initialize → Navigate → Decide → Record
 
 ### 1. Initialize (Before coding)

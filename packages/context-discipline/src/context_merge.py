@@ -32,6 +32,7 @@ class MergedNode:
     layer: str
     source_file: str = ""
     provenance: Provenance | None = None
+    source_file_keys: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -73,9 +74,11 @@ class MergedGraph:
 
     @classmethod
     def build(cls, repo_path: str | Path) -> MergedGraph:
+        from context_policy import load_policy
         from context_sources import DEFAULT_SOURCES
 
         repo = Path(repo_path).expanduser().resolve()
+        policy = load_policy(repo)
         nodes: dict[str, MergedNode] = {}
         edges: dict[tuple[str, str, str], MergedEdge] = {}
         source_file_candidates: dict[str, set[str]] = {}
@@ -87,16 +90,8 @@ class MergedGraph:
         loaded_layers: set[str] = set()
 
         for source in DEFAULT_SOURCES:
-            source_graph = source.load(repo)
-            is_loaded = bool(source_graph.nodes)
-            backing_exists = getattr(source, "backing_exists", None)
-            if backing_exists is not None:
-                is_loaded = is_loaded or backing_exists(repo)
-            if source.layer == "process":
-                process_loaded = getattr(source, "is_loaded", None)
-                if process_loaded is not None:
-                    is_loaded = process_loaded()
-            if is_loaded:
+            source_graph = source.load(repo, policy)
+            if source_graph.loaded:
                 loaded_layers.add(source.layer)
 
             for node in source_graph.nodes:
@@ -111,13 +106,8 @@ class MergedGraph:
                 label_tail_candidates.setdefault(label_tail(node.label), set()).add(
                     node.id
                 )
-                if node.source_file:
-                    source_file_candidates.setdefault(node.source_file, set()).add(
-                        node.id
-                    )
-                    source_file_candidates.setdefault(
-                        f"./{node.source_file}", set()
-                    ).add(node.id)
+                for source_file in node.source_file_keys:
+                    source_file_candidates.setdefault(source_file, set()).add(node.id)
             for edge in source_graph.edges:
                 key = (edge.source, edge.target, edge.relation)
                 if key in edges:

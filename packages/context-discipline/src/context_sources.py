@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import json
 import os
+import posixpath
 import re
 from contextlib import suppress
 from dataclasses import dataclass
@@ -25,7 +26,7 @@ from typing import Protocol
 
 from context_merge import MergedEdge, MergedNode, link_reasoning
 from context_overlay import OverlayStore, Provenance
-from context_policy import load_policy
+from context_policy import Policy
 from context_sessions import (
     AttentionRecord,
     ReasoningRecord,
@@ -33,6 +34,7 @@ from context_sessions import (
     RetrievalRecord,
     SessionLog,
     SessionRecord,
+    TaskClassRecord,
     TaskRecord,
 )
 
@@ -46,13 +48,14 @@ class SourceGraph:
     nodes: tuple[MergedNode, ...]
     edges: tuple[MergedEdge, ...]
     read_only: bool
+    loaded: bool = False
 
 
 class GraphSource(Protocol):
     layer: str
     read_only: bool
 
-    def load(self, repo: Path) -> SourceGraph: ...
+    def load(self, repo: Path, policy: Policy) -> SourceGraph: ...
 
 
 def _session_edges(records: tuple[Record, ...]) -> tuple[MergedEdge, ...]:
@@ -99,29 +102,30 @@ class CodeGraphSource:
     layer = "code"
     read_only = True
 
-    def backing_exists(self, repo: Path) -> bool:
-        return (repo / "graphify-out" / "graph.json").exists()
-
-    def load(self, repo: Path) -> SourceGraph:
+    def load(self, repo: Path, policy: Policy) -> SourceGraph:
         path = repo / "graphify-out" / "graph.json"
         if not path.exists():
-            return SourceGraph(self.layer, (), (), self.read_only)
+            return SourceGraph(self.layer, (), (), self.read_only, False)
         data = json.loads(path.read_text(encoding="utf-8"))
         nodes: list[MergedNode] = []
         for raw in data.get("nodes", []):
             source_file = raw.get("source_file")
             normalized_source_file = ""
+            source_file_keys: tuple[str, ...] = ()
             if source_file is not None:
                 raw_source_file = str(source_file)
-                normalized_source_file = os.path.normpath(
+                normalized_source_file = posixpath.normpath(
                     raw_source_file.replace("\\", "/")
                 )
+                keys = {raw_source_file, normalized_source_file}
                 source_path = Path(normalized_source_file)
                 if source_path.is_absolute():
                     with suppress(ValueError):
                         normalized_source_file = (
                             source_path.resolve().relative_to(repo).as_posix()
                         )
+                        keys.add(normalized_source_file)
+                source_file_keys = tuple(sorted(keys))
             nodes.append(
                 MergedNode(
                     id=str(raw["id"]),
@@ -129,6 +133,7 @@ class CodeGraphSource:
                     type=str(raw.get("type") or raw.get("file_type", "")),
                     layer=self.layer,
                     source_file=normalized_source_file,
+                    source_file_keys=source_file_keys,
                 )
             )
         raw_edges = data.get("links", data.get("edges", []))
@@ -141,17 +146,14 @@ class CodeGraphSource:
             )
             for raw in raw_edges
         )
-        return SourceGraph(self.layer, tuple(nodes), edges, self.read_only)
+        return SourceGraph(self.layer, tuple(nodes), edges, self.read_only, True)
 
 
 class OverlaySource:
     layer = "domain"
     read_only = False
 
-    def backing_exists(self, repo: Path) -> bool:
-        return (repo / "score-context").exists()
-
-    def load(self, repo: Path) -> SourceGraph:
+    def load(self, repo: Path, policy: Policy) -> SourceGraph:
         overlay = OverlayStore(repo)
         overlay.load()
         nodes = tuple(
@@ -174,21 +176,26 @@ class OverlaySource:
             )
             for raw in overlay.edges
         )
-        return SourceGraph(self.layer, nodes, edges, self.read_only)
+        return SourceGraph(
+            self.layer,
+            nodes,
+            edges,
+            self.read_only,
+            (repo / "score-context").exists(),
+        )
 
 
 class SessionSource:
     layer = "collaboration"
     read_only = False
 
-    def backing_exists(self, repo: Path) -> bool:
-        return (repo / ".score-local" / "sessions.jsonl").exists()
-
-    def load(self, repo: Path) -> SourceGraph:
+    def load(self, repo: Path, policy: Policy) -> SourceGraph:
         log = SessionLog(repo)
         records = log.read_all()
         nodes: list[MergedNode] = []
         for record in records:
+            if isinstance(record, TaskClassRecord):
+                continue
             if isinstance(record, SessionRecord):
                 label = record.goal
                 record_type = "session"
@@ -213,6 +220,7 @@ class SessionSource:
             tuple(nodes),
             _session_edges(records),
             self.read_only,
+            (repo / ".score-local" / "sessions.jsonl").exists(),
         )
 
 
@@ -220,22 +228,15 @@ class ProcessSource:
     layer = "process"
     read_only = True
 
-    def __init__(self) -> None:
-        self._loaded = False
-
-    def _path(self, repo: Path) -> Path | None:
+    def _path(self, repo: Path, policy: Policy) -> Path | None:
+        if not policy.process.enabled:
+            return None
         configured = os.environ.get("SCORE_PROCESS_GRAPH")
         if configured:
             path = Path(configured)
-            return path if path.is_absolute() else None
-        try:
-            policy = load_policy(repo).process
-        except (OSError, ValueError):
-            return None
-        if not policy.enabled:
-            return None
-        if policy.path:
-            configured_path = Path(policy.path)
+            return path if path.is_absolute() else repo / path
+        if policy.process.path:
+            configured_path = Path(policy.process.path)
             return (
                 configured_path
                 if configured_path.is_absolute()
@@ -251,18 +252,10 @@ class ProcessSource:
             return installed
         return repo / "score-context" / "process_graph.json"
 
-    def backing_exists(self, repo: Path) -> bool:
-        path = self._path(repo)
-        return path is not None and path.exists()
-
-    def is_loaded(self) -> bool:
-        return self._loaded
-
-    def load(self, repo: Path) -> SourceGraph:
-        self._loaded = False
-        path = self._path(repo)
+    def load(self, repo: Path, policy: Policy) -> SourceGraph:
+        path = self._path(repo, policy)
         if path is None or not path.exists():
-            return SourceGraph(self.layer, (), (), self.read_only)
+            return SourceGraph(self.layer, (), (), self.read_only, False)
         try:
             raw = json.loads(path.read_text(encoding="utf-8"))
             if (
@@ -281,7 +274,7 @@ class ProcessSource:
                 raise ValueError("invalid process graph source fields")
             if type(nodes_raw) is not list or type(edges_raw) is not list:
                 raise ValueError("invalid process graph arrays")
-            limits = load_policy(repo).overlay
+            limits = policy.overlay
             if len(nodes_raw) > limits.max_nodes or len(edges_raw) > limits.max_edges:
                 raise ValueError("process graph exceeds policy limits")
             provenance = Provenance(
@@ -350,15 +343,15 @@ class ProcessSource:
                         provenance,
                     )
                 )
-            self._loaded = True
             return SourceGraph(
                 self.layer,
                 tuple(nodes),
                 tuple(edges),
                 self.read_only,
+                True,
             )
         except (OSError, UnicodeError, TypeError, ValueError):
-            return SourceGraph(self.layer, (), (), self.read_only)
+            return SourceGraph(self.layer, (), (), self.read_only, False)
 
 
 DEFAULT_SOURCES = (

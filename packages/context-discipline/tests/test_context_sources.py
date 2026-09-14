@@ -16,6 +16,7 @@ from pathlib import Path
 
 import pytest
 from context_merge import MergedGraph
+from context_policy import Policy
 from context_sources import (
     DEFAULT_SOURCES,
     CodeGraphSource,
@@ -61,10 +62,15 @@ def test_default_sources_are_ordered_and_isolated(
         "process",
         "collaboration",
     ]
-    assert CodeGraphSource().load(tmp_path).nodes == ()
-    assert OverlaySource().load(tmp_path).nodes == ()
-    assert ProcessSource().load(tmp_path).nodes == ()
-    assert SessionSource().load(tmp_path).nodes == ()
+    policy = Policy()
+    code = CodeGraphSource().load(tmp_path, policy)
+    overlay = OverlaySource().load(tmp_path, policy)
+    process = ProcessSource().load(tmp_path, policy)
+    session = SessionSource().load(tmp_path, policy)
+    assert code.nodes == () and not code.loaded
+    assert overlay.nodes == () and not overlay.loaded
+    assert process.nodes == () and not process.loaded
+    assert session.nodes == () and not session.loaded
 
 
 def test_process_source_loads_provenance_and_layer(
@@ -111,7 +117,97 @@ def test_unknown_process_edge_target_is_dropped(
     path.write_text(json.dumps(payload), encoding="utf-8")
     monkeypatch.setenv("SCORE_PROCESS_GRAPH", str(path))
 
-    source = ProcessSource().load(tmp_path)
+    source = ProcessSource().load(tmp_path, Policy())
 
     assert source.edges == ()
     assert source.nodes
+
+
+def test_source_file_index_preserves_relative_and_absolute_keys(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    graph_dir = tmp_path / "graphify-out"
+    graph_dir.mkdir()
+    absolute = tmp_path / "src" / "b.py"
+    (graph_dir / "graph.json").write_text(
+        json.dumps(
+            {
+                "nodes": [
+                    {
+                        "id": "code__relative",
+                        "label": "relative",
+                        "file_type": "code",
+                        "source_file": "./src/a.py",
+                    },
+                    {
+                        "id": "code__absolute",
+                        "label": "absolute",
+                        "file_type": "code",
+                        "source_file": str(absolute),
+                    },
+                ],
+                "links": [],
+            }
+        ),
+        encoding="utf-8",
+    )
+    monkeypatch.setenv("SCORE_PROCESS_GRAPH", str(tmp_path / "missing.json"))
+
+    graph = MergedGraph.build(tmp_path)
+
+    assert graph.source_file_index["./src/a.py"] == "code__relative"
+    assert graph.source_file_index["src/a.py"] == "code__relative"
+    assert graph.source_file_index[str(absolute)] == "code__absolute"
+    assert graph.source_file_index["src/b.py"] == "code__absolute"
+
+
+def test_process_policy_disables_environment_override(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    policy_dir = tmp_path / "score-context"
+    policy_dir.mkdir()
+    policy_dir.joinpath("policy.toml").write_text(
+        "version = 1\n[process]\nenabled = false\n",
+        encoding="utf-8",
+    )
+    process_path = tmp_path / "process.json"
+    _process_graph(process_path)
+    monkeypatch.setenv("SCORE_PROCESS_GRAPH", str(process_path))
+
+    graph = MergedGraph.build(tmp_path)
+
+    assert "process" not in graph.loaded_layers
+    assert "gd_req__one" not in graph.nodes
+
+
+def test_relative_environment_process_path_is_repository_relative(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _process_graph(tmp_path / "process.json")
+    monkeypatch.setenv("SCORE_PROCESS_GRAPH", "process.json")
+
+    graph = MergedGraph.build(tmp_path)
+
+    assert "process" in graph.loaded_layers
+    assert "gd_req__one" in graph.nodes
+
+
+def test_graph_build_loads_policy_once(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import context_policy
+
+    calls = 0
+    original = context_policy.load_policy
+
+    def counted_load_policy(repo: Path):
+        nonlocal calls
+        calls += 1
+        return original(repo)
+
+    monkeypatch.setattr(context_policy, "load_policy", counted_load_policy)
+    monkeypatch.setenv("SCORE_PROCESS_GRAPH", str(tmp_path / "missing.json"))
+
+    MergedGraph.build(tmp_path)
+
+    assert calls == 1
