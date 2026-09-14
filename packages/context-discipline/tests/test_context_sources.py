@@ -214,6 +214,42 @@ def test_consumer_apm_module_process_graph_precedes_sibling(
     assert "gd_req__one" in graph.nodes
 
 
+def test_consumer_apm_module_process_graph_selection_is_sorted(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    first = (
+        tmp_path
+        / "apm_modules"
+        / "_local"
+        / "aaaa"
+        / "metamodel-flow"
+        / "model"
+        / "process_graph.json"
+    )
+    second = (
+        tmp_path
+        / "apm_modules"
+        / "_local"
+        / "zzzz"
+        / "metamodel-flow"
+        / "model"
+        / "process_graph.json"
+    )
+    first.parent.mkdir(parents=True)
+    second.parent.mkdir(parents=True)
+    _process_graph(first)
+    _process_graph(second)
+    second_payload = json.loads(second.read_text(encoding="utf-8"))
+    second_payload["nodes"][0]["id"] = "gd_req__second"
+    second.write_text(json.dumps(second_payload), encoding="utf-8")
+
+    monkeypatch.delenv("SCORE_PROCESS_GRAPH", raising=False)
+    graph = MergedGraph.build(tmp_path)
+
+    assert "gd_req__one" in graph.nodes
+    assert "gd_req__second" not in graph.nodes
+
+
 def test_graph_build_loads_policy_once(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
