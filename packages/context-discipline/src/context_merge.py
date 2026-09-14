@@ -22,7 +22,7 @@ from contextlib import suppress
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from context_overlay import OverlayStore
+from context_overlay import OverlayStore, Provenance
 from context_sessions import (
     AttentionRecord,
     ReasoningRecord,
@@ -41,6 +41,7 @@ class MergedNode:
     type: str
     layer: str
     source_file: str = ""
+    provenance: Provenance | None = None
 
 
 @dataclass(frozen=True)
@@ -49,6 +50,7 @@ class MergedEdge:
     target: str
     relation: str
     layer: str
+    provenance: Provenance | None = None
 
 
 def link_reasoning(records: Iterable[Record]) -> tuple[tuple[str, str], ...]:
@@ -191,7 +193,13 @@ class MergedGraph:
         overlay = OverlayStore(repo)
         overlay.load()
         for raw in overlay.nodes:
-            node = MergedNode(raw.id, raw.title, raw.type, "domain")
+            node = MergedNode(
+                raw.id,
+                raw.title,
+                raw.type,
+                "domain",
+                provenance=raw.provenance,
+            )
             if node.id in nodes:
                 conflicts.add(node.id)
             else:
@@ -202,7 +210,13 @@ class MergedGraph:
             )
             label_tail_candidates.setdefault(label_tail(node.label), set()).add(node.id)
         for raw in overlay.edges:
-            edge = MergedEdge(raw.source, raw.target, raw.relation, "domain")
+            edge = MergedEdge(
+                raw.source,
+                raw.target,
+                raw.relation,
+                "domain",
+                raw.provenance,
+            )
             key = (edge.source, edge.target, edge.relation)
             if key in edges:
                 edge_conflicts.add(key)

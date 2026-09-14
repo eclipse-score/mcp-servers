@@ -24,6 +24,7 @@ from context_discipline_mcp import (
     expand_focus,
 )
 from context_merge import MergedGraph
+from context_overlay import OverlayNode, OverlayStore, Provenance
 from context_policy import Policy
 
 
@@ -255,6 +256,32 @@ def test_query_graph_reports_missing_graph_setup(tmp_path: Path) -> None:
             "next": "Call setup_graphify with install_graphify=true.",
         },
     }
+
+
+def test_query_graph_keeps_provenance_out_of_term_matching(tmp_path: Path) -> None:
+    _write_graph(tmp_path)
+    overlay = OverlayStore(tmp_path)
+    overlay.upsert_node(
+        OverlayNode(
+            "decision__projected",
+            "dec_rec",
+            "Projected decision",
+            Provenance(
+                tmp_path.name,
+                "process_description",
+                0.9,
+                "2026-01-01T00:00:00Z",
+            ),
+        )
+    )
+    overlay.save()
+
+    manager = ContextDisciplineMCP(str(tmp_path))
+
+    assert manager.query_graph("process_description")["matches"] == []
+    matches = manager.query_graph("Projected decision")["matches"]
+    assert [node["id"] for node in matches] == ["decision__projected"]
+    assert matches[0]["provenance"]["adapter"] == "process_description"
 
 
 def test_get_prior_context_returns_items_and_untrusted_rendered_block(

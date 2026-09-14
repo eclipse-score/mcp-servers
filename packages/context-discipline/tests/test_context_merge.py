@@ -15,7 +15,7 @@ import json
 from pathlib import Path
 
 from context_merge import MergedEdge, MergedGraph, MergedNode, link_reasoning
-from context_overlay import OverlayNode, OverlayStore, Provenance
+from context_overlay import OverlayEdge, OverlayNode, OverlayStore, Provenance
 from context_sessions import (
     ReasoningRecord,
     RetrievalRecord,
@@ -52,21 +52,29 @@ def test_three_layer_merge_and_dangling_edges(tmp_path: Path) -> None:
         ),
         encoding="utf-8",
     )
+    provenance = Provenance(
+        "repo",
+        "test",
+        1.0,
+        "2026-01-01T00:00:00Z",
+        "abc123",
+    )
     overlay = OverlayStore(tmp_path)
     overlay.upsert_node(
         OverlayNode(
             "domain__one",
             "dec_rec",
             "Decision",
-            Provenance("repo", "test", 1.0, "2026-01-01T00:00:00Z"),
+            provenance,
         )
     )
+    overlay.upsert_edge(OverlayEdge("domain__one", "code__one", "affects", provenance))
     overlay.upsert_node(
         OverlayNode(
             "collision",
             "contract",
             "Domain collision",
-            Provenance("repo", "test", 1.0, "2026-01-01T00:00:00Z"),
+            provenance,
         )
     )
     overlay.save()
@@ -104,8 +112,16 @@ def test_three_layer_merge_and_dangling_edges(tmp_path: Path) -> None:
 
     merged = MergedGraph.build(tmp_path)
     assert merged.nodes["code__one"].layer == "code"
+    assert merged.nodes["code__one"].provenance is None
     assert merged.nodes["domain__one"].layer == "domain"
+    assert merged.nodes["domain__one"].provenance == provenance
+    assert merged.nodes["domain__one"].provenance is not None
+    assert merged.nodes["domain__one"].provenance.adapter == "test"
+    assert merged.nodes["domain__one"].provenance.repo == "repo"
+    assert merged.nodes["domain__one"].provenance.confidence == 1.0
+    assert merged.nodes["domain__one"].provenance.sha == "abc123"
     assert merged.nodes[reasoning.id].layer == "collaboration"
+    assert merged.nodes[reasoning.id].provenance is None
     assert merged.nodes["collision"].label == "Code"
     assert "collision" in merged.conflicts
     assert merged.edge_conflicts == (("code__one", "missing", "contains"),)
@@ -113,7 +129,15 @@ def test_three_layer_merge_and_dangling_edges(tmp_path: Path) -> None:
     assert merged.edges[(reasoning.id, task.id, "belongs_to")].relation == "belongs_to"
     assert merged.edges[(reasoning.id, "domain__one", "supported_by")]
     assert merged.edges[(retrieval.id, "code__one", "covers")]
+    assert (
+        merged.edges[("domain__one", "code__one", "affects")].provenance == provenance
+    )
+    assert merged.edges[("code__one", "missing", "contains")].provenance is None
     assert any(edge.target == "missing" for edge in merged.dangling_edges)
+
+
+def test_merged_node_positional_construction_defaults_provenance() -> None:
+    assert MergedNode("x", "x", "t", "code").provenance is None
 
 
 def test_link_reasoning_pairs_prior_cross_session_records() -> None:
