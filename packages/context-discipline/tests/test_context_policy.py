@@ -18,6 +18,7 @@ from context_policy import (
     AttentionPolicy,
     OverlayPolicy,
     PrivacyPolicy,
+    ProcessPolicy,
     load_policy,
 )
 
@@ -28,6 +29,7 @@ def test_missing_policy_uses_defaults(tmp_path: Path) -> None:
     assert policy.attention.recency_decay is False
     assert policy.privacy == PrivacyPolicy()
     assert policy.overlay == OverlayPolicy()
+    assert policy.process == ProcessPolicy()
 
 
 def test_policy_loads_written_values(tmp_path: Path) -> None:

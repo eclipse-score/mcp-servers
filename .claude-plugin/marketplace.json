@@ -25,6 +25,13 @@
       "version": "0.1.0",
       "category": "Productivity",
       "source": "./packages/graphify-codegraph"
+    },
+    {
+      "name": "metamodel-flow",
+      "description": "Normative S-CORE artifact model guidance generated from the metamodel projection.",
+      "version": "0.1.0",
+      "category": "Productivity",
+      "source": "./packages/metamodel-flow"
     }
   ]
 }

@@ -1,0 +1,6 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (c) 2026 Contributors to the Eclipse Foundation
+
+source_repo_url=https://github.com/eclipse-score/process_description.git
+source_commit=531b538c89849af3807cfaf77a96a49a3225818a
+generator_command=python -m process_projection --needs /home/ubuntu/work/pd/bazel-bin/needs_json/_build/needs/needs.json --out packages/metamodel-flow/model/process_graph.json --source-commit 531b538c89849af3807cfaf77a96a49a3225818a --observed-at 2026-09-14T16:14:00+00:00

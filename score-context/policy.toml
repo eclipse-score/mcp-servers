@@ -36,3 +36,8 @@ max_attribute_chars = 500
 max_attributes = 20
 max_added_nodes_per_change = 200
 max_added_edges_per_change = 400
+
+[process]
+enabled = true
+path = ""
+gap_min = 0.30

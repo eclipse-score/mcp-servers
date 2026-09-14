@@ -1,0 +1,3630 @@
+{
+  "schema_version": 1,
+  "metamodel_digest": "sha256:90caf4d5e869a5a767044b4400f4b691ed7687856cb2acedd65dd9fb3d06c1d1",
+  "base_options": {
+    "mandatory": [
+      {
+        "name": "version",
+        "pattern": "^[0-9]+$"
+      }
+    ],
+    "optional": [
+      {
+        "name": "source_code_link",
+        "pattern": "^https://github.com/.*"
+      },
+      {
+        "name": "testlink",
+        "pattern": "^https://github.com/.*"
+      }
+    ]
+  },
+  "prohibited_words": [
+    {
+      "check": "content_check",
+      "option": "content",
+      "applies_to_tags": [
+        "requirement_excl_process"
+      ],
+      "words": [
+        "just",
+        "about",
+        "really",
+        "some",
+        "thing",
+        "absolutely"
+      ]
+    },
+    {
+      "check": "title_check",
+      "option": "title",
+      "applies_to_tags": [],
+      "words": [
+        "shall",
+        "must",
+        "will"
+      ]
+    }
+  ],
+  "link_types": [
+    {
+      "name": "affects",
+      "outgoing": "affects",
+      "incoming": "affected by",
+      "declared": true
+    },
+    {
+      "name": "approved_by",
+      "outgoing": "approved by",
+      "incoming": "approves",
+      "declared": true
+    },
+    {
+      "name": "belongs_to",
+      "outgoing": "belongs to",
+      "incoming": "has",
+      "declared": true
+    },
+    {
+      "name": "complies",
+      "outgoing": "complies",
+      "incoming": "complies to",
+      "declared": true
+    },
+    {
+      "name": "consists_of",
+      "outgoing": "consists of",
+      "incoming": "forms part of",
+      "declared": true
+    },
+    {
+      "name": "contains",
+      "outgoing": "contains",
+      "incoming": "contained by",
+      "declared": true
+    },
+    {
+      "name": "covers",
+      "outgoing": "covers",
+      "incoming": "covered by",
+      "declared": true
+    },
+    {
+      "name": "derived_from",
+      "outgoing": "derived from",
+      "incoming": "derives",
+      "declared": true
+    },
+    {
+      "name": "evidence",
+      "outgoing": "evidence",
+      "incoming": "evidence_for",
+      "declared": true
+    },
+    {
+      "name": "fulfils",
+      "outgoing": "fulfils",
+      "incoming": "fulfilled by",
+      "declared": true
+    },
+    {
+      "name": "fully_verifies",
+      "outgoing": "fully_verifies",
+      "incoming": "fully_verified_by",
+      "declared": true
+    },
+    {
+      "name": "has",
+      "outgoing": "has",
+      "incoming": "relates to",
+      "declared": true
+    },
+    {
+      "name": "implements",
+      "outgoing": "implements",
+      "incoming": "implemented by",
+      "declared": true
+    },
+    {
+      "name": "included_by",
+      "outgoing": "included by",
+      "incoming": "includes",
+      "declared": true
+    },
+    {
+      "name": "includes",
+      "outgoing": "includes",
+      "incoming": "included by",
+      "declared": true
+    },
+    {
+      "name": "input",
+      "outgoing": "needs input",
+      "incoming": "is input to",
+      "declared": true
+    },
+    {
+      "name": "links",
+      "outgoing": null,
+      "incoming": null,
+      "declared": false
+    },
+    {
+      "name": "mitigated_by",
+      "outgoing": "mitigated_by",
+      "incoming": "mitigates",
+      "declared": true
+    },
+    {
+      "name": "output",
+      "outgoing": "outputs",
+      "incoming": "is output from",
+      "declared": true
+    },
+    {
+      "name": "partially_verifies",
+      "outgoing": "partially_verifies",
+      "incoming": "partially_verified_by",
+      "declared": true
+    },
+    {
+      "name": "provides",
+      "outgoing": "provides",
+      "incoming": "provided by",
+      "declared": true
+    },
+    {
+      "name": "realizes",
+      "outgoing": "realizes",
+      "incoming": "realized by",
+      "declared": true
+    },
+    {
+      "name": "responsible",
+      "outgoing": "responsible",
+      "incoming": "is responsible for",
+      "declared": true
+    },
+    {
+      "name": "satisfied_by",
+      "outgoing": "satisfied by",
+      "incoming": "satisfies",
+      "declared": true
+    },
+    {
+      "name": "satisfies",
+      "outgoing": "satisfies",
+      "incoming": "satisfied by",
+      "declared": true
+    },
+    {
+      "name": "supported_by",
+      "outgoing": "supported by",
+      "incoming": "supports",
+      "declared": true
+    },
+    {
+      "name": "uses",
+      "outgoing": "uses",
+      "incoming": "used by",
+      "declared": true
+    },
+    {
+      "name": "violates",
+      "outgoing": "violates",
+      "incoming": "violated_by",
+      "declared": true
+    }
+  ],
+  "need_types": [
+    {
+      "name": "aou_req",
+      "title": "Assumption of Use Requirement",
+      "prefix": null,
+      "tags": [
+        "requirement",
+        "requirement_excl_process"
+      ],
+      "parts": 3,
+      "options": [
+        {
+          "name": "content",
+          "pattern": "^[\\s\\S]+$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "hash",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": false
+        },
+        {
+          "name": "reqtype",
+          "pattern": "^(Functional|Interface|Process|Non-Functional)$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "safety",
+          "pattern": "^(QM|ASIL_B)$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "security",
+          "pattern": "^(YES|NO)$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "source_code_link",
+          "pattern": "^https://github.com/.*",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "status",
+          "pattern": "^(valid|invalid)$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "testcovered",
+          "pattern": "^(YES|NO)$",
+          "required": false,
+          "inherited": false
+        },
+        {
+          "name": "testlink",
+          "pattern": "^https://github.com/.*",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "version",
+          "pattern": "^[0-9]+$",
+          "required": true,
+          "inherited": true
+        }
+      ],
+      "links": []
+    },
+    {
+      "name": "assertion",
+      "title": "Assertion",
+      "prefix": null,
+      "tags": [],
+      "parts": 3,
+      "options": [
+        {
+          "name": "id",
+          "pattern": "^assertion__[0-9a-zA-Z_-]*$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "source_code_link",
+          "pattern": "^https://github.com/.*",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "status",
+          "pattern": "^(draft|valid)$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "testlink",
+          "pattern": "^https://github.com/.*",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "version",
+          "pattern": "^[0-9]+$",
+          "required": true,
+          "inherited": true
+        }
+      ],
+      "links": [
+        {
+          "name": "links",
+          "targets": [],
+          "any_target": true,
+          "required": false
+        }
+      ]
+    },
+    {
+      "name": "comp",
+      "title": "Component",
+      "prefix": null,
+      "tags": [
+        "architecture_element"
+      ],
+      "parts": 2,
+      "options": [
+        {
+          "name": "safety",
+          "pattern": "^(QM|ASIL_B)$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "security",
+          "pattern": "^(YES|NO)$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "source_code_link",
+          "pattern": "^https://github.com/.*",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "status",
+          "pattern": "^(valid|invalid)$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "testlink",
+          "pattern": "^https://github.com/.*",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "version",
+          "pattern": "^[0-9]+$",
+          "required": true,
+          "inherited": true
+        }
+      ],
+      "links": [
+        {
+          "name": "belongs_to",
+          "targets": [
+            "feat"
+          ],
+          "any_target": false,
+          "required": true
+        },
+        {
+          "name": "consists_of",
+          "targets": [
+            "comp"
+          ],
+          "any_target": false,
+          "required": false
+        },
+        {
+          "name": "fulfils",
+          "targets": [
+            "aou_req"
+          ],
+          "any_target": false,
+          "required": false
+        },
+        {
+          "name": "implements",
+          "targets": [
+            "logic_arc_int",
+            "real_arc_int_op"
+          ],
+          "any_target": false,
+          "required": false
+        },
+        {
+          "name": "uses",
+          "targets": [
+            "logic_arc_int",
+            "real_arc_int_op"
+          ],
+          "any_target": false,
+          "required": false
+        }
+      ]
+    },
+    {
+      "name": "comp_arc_dyn",
+      "title": "Component Sequence Diagram",
+      "prefix": null,
+      "tags": [
+        "architecture_view"
+      ],
+      "parts": 3,
+      "options": [
+        {
+          "name": "safety",
+          "pattern": "^(QM|ASIL_B)$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "security",
+          "pattern": "^(YES|NO)$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "source_code_link",
+          "pattern": "^https://github.com/.*",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "status",
+          "pattern": "^(valid|invalid)$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "testlink",
+          "pattern": "^https://github.com/.*",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "version",
+          "pattern": "^[0-9]+$",
+          "required": true,
+          "inherited": true
+        }
+      ],
+      "links": [
+        {
+          "name": "belongs_to",
+          "targets": [
+            "comp"
+          ],
+          "any_target": false,
+          "required": true
+        },
+        {
+          "name": "fulfils",
+          "targets": [
+            "comp_req"
+          ],
+          "any_target": false,
+          "required": false
+        }
+      ]
+    },
+    {
+      "name": "comp_arc_sta",
+      "title": "Component Package Diagram",
+      "prefix": null,
+      "tags": [
+        "architecture_view"
+      ],
+      "parts": 3,
+      "options": [
+        {
+          "name": "safety",
+          "pattern": "^(QM|ASIL_B)$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "security",
+          "pattern": "^(YES|NO)$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "source_code_link",
+          "pattern": "^https://github.com/.*",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "status",
+          "pattern": "^(valid|invalid)$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "testlink",
+          "pattern": "^https://github.com/.*",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "version",
+          "pattern": "^[0-9]+$",
+          "required": true,
+          "inherited": true
+        }
+      ],
+      "links": [
+        {
+          "name": "belongs_to",
+          "targets": [
+            "comp"
+          ],
+          "any_target": false,
+          "required": true
+        },
+        {
+          "name": "fulfils",
+          "targets": [
+            "comp_req"
+          ],
+          "any_target": false,
+          "required": false
+        },
+        {
+          "name": "uses",
+          "targets": [
+            "logic_arc_int",
+            "real_arc_int_op"
+          ],
+          "any_target": false,
+          "required": false
+        }
+      ]
+    },
+    {
+      "name": "comp_req",
+      "title": "Component Requirement",
+      "prefix": null,
+      "tags": [
+        "requirement",
+        "requirement_excl_process"
+      ],
+      "parts": 3,
+      "options": [
+        {
+          "name": "content",
+          "pattern": "^[\\s\\S]+$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "hash",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": false
+        },
+        {
+          "name": "reqtype",
+          "pattern": "^(Functional|Interface|Process|Non-Functional)$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "safety",
+          "pattern": "^(QM|ASIL_B)$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "security",
+          "pattern": "^(YES|NO)$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "source_code_link",
+          "pattern": "^https://github.com/.*",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "status",
+          "pattern": "^(valid|invalid)$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "testcovered",
+          "pattern": "^(YES|NO)$",
+          "required": false,
+          "inherited": false
+        },
+        {
+          "name": "testlink",
+          "pattern": "^https://github.com/.*",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "version",
+          "pattern": "^[0-9]+$",
+          "required": true,
+          "inherited": true
+        }
+      ],
+      "links": [
+        {
+          "name": "covers",
+          "targets": [
+            "aou_req"
+          ],
+          "any_target": false,
+          "required": false
+        },
+        {
+          "name": "derived_from",
+          "targets": [
+            "feat_req"
+          ],
+          "any_target": false,
+          "required": false
+        },
+        {
+          "name": "satisfied_by",
+          "targets": [
+            "comp"
+          ],
+          "any_target": false,
+          "required": true
+        }
+      ]
+    },
+    {
+      "name": "comp_saf_dfa",
+      "title": "Component DFA (Dependent Failure Analysis)",
+      "prefix": null,
+      "tags": [
+        "dependent_failure_analysis",
+        "safety_analysis"
+      ],
+      "parts": 3,
+      "options": [
+        {
+          "name": "content",
+          "pattern": "^[\\s\\S]+$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "failure_effect",
+          "pattern": "^.+$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "failure_id",
+          "pattern": "^.+$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "mitigation_issue",
+          "pattern": "^https://github\\.com/[^/]+/[^/]+/issues/\\d+$",
+          "required": false,
+          "inherited": false
+        },
+        {
+          "name": "safety_relevant",
+          "pattern": "^(yes|no)$",
+          "required": false,
+          "inherited": false
+        },
+        {
+          "name": "source_code_link",
+          "pattern": "^https://github.com/.*",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "status",
+          "pattern": "^(valid|invalid)$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "sufficient",
+          "pattern": "^(yes|no)$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "testlink",
+          "pattern": "^https://github.com/.*",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "version",
+          "pattern": "^[0-9]+$",
+          "required": true,
+          "inherited": true
+        }
+      ],
+      "links": [
+        {
+          "name": "mitigated_by",
+          "targets": [
+            "comp_req",
+            "aou_req"
+          ],
+          "any_target": false,
+          "required": false
+        },
+        {
+          "name": "violates",
+          "targets": [
+            "comp_arc_sta"
+          ],
+          "any_target": false,
+          "required": true
+        }
+      ]
+    },
+    {
+      "name": "comp_saf_fmea",
+      "title": "Component FMEA (Failure Mode and Effects Analysis)",
+      "prefix": null,
+      "tags": [
+        "failure_mode_effects_analysis",
+        "safety_analysis"
+      ],
+      "parts": 3,
+      "options": [
+        {
+          "name": "content",
+          "pattern": "^[\\s\\S]+$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "failure_effect",
+          "pattern": "^.+$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "fault_id",
+          "pattern": "^.+$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "mitigation_issue",
+          "pattern": "^https://github\\.com/[^/]+/[^/]+/issues/\\d+$",
+          "required": false,
+          "inherited": false
+        },
+        {
+          "name": "root_cause",
+          "pattern": "^[\\s\\S]+$",
+          "required": false,
+          "inherited": false
+        },
+        {
+          "name": "safety_relevant",
+          "pattern": "^(yes|no)$",
+          "required": false,
+          "inherited": false
+        },
+        {
+          "name": "source_code_link",
+          "pattern": "^https://github.com/.*",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "status",
+          "pattern": "^(valid|invalid)$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "sufficient",
+          "pattern": "^(yes|no)$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "testlink",
+          "pattern": "^https://github.com/.*",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "version",
+          "pattern": "^[0-9]+$",
+          "required": true,
+          "inherited": true
+        }
+      ],
+      "links": [
+        {
+          "name": "mitigated_by",
+          "targets": [
+            "comp_req",
+            "aou_req"
+          ],
+          "any_target": false,
+          "required": false
+        },
+        {
+          "name": "violates",
+          "targets": [
+            "comp_arc_dyn",
+            "comp_arc_sta"
+          ],
+          "any_target": false,
+          "required": true
+        }
+      ]
+    },
+    {
+      "name": "comp_sec_ana",
+      "title": "Component Security Analysis (Threat Scenario)",
+      "prefix": null,
+      "tags": [
+        "threat_scenario",
+        "security_analysis"
+      ],
+      "parts": 3,
+      "options": [
+        {
+          "name": "content",
+          "pattern": "^[\\s\\S]+$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "mitigation_issue",
+          "pattern": "^https://github\\.com/[^/]+/[^/]+/issues/\\d+$",
+          "required": false,
+          "inherited": false
+        },
+        {
+          "name": "source_code_link",
+          "pattern": "^https://github.com/.*",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "status",
+          "pattern": "^(valid|invalid)$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "sufficient",
+          "pattern": "^(yes|no)$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "testlink",
+          "pattern": "^https://github.com/.*",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "threat_effect",
+          "pattern": "^.+$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "threat_scenario_id",
+          "pattern": "^(AS_01_(01|02|04|05|06|07|09|10)|CO_01_0[1-7]|SC_01_0[2-5]|SI_01_0[2-5]|UI_01_(0[1-9]|1[0-2]))$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "version",
+          "pattern": "^[0-9]+$",
+          "required": true,
+          "inherited": true
+        }
+      ],
+      "links": [
+        {
+          "name": "mitigated_by",
+          "targets": [
+            "comp_req",
+            "aou_req"
+          ],
+          "any_target": false,
+          "required": false
+        }
+      ]
+    },
+    {
+      "name": "comp_sec_threat",
+      "title": "Component Security Analysis Threat (STRIDE)",
+      "prefix": null,
+      "tags": [
+        "stride_threat",
+        "security_analysis"
+      ],
+      "parts": 3,
+      "options": [
+        {
+          "name": "content",
+          "pattern": "^[\\s\\S]+$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "source_code_link",
+          "pattern": "^https://github.com/.*",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "status",
+          "pattern": "^(valid|invalid)$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "testlink",
+          "pattern": "^https://github.com/.*",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "threat_id",
+          "pattern": "^(AU_01_0[1-3]|AZ_01_0[1-3]|CT_01_0[1-2]|DS_01_0[1-3]|EX_01_0[1-6]|LA_01_0[1-3]|MT_01_0[1-7])$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "version",
+          "pattern": "^[0-9]+$",
+          "required": true,
+          "inherited": true
+        }
+      ],
+      "links": []
+    },
+    {
+      "name": "dec_rec",
+      "title": "Decision Record",
+      "prefix": null,
+      "tags": [],
+      "parts": null,
+      "options": [
+        {
+          "name": "consequences",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": false
+        },
+        {
+          "name": "context",
+          "pattern": "^.+$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "decision",
+          "pattern": "^.+$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "source_code_link",
+          "pattern": "^https://github.com/.*",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "status",
+          "pattern": "^(proposed|accepted|deprecated|rejected|superseded)$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "testlink",
+          "pattern": "^https://github.com/.*",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "tracking",
+          "pattern": "^https://github\\.com/[^/]+/[^/]+/issues/\\d+$",
+          "required": false,
+          "inherited": false
+        },
+        {
+          "name": "version",
+          "pattern": "^[0-9]+$",
+          "required": true,
+          "inherited": true
+        }
+      ],
+      "links": [
+        {
+          "name": "affects",
+          "targets": [],
+          "any_target": true,
+          "required": false
+        }
+      ]
+    },
+    {
+      "name": "doc_concept",
+      "title": "Concept Definition",
+      "prefix": null,
+      "tags": [],
+      "parts": 2,
+      "options": [
+        {
+          "name": "source_code_link",
+          "pattern": "^https://github.com/.*",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "status",
+          "pattern": "^(valid|draft)$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "testlink",
+          "pattern": "^https://github.com/.*",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "version",
+          "pattern": "^[0-9]+$",
+          "required": true,
+          "inherited": true
+        }
+      ],
+      "links": []
+    },
+    {
+      "name": "doc_getstrt",
+      "title": "Getting Started",
+      "prefix": null,
+      "tags": [],
+      "parts": 2,
+      "options": [
+        {
+          "name": "source_code_link",
+          "pattern": "^https://github.com/.*",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "status",
+          "pattern": "^(valid|draft)$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "testlink",
+          "pattern": "^https://github.com/.*",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "version",
+          "pattern": "^[0-9]+$",
+          "required": true,
+          "inherited": true
+        }
+      ],
+      "links": []
+    },
+    {
+      "name": "doc_tool",
+      "title": "Tool Verification Report",
+      "prefix": null,
+      "tags": [],
+      "parts": 2,
+      "options": [
+        {
+          "name": "approver",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": false
+        },
+        {
+          "name": "author",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": false
+        },
+        {
+          "name": "reviewer",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": false
+        },
+        {
+          "name": "safety_affected",
+          "pattern": "^(YES|NO)$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "security_affected",
+          "pattern": "^(YES|NO)$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "source_code_link",
+          "pattern": "^https://github.com/.*",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "status",
+          "pattern": "^(draft|evaluated|qualified|released|rejected)$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "tcl",
+          "pattern": "^(LOW|HIGH)$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "testlink",
+          "pattern": "^https://github.com/.*",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "tool_version",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": false
+        },
+        {
+          "name": "version",
+          "pattern": "^[0-9]+$",
+          "required": true,
+          "inherited": true
+        }
+      ],
+      "links": [
+        {
+          "name": "realizes",
+          "targets": [
+            "workproduct"
+          ],
+          "any_target": false,
+          "required": false
+        }
+      ]
+    },
+    {
+      "name": "document",
+      "title": "Generic Document",
+      "prefix": "doc__",
+      "tags": [],
+      "parts": 2,
+      "options": [
+        {
+          "name": "approver",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": false
+        },
+        {
+          "name": "author",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": false
+        },
+        {
+          "name": "reviewer",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": false
+        },
+        {
+          "name": "safety",
+          "pattern": "^(QM|ASIL_B)$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "security",
+          "pattern": "^(YES|NO)$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "source_code_link",
+          "pattern": "^https://github.com/.*",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "status",
+          "pattern": "^(valid|draft|invalid)$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "testlink",
+          "pattern": "^https://github.com/.*",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "version",
+          "pattern": "^[0-9]+$",
+          "required": true,
+          "inherited": true
+        }
+      ],
+      "links": [
+        {
+          "name": "realizes",
+          "targets": [
+            "workproduct"
+          ],
+          "any_target": false,
+          "required": true
+        }
+      ]
+    },
+    {
+      "name": "feat",
+      "title": "Feature",
+      "prefix": null,
+      "tags": [
+        "architecture_element"
+      ],
+      "parts": 2,
+      "options": [
+        {
+          "name": "safety",
+          "pattern": "^(QM|ASIL_B)$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "security",
+          "pattern": "^(YES|NO)$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "source_code_link",
+          "pattern": "^https://github.com/.*",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "status",
+          "pattern": "^(valid|invalid)$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "testlink",
+          "pattern": "^https://github.com/.*",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "version",
+          "pattern": "^[0-9]+$",
+          "required": true,
+          "inherited": true
+        }
+      ],
+      "links": [
+        {
+          "name": "includes",
+          "targets": [
+            "logic_arc_int",
+            "logic_arc_int_op"
+          ],
+          "any_target": false,
+          "required": false
+        },
+        {
+          "name": "provides",
+          "targets": [
+            "logic_arc_int",
+            "logic_arc_int_op"
+          ],
+          "any_target": false,
+          "required": false
+        },
+        {
+          "name": "uses",
+          "targets": [
+            "logic_arc_int",
+            "logic_arc_int_op"
+          ],
+          "any_target": false,
+          "required": false
+        }
+      ]
+    },
+    {
+      "name": "feat_arc_dyn",
+      "title": "Feature Sequence Diagram",
+      "prefix": null,
+      "tags": [
+        "architecture_view",
+        "architecture_element"
+      ],
+      "parts": 3,
+      "options": [
+        {
+          "name": "safety",
+          "pattern": "^(QM|ASIL_B)$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "security",
+          "pattern": "^(YES|NO)$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "source_code_link",
+          "pattern": "^https://github.com/.*",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "status",
+          "pattern": "^(valid|invalid)$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "testlink",
+          "pattern": "^https://github.com/.*",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "version",
+          "pattern": "^[0-9]+$",
+          "required": true,
+          "inherited": true
+        }
+      ],
+      "links": [
+        {
+          "name": "belongs_to",
+          "targets": [
+            "feat"
+          ],
+          "any_target": false,
+          "required": true
+        },
+        {
+          "name": "fulfils",
+          "targets": [
+            "feat_req"
+          ],
+          "any_target": false,
+          "required": false
+        }
+      ]
+    },
+    {
+      "name": "feat_arc_sta",
+      "title": "Feature & Feature Package Diagram",
+      "prefix": null,
+      "tags": [
+        "architecture_element",
+        "architecture_view"
+      ],
+      "parts": 3,
+      "options": [
+        {
+          "name": "safety",
+          "pattern": "^(QM|ASIL_B)$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "security",
+          "pattern": "^(YES|NO)$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "source_code_link",
+          "pattern": "^https://github.com/.*",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "status",
+          "pattern": "^(valid|invalid)$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "testlink",
+          "pattern": "^https://github.com/.*",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "version",
+          "pattern": "^[0-9]+$",
+          "required": true,
+          "inherited": true
+        }
+      ],
+      "links": [
+        {
+          "name": "belongs_to",
+          "targets": [
+            "feat"
+          ],
+          "any_target": false,
+          "required": true
+        },
+        {
+          "name": "fulfils",
+          "targets": [
+            "feat_req",
+            "aou_req"
+          ],
+          "any_target": false,
+          "required": false
+        },
+        {
+          "name": "includes",
+          "targets": [
+            "logic_arc_int",
+            "logic_arc_int_op"
+          ],
+          "any_target": false,
+          "required": true
+        }
+      ]
+    },
+    {
+      "name": "feat_req",
+      "title": "Feature Requirement",
+      "prefix": null,
+      "tags": [
+        "requirement",
+        "requirement_excl_process"
+      ],
+      "parts": 3,
+      "options": [
+        {
+          "name": "content",
+          "pattern": "^[\\s\\S]+$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "hash",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": false
+        },
+        {
+          "name": "reqtype",
+          "pattern": "^(Functional|Interface|Process|Non-Functional)$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "safety",
+          "pattern": "^(QM|ASIL_B)$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "security",
+          "pattern": "^(YES|NO)$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "source_code_link",
+          "pattern": "^https://github.com/.*",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "status",
+          "pattern": "^(valid|invalid)$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "testcovered",
+          "pattern": "^(YES|NO)$",
+          "required": false,
+          "inherited": false
+        },
+        {
+          "name": "testlink",
+          "pattern": "^https://github.com/.*",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "valid_from",
+          "pattern": "^v(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(\\.(0|[1-9]\\d*))?$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "valid_until",
+          "pattern": "^v(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(\\.(0|[1-9]\\d*))?$",
+          "required": false,
+          "inherited": false
+        },
+        {
+          "name": "version",
+          "pattern": "^[0-9]+$",
+          "required": true,
+          "inherited": true
+        }
+      ],
+      "links": [
+        {
+          "name": "covers",
+          "targets": [
+            "aou_req"
+          ],
+          "any_target": false,
+          "required": false
+        },
+        {
+          "name": "derived_from",
+          "targets": [
+            "stkh_req"
+          ],
+          "any_target": false,
+          "required": false
+        },
+        {
+          "name": "satisfied_by",
+          "targets": [
+            "feat"
+          ],
+          "any_target": false,
+          "required": true
+        }
+      ]
+    },
+    {
+      "name": "feat_saf_dfa",
+      "title": "Feature DFA (Dependent Failure Analysis)",
+      "prefix": null,
+      "tags": [
+        "dependent_failure_analysis",
+        "safety_analysis"
+      ],
+      "parts": 3,
+      "options": [
+        {
+          "name": "content",
+          "pattern": "^[\\s\\S]+$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "failure_effect",
+          "pattern": "^.+$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "failure_id",
+          "pattern": "^.+$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "mitigation_issue",
+          "pattern": "^https://github\\.com/[^/]+/[^/]+/issues/\\d+$",
+          "required": false,
+          "inherited": false
+        },
+        {
+          "name": "safety_relevant",
+          "pattern": "^(yes|no)$",
+          "required": false,
+          "inherited": false
+        },
+        {
+          "name": "source_code_link",
+          "pattern": "^https://github.com/.*",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "status",
+          "pattern": "^(valid|invalid)$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "sufficient",
+          "pattern": "^(yes|no)$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "testlink",
+          "pattern": "^https://github.com/.*",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "version",
+          "pattern": "^[0-9]+$",
+          "required": true,
+          "inherited": true
+        }
+      ],
+      "links": [
+        {
+          "name": "mitigated_by",
+          "targets": [
+            "feat_req",
+            "aou_req"
+          ],
+          "any_target": false,
+          "required": false
+        },
+        {
+          "name": "violates",
+          "targets": [
+            "feat_arc_sta"
+          ],
+          "any_target": false,
+          "required": true
+        }
+      ]
+    },
+    {
+      "name": "feat_saf_fmea",
+      "title": "Feature FMEA (Failure Mode and Effects Analysis)",
+      "prefix": null,
+      "tags": [
+        "failure_mode_effects_analysis",
+        "safety_analysis"
+      ],
+      "parts": 3,
+      "options": [
+        {
+          "name": "content",
+          "pattern": "^[\\s\\S]+$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "failure_effect",
+          "pattern": "^.+$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "fault_id",
+          "pattern": "^.+$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "mitigation_issue",
+          "pattern": "^https://github\\.com/[^/]+/[^/]+/issues/\\d+$",
+          "required": false,
+          "inherited": false
+        },
+        {
+          "name": "root_cause",
+          "pattern": "^[\\s\\S]+$",
+          "required": false,
+          "inherited": false
+        },
+        {
+          "name": "safety_relevant",
+          "pattern": "^(yes|no)$",
+          "required": false,
+          "inherited": false
+        },
+        {
+          "name": "source_code_link",
+          "pattern": "^https://github.com/.*",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "status",
+          "pattern": "^(valid|invalid)$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "sufficient",
+          "pattern": "^(yes|no)$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "testlink",
+          "pattern": "^https://github.com/.*",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "version",
+          "pattern": "^[0-9]+$",
+          "required": true,
+          "inherited": true
+        }
+      ],
+      "links": [
+        {
+          "name": "mitigated_by",
+          "targets": [
+            "feat_req",
+            "aou_req"
+          ],
+          "any_target": false,
+          "required": false
+        },
+        {
+          "name": "violates",
+          "targets": [
+            "feat_arc_dyn",
+            "feat_arc_sta"
+          ],
+          "any_target": false,
+          "required": true
+        }
+      ]
+    },
+    {
+      "name": "feat_sec_ana",
+      "title": "Feature Security Analysis (Threat Scenario)",
+      "prefix": null,
+      "tags": [
+        "threat_scenario",
+        "security_analysis"
+      ],
+      "parts": 3,
+      "options": [
+        {
+          "name": "content",
+          "pattern": "^[\\s\\S]+$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "mitigation_issue",
+          "pattern": "^https://github\\.com/[^/]+/[^/]+/issues/\\d+$",
+          "required": false,
+          "inherited": false
+        },
+        {
+          "name": "source_code_link",
+          "pattern": "^https://github.com/.*",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "status",
+          "pattern": "^(valid|invalid)$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "sufficient",
+          "pattern": "^(yes|no)$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "testlink",
+          "pattern": "^https://github.com/.*",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "threat_effect",
+          "pattern": "^.+$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "threat_scenario_id",
+          "pattern": "^(AS_01_(01|02|04|05|06|07|09|10)|CO_01_0[1-7]|SC_01_0[2-5]|SI_01_0[2-5]|UI_01_(0[1-9]|1[0-2]))$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "version",
+          "pattern": "^[0-9]+$",
+          "required": true,
+          "inherited": true
+        }
+      ],
+      "links": [
+        {
+          "name": "mitigated_by",
+          "targets": [
+            "feat_req",
+            "aou_req"
+          ],
+          "any_target": false,
+          "required": false
+        }
+      ]
+    },
+    {
+      "name": "feat_sec_threat",
+      "title": "Feature Security Analysis Threat (STRIDE)",
+      "prefix": null,
+      "tags": [
+        "stride_threat",
+        "security_analysis"
+      ],
+      "parts": 3,
+      "options": [
+        {
+          "name": "content",
+          "pattern": "^[\\s\\S]+$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "source_code_link",
+          "pattern": "^https://github.com/.*",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "status",
+          "pattern": "^(valid|invalid)$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "testlink",
+          "pattern": "^https://github.com/.*",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "threat_id",
+          "pattern": "^(AU_01_0[1-3]|AZ_01_0[1-3]|CT_01_0[1-2]|DS_01_0[1-3]|EX_01_0[1-6]|LA_01_0[1-3]|MT_01_0[1-7])$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "version",
+          "pattern": "^[0-9]+$",
+          "required": true,
+          "inherited": true
+        }
+      ],
+      "links": []
+    },
+    {
+      "name": "gd_chklst",
+      "title": "Process Checklist",
+      "prefix": null,
+      "tags": [],
+      "parts": 2,
+      "options": [
+        {
+          "name": "source_code_link",
+          "pattern": "^https://github.com/.*",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "status",
+          "pattern": "^(valid|draft)$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "testlink",
+          "pattern": "^https://github.com/.*",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "version",
+          "pattern": "^[0-9]+$",
+          "required": true,
+          "inherited": true
+        }
+      ],
+      "links": [
+        {
+          "name": "complies",
+          "targets": [
+            "std_req"
+          ],
+          "any_target": false,
+          "required": false
+        }
+      ]
+    },
+    {
+      "name": "gd_guidl",
+      "title": "Process Guideline",
+      "prefix": null,
+      "tags": [],
+      "parts": 2,
+      "options": [
+        {
+          "name": "source_code_link",
+          "pattern": "^https://github.com/.*",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "status",
+          "pattern": "^(valid|draft)$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "testlink",
+          "pattern": "^https://github.com/.*",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "version",
+          "pattern": "^[0-9]+$",
+          "required": true,
+          "inherited": true
+        }
+      ],
+      "links": [
+        {
+          "name": "complies",
+          "targets": [
+            "std_req"
+          ],
+          "any_target": false,
+          "required": false
+        }
+      ]
+    },
+    {
+      "name": "gd_method",
+      "title": "Process Method",
+      "prefix": "gd_meth__",
+      "tags": [],
+      "parts": 2,
+      "options": [
+        {
+          "name": "source_code_link",
+          "pattern": "^https://github.com/.*",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "status",
+          "pattern": "^(valid|draft)$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "testlink",
+          "pattern": "^https://github.com/.*",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "version",
+          "pattern": "^[0-9]+$",
+          "required": true,
+          "inherited": true
+        }
+      ],
+      "links": [
+        {
+          "name": "complies",
+          "targets": [
+            "std_req"
+          ],
+          "any_target": false,
+          "required": false
+        }
+      ]
+    },
+    {
+      "name": "gd_req",
+      "title": "Process Requirements",
+      "prefix": null,
+      "tags": [
+        "requirement"
+      ],
+      "parts": 2,
+      "options": [
+        {
+          "name": "content",
+          "pattern": "^[\\s\\S]+$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "source_code_link",
+          "pattern": "^https://github.com/.*",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "testlink",
+          "pattern": "^https://github.com/.*",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "version",
+          "pattern": "^[0-9]+$",
+          "required": true,
+          "inherited": true
+        }
+      ],
+      "links": [
+        {
+          "name": "complies",
+          "targets": [
+            "std_req"
+          ],
+          "any_target": false,
+          "required": false
+        },
+        {
+          "name": "satisfies",
+          "targets": [
+            "workflow"
+          ],
+          "any_target": false,
+          "required": false
+        }
+      ]
+    },
+    {
+      "name": "gd_temp",
+      "title": "Process Template",
+      "prefix": null,
+      "tags": [],
+      "parts": 2,
+      "options": [
+        {
+          "name": "source_code_link",
+          "pattern": "^https://github.com/.*",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "status",
+          "pattern": "^(valid|draft)$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "testlink",
+          "pattern": "^https://github.com/.*",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "version",
+          "pattern": "^[0-9]+$",
+          "required": true,
+          "inherited": true
+        }
+      ],
+      "links": [
+        {
+          "name": "complies",
+          "targets": [
+            "std_req"
+          ],
+          "any_target": false,
+          "required": false
+        }
+      ]
+    },
+    {
+      "name": "logic_arc_int",
+      "title": "Logical Interface & Feature Interface View",
+      "prefix": null,
+      "tags": [
+        "architecture_element",
+        "architecture_view"
+      ],
+      "parts": 3,
+      "options": [
+        {
+          "name": "safety",
+          "pattern": "^(QM|ASIL_B)$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "security",
+          "pattern": "^(YES|NO)$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "source_code_link",
+          "pattern": "^https://github.com/.*",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "status",
+          "pattern": "^(valid|invalid)$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "testlink",
+          "pattern": "^https://github.com/.*",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "version",
+          "pattern": "^[0-9]+$",
+          "required": true,
+          "inherited": true
+        }
+      ],
+      "links": [
+        {
+          "name": "fulfils",
+          "targets": [
+            "feat_req"
+          ],
+          "any_target": false,
+          "required": false
+        },
+        {
+          "name": "included_by",
+          "targets": [
+            "feat"
+          ],
+          "any_target": false,
+          "required": false
+        }
+      ]
+    },
+    {
+      "name": "logic_arc_int_op",
+      "title": "Logical Interface Operation",
+      "prefix": null,
+      "tags": [
+        "architecture_element"
+      ],
+      "parts": 3,
+      "options": [
+        {
+          "name": "safety",
+          "pattern": "^(QM|ASIL_B)$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "security",
+          "pattern": "^(YES|NO)$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "source_code_link",
+          "pattern": "^https://github.com/.*",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "status",
+          "pattern": "^(valid|invalid)$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "testlink",
+          "pattern": "^https://github.com/.*",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "version",
+          "pattern": "^[0-9]+$",
+          "required": true,
+          "inherited": true
+        }
+      ],
+      "links": [
+        {
+          "name": "included_by",
+          "targets": [
+            "logic_arc_int"
+          ],
+          "any_target": false,
+          "required": true
+        }
+      ]
+    },
+    {
+      "name": "mod",
+      "title": "Module",
+      "prefix": null,
+      "tags": [
+        "architecture_element"
+      ],
+      "parts": 2,
+      "options": [
+        {
+          "name": "safety",
+          "pattern": "^(QM|ASIL_B)$",
+          "required": false,
+          "inherited": false
+        },
+        {
+          "name": "security",
+          "pattern": "^(YES|NO)$",
+          "required": false,
+          "inherited": false
+        },
+        {
+          "name": "source_code_link",
+          "pattern": "^https://github.com/.*",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "status",
+          "pattern": "^(valid|invalid)$",
+          "required": false,
+          "inherited": false
+        },
+        {
+          "name": "testlink",
+          "pattern": "^https://github.com/.*",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "version",
+          "pattern": "^[0-9]+$",
+          "required": true,
+          "inherited": true
+        }
+      ],
+      "links": [
+        {
+          "name": "includes",
+          "targets": [
+            "comp"
+          ],
+          "any_target": false,
+          "required": true
+        }
+      ]
+    },
+    {
+      "name": "mod_ver_report",
+      "title": "Module Verification Report",
+      "prefix": "mod_vrep__",
+      "tags": [
+        "verification_report"
+      ],
+      "parts": 3,
+      "options": [
+        {
+          "name": "applies_to_module_version",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": false
+        },
+        {
+          "name": "branch_coverage_percent",
+          "pattern": "^(100|[1-9]?[0-9])$",
+          "required": false,
+          "inherited": false
+        },
+        {
+          "name": "line_coverage_percent",
+          "pattern": "^(100|[1-9]?[0-9])$",
+          "required": false,
+          "inherited": false
+        },
+        {
+          "name": "requirements_tests_completely_passed_percent",
+          "pattern": "^(100|[1-9]?[0-9])$",
+          "required": false,
+          "inherited": false
+        },
+        {
+          "name": "safety",
+          "pattern": "^(QM|ASIL_B)$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "security",
+          "pattern": "^(YES|NO)$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "source_code_link",
+          "pattern": "^https://github.com/.*",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "status",
+          "pattern": "^(valid|invalid)$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "testlink",
+          "pattern": "^https://github.com/.*",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "verification_method",
+          "pattern": "^.+$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "version",
+          "pattern": "^[0-9]+$",
+          "required": true,
+          "inherited": true
+        }
+      ],
+      "links": [
+        {
+          "name": "belongs_to",
+          "targets": [
+            "mod"
+          ],
+          "any_target": false,
+          "required": true
+        },
+        {
+          "name": "contains",
+          "targets": [],
+          "any_target": true,
+          "required": false
+        },
+        {
+          "name": "covers",
+          "targets": [],
+          "any_target": true,
+          "required": false
+        },
+        {
+          "name": "evidence",
+          "targets": [],
+          "any_target": true,
+          "required": false
+        },
+        {
+          "name": "realizes",
+          "targets": [
+            "workproduct"
+          ],
+          "any_target": false,
+          "required": false
+        }
+      ]
+    },
+    {
+      "name": "mod_view_dyn",
+      "title": "Module Architecture Dynamic View",
+      "prefix": null,
+      "tags": [],
+      "parts": 3,
+      "options": [
+        {
+          "name": "source_code_link",
+          "pattern": "^https://github.com/.*",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "testlink",
+          "pattern": "^https://github.com/.*",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "version",
+          "pattern": "^[0-9]+$",
+          "required": true,
+          "inherited": true
+        }
+      ],
+      "links": [
+        {
+          "name": "belongs_to",
+          "targets": [
+            "mod"
+          ],
+          "any_target": false,
+          "required": false
+        }
+      ]
+    },
+    {
+      "name": "mod_view_sta",
+      "title": "Module Architecture Static View",
+      "prefix": null,
+      "tags": [
+        "architecture_view"
+      ],
+      "parts": 3,
+      "options": [
+        {
+          "name": "source_code_link",
+          "pattern": "^https://github.com/.*",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "testlink",
+          "pattern": "^https://github.com/.*",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "version",
+          "pattern": "^[0-9]+$",
+          "required": true,
+          "inherited": true
+        }
+      ],
+      "links": [
+        {
+          "name": "belongs_to",
+          "targets": [
+            "mod"
+          ],
+          "any_target": false,
+          "required": false
+        },
+        {
+          "name": "includes",
+          "targets": [
+            "comp"
+          ],
+          "any_target": false,
+          "required": false
+        }
+      ]
+    },
+    {
+      "name": "plat_saf_dfa",
+      "title": "Platform Dependent Failure Analysis",
+      "prefix": null,
+      "tags": [],
+      "parts": 3,
+      "options": [
+        {
+          "name": "content",
+          "pattern": "^[\\s\\S]+$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "failure_effect",
+          "pattern": "^.+$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "failure_id",
+          "pattern": "^.+$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "mitigation_issue",
+          "pattern": "^https://github\\.com/[^/]+/[^/]+/issues/\\d+$",
+          "required": false,
+          "inherited": false
+        },
+        {
+          "name": "safety_relevant",
+          "pattern": "^(yes|no)$",
+          "required": false,
+          "inherited": false
+        },
+        {
+          "name": "source_code_link",
+          "pattern": "^https://github.com/.*",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "status",
+          "pattern": "^(valid|invalid)$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "sufficient",
+          "pattern": "^(yes|no)$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "testlink",
+          "pattern": "^https://github.com/.*",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "version",
+          "pattern": "^[0-9]+$",
+          "required": true,
+          "inherited": true
+        }
+      ],
+      "links": [
+        {
+          "name": "mitigated_by",
+          "targets": [
+            "stkh_req",
+            "aou_req"
+          ],
+          "any_target": false,
+          "required": false
+        },
+        {
+          "name": "violates",
+          "targets": [
+            "feat_arc_sta"
+          ],
+          "any_target": false,
+          "required": true
+        }
+      ]
+    },
+    {
+      "name": "plat_sec_ana",
+      "title": "Platform Security Analysis (Threat Scenario)",
+      "prefix": null,
+      "tags": [
+        "threat_scenario",
+        "security_analysis"
+      ],
+      "parts": 3,
+      "options": [
+        {
+          "name": "content",
+          "pattern": "^[\\s\\S]+$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "mitigation_issue",
+          "pattern": "^https://github\\.com/[^/]+/[^/]+/issues/\\d+$",
+          "required": false,
+          "inherited": false
+        },
+        {
+          "name": "source_code_link",
+          "pattern": "^https://github.com/.*",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "status",
+          "pattern": "^(valid|invalid)$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "sufficient",
+          "pattern": "^(yes|no)$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "testlink",
+          "pattern": "^https://github.com/.*",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "threat_effect",
+          "pattern": "^.+$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "threat_scenario_id",
+          "pattern": "^(AS_01_(01|02|04|05|06|07|09|10)|CO_01_0[1-7]|SC_01_0[2-5]|SI_01_0[2-5]|UI_01_(0[1-9]|1[0-2]))$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "version",
+          "pattern": "^[0-9]+$",
+          "required": true,
+          "inherited": true
+        }
+      ],
+      "links": [
+        {
+          "name": "mitigated_by",
+          "targets": [
+            "feat_req",
+            "aou_req"
+          ],
+          "any_target": false,
+          "required": false
+        }
+      ]
+    },
+    {
+      "name": "plat_sec_threat",
+      "title": "Platform Security Analysis Threat (STRIDE)",
+      "prefix": null,
+      "tags": [
+        "stride_threat",
+        "security_analysis"
+      ],
+      "parts": 3,
+      "options": [
+        {
+          "name": "content",
+          "pattern": "^[\\s\\S]+$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "source_code_link",
+          "pattern": "^https://github.com/.*",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "status",
+          "pattern": "^(valid|invalid)$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "testlink",
+          "pattern": "^https://github.com/.*",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "threat_id",
+          "pattern": "^(AU_01_0[1-3]|AZ_01_0[1-3]|CT_01_0[1-2]|DS_01_0[1-3]|EX_01_0[1-6]|LA_01_0[1-3]|MT_01_0[1-7])$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "version",
+          "pattern": "^[0-9]+$",
+          "required": true,
+          "inherited": true
+        }
+      ],
+      "links": []
+    },
+    {
+      "name": "real_arc_int",
+      "title": "Interface & Component Interface",
+      "prefix": null,
+      "tags": [
+        "architecture_element",
+        "architecture_view"
+      ],
+      "parts": 3,
+      "options": [
+        {
+          "name": "language",
+          "pattern": "^(cpp|rust)$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "safety",
+          "pattern": "^(QM|ASIL_B)$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "security",
+          "pattern": "^(YES|NO)$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "source_code_link",
+          "pattern": "^https://github.com/.*",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "status",
+          "pattern": "^(valid|invalid)$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "testlink",
+          "pattern": "^https://github.com/.*",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "version",
+          "pattern": "^[0-9]+$",
+          "required": true,
+          "inherited": true
+        }
+      ],
+      "links": [
+        {
+          "name": "fulfils",
+          "targets": [
+            "comp_req"
+          ],
+          "any_target": false,
+          "required": false
+        }
+      ]
+    },
+    {
+      "name": "real_arc_int_op",
+      "title": "Interface Operation",
+      "prefix": null,
+      "tags": [
+        "architecture_element"
+      ],
+      "parts": 3,
+      "options": [
+        {
+          "name": "safety",
+          "pattern": "^(QM|ASIL_B)$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "security",
+          "pattern": "^(YES|NO)$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "source_code_link",
+          "pattern": "^https://github.com/.*",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "status",
+          "pattern": "^(valid|invalid)$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "testlink",
+          "pattern": "^https://github.com/.*",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "version",
+          "pattern": "^[0-9]+$",
+          "required": true,
+          "inherited": true
+        }
+      ],
+      "links": [
+        {
+          "name": "implements",
+          "targets": [
+            "logic_arc_int_op"
+          ],
+          "any_target": false,
+          "required": false
+        },
+        {
+          "name": "included_by",
+          "targets": [
+            "real_arc_int"
+          ],
+          "any_target": false,
+          "required": true
+        }
+      ]
+    },
+    {
+      "name": "review_header",
+      "title": "Review Header",
+      "prefix": null,
+      "tags": [],
+      "parts": 3,
+      "options": [
+        {
+          "name": "approvers",
+          "pattern": "^.+$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "hash",
+          "pattern": "^.+$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "reviewers",
+          "pattern": "^.+$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "source_code_link",
+          "pattern": "^https://github.com/.*",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "template",
+          "pattern": "^.+$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "testlink",
+          "pattern": "^https://github.com/.*",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "version",
+          "pattern": "^[0-9]+$",
+          "required": true,
+          "inherited": true
+        }
+      ],
+      "links": []
+    },
+    {
+      "name": "role",
+      "title": "Role",
+      "prefix": "rl__",
+      "tags": [],
+      "parts": 2,
+      "options": [
+        {
+          "name": "source_code_link",
+          "pattern": "^https://github.com/.*",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "testlink",
+          "pattern": "^https://github.com/.*",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "version",
+          "pattern": "^[0-9]+$",
+          "required": true,
+          "inherited": true
+        }
+      ],
+      "links": [
+        {
+          "name": "contains",
+          "targets": [
+            "role"
+          ],
+          "any_target": false,
+          "required": false
+        }
+      ]
+    },
+    {
+      "name": "std_req",
+      "title": "Standard Requirement",
+      "prefix": null,
+      "tags": [],
+      "parts": 3,
+      "options": [
+        {
+          "name": "id",
+          "pattern": "^std_req__(iso26262|isosae21434|isopas8926|aspice_40)__[0-9a-zA-Z_-]*$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "source_code_link",
+          "pattern": "^https://github.com/.*",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "status",
+          "pattern": "^(valid)$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "testlink",
+          "pattern": "^https://github.com/.*",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "version",
+          "pattern": "^[0-9]+$",
+          "required": true,
+          "inherited": true
+        }
+      ],
+      "links": [
+        {
+          "name": "links",
+          "targets": [],
+          "any_target": true,
+          "required": false
+        }
+      ]
+    },
+    {
+      "name": "std_wp",
+      "title": "Standard Work Product",
+      "prefix": null,
+      "tags": [],
+      "parts": 3,
+      "options": [
+        {
+          "name": "id",
+          "pattern": "^std_wp__(iso26262|isosae21434|isopas8926|aspice_40)__[0-9a-z_]*$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "source_code_link",
+          "pattern": "^https://github.com/.*",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "status",
+          "pattern": "^(valid)$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "testlink",
+          "pattern": "^https://github.com/.*",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "version",
+          "pattern": "^[0-9]+$",
+          "required": true,
+          "inherited": true
+        }
+      ],
+      "links": []
+    },
+    {
+      "name": "stkh_req",
+      "title": "Stakeholder Requirement",
+      "prefix": null,
+      "tags": [
+        "requirement",
+        "requirement_excl_process"
+      ],
+      "parts": 3,
+      "options": [
+        {
+          "name": "hash",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": false
+        },
+        {
+          "name": "rationale",
+          "pattern": "^.+$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "reqtype",
+          "pattern": "^(Functional|Interface|Process|Non-Functional)$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "safety",
+          "pattern": "^(QM|ASIL_B)$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "security",
+          "pattern": "^(YES|NO)$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "source_code_link",
+          "pattern": "^https://github.com/.*",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "status",
+          "pattern": "^(valid|invalid)$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "testcovered",
+          "pattern": "^(YES|NO)$",
+          "required": false,
+          "inherited": false
+        },
+        {
+          "name": "testlink",
+          "pattern": "^https://github.com/.*",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "valid_from",
+          "pattern": "^v(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(\\.(0|[1-9]\\d*))?$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "valid_until",
+          "pattern": "^v(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(\\.(0|[1-9]\\d*))?$",
+          "required": false,
+          "inherited": false
+        },
+        {
+          "name": "version",
+          "pattern": "^[0-9]+$",
+          "required": true,
+          "inherited": true
+        }
+      ],
+      "links": []
+    },
+    {
+      "name": "tenet",
+      "title": "Tenet",
+      "prefix": null,
+      "tags": [],
+      "parts": 3,
+      "options": [
+        {
+          "name": "id",
+          "pattern": "^tenet__[0-9a-zA-Z_-]*$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "source_code_link",
+          "pattern": "^https://github.com/.*",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "status",
+          "pattern": "^(draft|valid)$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "testlink",
+          "pattern": "^https://github.com/.*",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "version",
+          "pattern": "^[0-9]+$",
+          "required": true,
+          "inherited": true
+        }
+      ],
+      "links": [
+        {
+          "name": "links",
+          "targets": [],
+          "any_target": true,
+          "required": false
+        }
+      ]
+    },
+    {
+      "name": "testcase",
+      "title": "Testcase Needs parsed from test.xml files",
+      "prefix": null,
+      "tags": [],
+      "parts": null,
+      "options": [
+        {
+          "name": "derivation_technique",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": false
+        },
+        {
+          "name": "file",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": false
+        },
+        {
+          "name": "line",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": false
+        },
+        {
+          "name": "name",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": false
+        },
+        {
+          "name": "result",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": false
+        },
+        {
+          "name": "result_text",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": false
+        },
+        {
+          "name": "source_code_link",
+          "pattern": "^https://github.com/.*",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "test_type",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": false
+        },
+        {
+          "name": "testlink",
+          "pattern": "^https://github.com/.*",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "version",
+          "pattern": "^[0-9]+$",
+          "required": true,
+          "inherited": true
+        }
+      ],
+      "links": [
+        {
+          "name": "fully_verifies",
+          "targets": [],
+          "any_target": true,
+          "required": false
+        },
+        {
+          "name": "partially_verifies",
+          "targets": [],
+          "any_target": true,
+          "required": false
+        }
+      ]
+    },
+    {
+      "name": "tool_req",
+      "title": "Tool Requirement",
+      "prefix": null,
+      "tags": [
+        "requirement",
+        "requirement_excl_process"
+      ],
+      "parts": 2,
+      "options": [
+        {
+          "name": "content",
+          "pattern": "^[\\s\\S]+$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "hash",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": false
+        },
+        {
+          "name": "implemented",
+          "pattern": "^(YES|PARTIAL|NO)$",
+          "required": false,
+          "inherited": false
+        },
+        {
+          "name": "parent_covered",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": false
+        },
+        {
+          "name": "parent_has_problem",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": false
+        },
+        {
+          "name": "safety",
+          "pattern": "^(QM|ASIL_B)$",
+          "required": false,
+          "inherited": false
+        },
+        {
+          "name": "security",
+          "pattern": "^(YES|NO)$",
+          "required": false,
+          "inherited": false
+        },
+        {
+          "name": "source_code_link",
+          "pattern": "^https://github.com/.*",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "tags",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": false
+        },
+        {
+          "name": "testcovered",
+          "pattern": "^(YES|NO)$",
+          "required": false,
+          "inherited": false
+        },
+        {
+          "name": "testlink",
+          "pattern": "^https://github.com/.*",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "version",
+          "pattern": "^[0-9]+$",
+          "required": true,
+          "inherited": true
+        }
+      ],
+      "links": [
+        {
+          "name": "satisfies",
+          "targets": [
+            "gd_req",
+            "stkh_req",
+            "feat_req",
+            "comp_req"
+          ],
+          "any_target": false,
+          "required": false
+        }
+      ]
+    },
+    {
+      "name": "tsf",
+      "title": "TSF",
+      "prefix": null,
+      "tags": [],
+      "parts": 3,
+      "options": [
+        {
+          "name": "id",
+          "pattern": "^tsf__[0-9a-zA-Z_-]*$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "source_code_link",
+          "pattern": "^https://github.com/.*",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "status",
+          "pattern": "^(draft|valid)$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "testlink",
+          "pattern": "^https://github.com/.*",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "version",
+          "pattern": "^[0-9]+$",
+          "required": true,
+          "inherited": true
+        }
+      ],
+      "links": [
+        {
+          "name": "links",
+          "targets": [],
+          "any_target": true,
+          "required": false
+        }
+      ]
+    },
+    {
+      "name": "workflow",
+      "title": "Workflow",
+      "prefix": "wf__",
+      "tags": [],
+      "parts": 2,
+      "options": [
+        {
+          "name": "source_code_link",
+          "pattern": "^https://github.com/.*",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "status",
+          "pattern": "^(valid|draft)$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "testlink",
+          "pattern": "^https://github.com/.*",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "version",
+          "pattern": "^[0-9]+$",
+          "required": true,
+          "inherited": true
+        }
+      ],
+      "links": [
+        {
+          "name": "approved_by",
+          "targets": [
+            "role"
+          ],
+          "any_target": false,
+          "required": true
+        },
+        {
+          "name": "contains",
+          "targets": [
+            "gd_req",
+            "gd_temp",
+            "gd_chklst",
+            "gd_guidl",
+            "gd_method"
+          ],
+          "any_target": false,
+          "required": false
+        },
+        {
+          "name": "has",
+          "targets": [
+            "doc_getstrt",
+            "doc_concept"
+          ],
+          "any_target": false,
+          "required": false
+        },
+        {
+          "name": "input",
+          "targets": [
+            "workproduct"
+          ],
+          "any_target": false,
+          "required": true
+        },
+        {
+          "name": "output",
+          "targets": [
+            "workproduct"
+          ],
+          "any_target": false,
+          "required": true
+        },
+        {
+          "name": "responsible",
+          "targets": [
+            "role"
+          ],
+          "any_target": false,
+          "required": true
+        },
+        {
+          "name": "supported_by",
+          "targets": [
+            "role"
+          ],
+          "any_target": false,
+          "required": false
+        }
+      ]
+    },
+    {
+      "name": "workproduct",
+      "title": "Workproduct",
+      "prefix": "wp__",
+      "tags": [],
+      "parts": 2,
+      "options": [
+        {
+          "name": "source_code_link",
+          "pattern": "^https://github.com/.*",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "status",
+          "pattern": "^(valid|draft)$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "testlink",
+          "pattern": "^https://github.com/.*",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "version",
+          "pattern": "^[0-9]+$",
+          "required": true,
+          "inherited": true
+        }
+      ],
+      "links": [
+        {
+          "name": "complies",
+          "targets": [
+            "std_wp",
+            "std_req"
+          ],
+          "any_target": false,
+          "required": false
+        }
+      ]
+    }
+  ],
+  "graph_rules": [
+    {
+      "name": "tool_req__docs_arch_link_qm_to_safety_req",
+      "applies_to": [
+        "feat_arc_sta",
+        "logic_arc_int",
+        "logic_arc_int_op",
+        "comp_arc_sta",
+        "real_arc_int",
+        "real_arc_int_op"
+      ],
+      "condition_raw": "safety == QM",
+      "check_raw": {
+        "fulfils": "safety != QM"
+      },
+      "explanation": "An QM architecture element cannot implement ASIL requirements."
+    },
+    {
+      "name": "tool_req__docs_arch_link_security",
+      "applies_to": [
+        "feat_arc_sta",
+        "logic_arc_int",
+        "logic_arc_int_op",
+        "comp_arc_sta",
+        "real_arc_int",
+        "real_arc_int_op"
+      ],
+      "condition_raw": "security == YES",
+      "check_raw": {
+        "implements": "security == YES"
+      },
+      "explanation": "An security architecture element can only link other security architecture elements."
+    },
+    {
+      "name": "tool_req__docs_common_attr_safety_link_check",
+      "applies_to": [
+        "stkh_req",
+        "feat_req",
+        "comp_req",
+        "aou_req",
+        "gd_req",
+        "tool_req"
+      ],
+      "condition_raw": "safety == QM",
+      "check_raw": {
+        "derived_from": "safety == QM"
+      },
+      "explanation": "QM requirements cannot be derived from ASIL requirements."
+    },
+    {
+      "name": "tool_req__docs_req_arch_link_safety_to_arch",
+      "applies_to": [
+        "feat_arc_sta",
+        "logic_arc_int",
+        "logic_arc_int_op",
+        "comp_arc_sta",
+        "real_arc_int",
+        "real_arc_int_op"
+      ],
+      "condition_raw": {
+        "and": [
+          "safety != QM",
+          "status == valid"
+        ]
+      },
+      "check_raw": {
+        "implements": {
+          "and": [
+            "safety != QM",
+            "status == valid"
+          ]
+        }
+      },
+      "explanation": "An safety architecture element can only link other safety architecture elements."
+    },
+    {
+      "name": "workproduct_aspice_40",
+      "applies_to": [
+        "workproduct"
+      ],
+      "condition_raw": "complies != []",
+      "check_raw": {
+        "complies": {
+          "or": [
+            "id contains aspice_40__iic",
+            "id contains std_wp"
+          ]
+        }
+      },
+      "explanation": "Workproducts may only link to ASPICE 40 IIC stakeholder requirements. Please ensure that the linked requirement is an ASPICE 40 IIC stakeholder requirement."
+    }
+  ]
+}

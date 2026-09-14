@@ -46,6 +46,61 @@ def make_log(path: Path, records: Sequence[Record]) -> SessionLog:
     return log
 
 
+def test_unavailable_process_ids_are_neutral_in_live_ratio() -> None:
+    reasoning = ReasoningRecord(
+        id="reasoning__process",
+        session_id="session__old",
+        task_id="task__old",
+        text="matching task",
+        grounded_nodes=["score/mw/log/error.h", "gd_req__x"],
+        timestamp="2026-01-01T00:00:00+00:00",
+    )
+    unavailable = score_candidate(
+        frozenset({"matching", "task"}),
+        {"score/mw/log/error.h"},
+        reasoning,
+        None,
+        policy=Policy(),
+        now=datetime(2026, 1, 2, tzinfo=UTC),
+        corroboration=0,
+        live_nodes={"score/mw/log/error.h"},
+        process_layer_loaded=False,
+    )
+    available = score_candidate(
+        frozenset({"matching", "task"}),
+        {"score/mw/log/error.h"},
+        reasoning,
+        None,
+        policy=Policy(),
+        now=datetime(2026, 1, 2, tzinfo=UTC),
+        corroboration=0,
+        live_nodes={"score/mw/log/error.h"},
+        process_layer_loaded=True,
+    )
+    process_only = score_candidate(
+        frozenset({"matching", "task"}),
+        {"score/mw/log/error.h"},
+        ReasoningRecord(
+            id="reasoning__process_only",
+            session_id="session__old",
+            task_id="task__old",
+            text="matching task",
+            grounded_nodes=["gd_req__x"],
+            timestamp="2026-01-01T00:00:00+00:00",
+        ),
+        None,
+        policy=Policy(),
+        now=datetime(2026, 1, 2, tzinfo=UTC),
+        corroboration=0,
+        live_nodes={"score/mw/log/error.h"},
+        process_layer_loaded=False,
+    )
+
+    assert unavailable.live_ratio == 1.0
+    assert available.live_ratio == 0.5
+    assert process_only.live_ratio == 1.0
+
+
 _MEASURED_RECORDS = {
     "reasoning__f1b56ce6": (
         "score/filesystem als zweiten Consumer auswählen und seine "

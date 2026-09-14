@@ -11,27 +11,17 @@
 # SPDX-License-Identifier: Apache-2.0
 # *******************************************************************************
 
-"""Read-time union of code, durable domain, and collaboration context."""
+"""Read-time union of ordered context graph sources."""
 
 from __future__ import annotations
 
-import json
 import posixpath
 from collections.abc import Iterable
-from contextlib import suppress
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from context_overlay import OverlayStore, Provenance
-from context_sessions import (
-    AttentionRecord,
-    ReasoningRecord,
-    Record,
-    RetrievalRecord,
-    SessionLog,
-    SessionRecord,
-    TaskRecord,
-)
+from context_overlay import Provenance
+from context_sessions import ReasoningRecord, Record
 
 
 @dataclass(frozen=True)
@@ -67,46 +57,6 @@ def link_reasoning(records: Iterable[Record]) -> tuple[tuple[str, str], ...]:
     return tuple(sorted(set(pairs)))
 
 
-def _session_edges(records: tuple[Record, ...]) -> tuple[MergedEdge, ...]:
-    edges: list[MergedEdge] = []
-    sessions = [record for record in records if isinstance(record, SessionRecord)]
-    tasks = [record for record in records if isinstance(record, TaskRecord)]
-    reasonings = [record for record in records if isinstance(record, ReasoningRecord)]
-    retrievals = [record for record in records if isinstance(record, RetrievalRecord)]
-    for session in sessions:
-        for task in tasks:
-            if task.session_id == session.id:
-                edges.append(
-                    MergedEdge(session.id, task.id, "contains", "collaboration")
-                )
-    for task in tasks:
-        if task.parent_id:
-            edges.append(
-                MergedEdge(task.parent_id, task.id, "contains", "collaboration")
-            )
-    for reasoning in reasonings:
-        if reasoning.task_id:
-            edges.append(
-                MergedEdge(
-                    reasoning.id, reasoning.task_id, "belongs_to", "collaboration"
-                )
-            )
-        edges.extend(
-            MergedEdge(reasoning.id, node_id, "supported_by", "collaboration")
-            for node_id in reasoning.grounded_nodes
-        )
-    edges.extend(
-        MergedEdge(r2, r1, "derived_from", "collaboration")
-        for r2, r1 in link_reasoning(records)
-    )
-    for retrieval in retrievals:
-        edges.extend(
-            MergedEdge(retrieval.id, node_id, "covers", "collaboration")
-            for node_id in retrieval.returned_nodes
-        )
-    return tuple(edges)
-
-
 @dataclass
 class MergedGraph:
     nodes: dict[str, MergedNode]
@@ -119,9 +69,12 @@ class MergedGraph:
         default_factory=lambda: dict[str, str]()
     )
     label_tail_index: dict[str, str] = field(default_factory=lambda: dict[str, str]())
+    loaded_layers: frozenset[str] = frozenset()
 
     @classmethod
     def build(cls, repo_path: str | Path) -> MergedGraph:
+        from context_sources import DEFAULT_SOURCES
+
         repo = Path(repo_path).expanduser().resolve()
         nodes: dict[str, MergedNode] = {}
         edges: dict[tuple[str, str, str], MergedEdge] = {}
@@ -131,31 +84,22 @@ class MergedGraph:
         label_tail_candidates: dict[str, set[str]] = {}
         conflicts: set[str] = set()
         edge_conflicts: set[tuple[str, str, str]] = set()
+        loaded_layers: set[str] = set()
 
-        graph_path = repo / "graphify-out" / "graph.json"
-        if graph_path.exists():
-            data = json.loads(graph_path.read_text(encoding="utf-8"))
-            for raw in data.get("nodes", []):
-                source_file = raw.get("source_file")
-                normalized_source_file = ""
-                if source_file is not None:
-                    raw_source_file = str(source_file)
-                    normalized_source_file = posixpath.normpath(
-                        raw_source_file.replace("\\", "/")
-                    )
-                    source_path = Path(normalized_source_file)
-                    if source_path.is_absolute():
-                        with suppress(ValueError):
-                            normalized_source_file = (
-                                source_path.resolve().relative_to(repo).as_posix()
-                            )
-                node = MergedNode(
-                    id=str(raw["id"]),
-                    label=str(raw.get("label", raw["id"])),
-                    type=str(raw.get("type") or raw.get("file_type", "")),
-                    layer="code",
-                    source_file=normalized_source_file,
-                )
+        for source in DEFAULT_SOURCES:
+            source_graph = source.load(repo)
+            is_loaded = bool(source_graph.nodes)
+            backing_exists = getattr(source, "backing_exists", None)
+            if backing_exists is not None:
+                is_loaded = is_loaded or backing_exists(repo)
+            if source.layer == "process":
+                process_loaded = getattr(source, "is_loaded", None)
+                if process_loaded is not None:
+                    is_loaded = process_loaded()
+            if is_loaded:
+                loaded_layers.add(source.layer)
+
+            for node in source_graph.nodes:
                 if node.id in nodes:
                     conflicts.add(node.id)
                 else:
@@ -167,94 +111,20 @@ class MergedGraph:
                 label_tail_candidates.setdefault(label_tail(node.label), set()).add(
                     node.id
                 )
-                if source_file is not None:
-                    raw_source_file = str(source_file)
-                    keys = {raw_source_file, normalized_source_file}
-                    source_path = Path(normalized_source_file)
-                    if source_path.is_absolute():
-                        with suppress(ValueError):
-                            keys.add(source_path.resolve().relative_to(repo).as_posix())
-                    for key in keys:
-                        source_file_candidates.setdefault(key, set()).add(node.id)
-            raw_edges = data.get("links", data.get("edges", []))
-            for raw in raw_edges:
-                edge = MergedEdge(
-                    source=str(raw["source"]),
-                    target=str(raw["target"]),
-                    relation=str(raw.get("relation", "")),
-                    layer="code",
-                )
+                if node.source_file:
+                    source_file_candidates.setdefault(node.source_file, set()).add(
+                        node.id
+                    )
+                    source_file_candidates.setdefault(
+                        f"./{node.source_file}", set()
+                    ).add(node.id)
+            for edge in source_graph.edges:
                 key = (edge.source, edge.target, edge.relation)
                 if key in edges:
                     edge_conflicts.add(key)
                 else:
                     edges[key] = edge
 
-        overlay = OverlayStore(repo)
-        overlay.load()
-        for raw in overlay.nodes:
-            node = MergedNode(
-                raw.id,
-                raw.title,
-                raw.type,
-                "domain",
-                provenance=raw.provenance,
-            )
-            if node.id in nodes:
-                conflicts.add(node.id)
-            else:
-                nodes[node.id] = node
-            label_candidates.setdefault(node.label, set()).add(node.id)
-            label_casefold_candidates.setdefault(node.label.casefold(), set()).add(
-                node.id
-            )
-            label_tail_candidates.setdefault(label_tail(node.label), set()).add(node.id)
-        for raw in overlay.edges:
-            edge = MergedEdge(
-                raw.source,
-                raw.target,
-                raw.relation,
-                "domain",
-                raw.provenance,
-            )
-            key = (edge.source, edge.target, edge.relation)
-            if key in edges:
-                edge_conflicts.add(key)
-            else:
-                edges[key] = edge
-
-        log = SessionLog(repo)
-        records = log.read_all()
-        for record in records:
-            if isinstance(record, SessionRecord):
-                label = record.goal
-                record_type = "session"
-            elif isinstance(record, TaskRecord):
-                label = record.text
-                record_type = "task"
-            elif isinstance(record, ReasoningRecord):
-                label = record.text
-                record_type = "reasoning"
-            elif isinstance(record, RetrievalRecord):
-                label = record.query
-                record_type = "retrieval"
-            elif isinstance(record, AttentionRecord):
-                label = record.query
-                record_type = "attention"
-            else:
-                label = record.verdict
-                record_type = "outcome"
-            node = MergedNode(record.id, label, record_type, "collaboration")
-            if node.id in nodes:
-                conflicts.add(node.id)
-            else:
-                nodes[node.id] = node
-        for edge in _session_edges(records):
-            key = (edge.source, edge.target, edge.relation)
-            if key in edges:
-                edge_conflicts.add(key)
-            else:
-                edges[key] = edge
         return cls(
             nodes,
             edges,
@@ -267,6 +137,7 @@ class MergedGraph:
             _unique_index(label_candidates),
             _unique_index(label_casefold_candidates),
             _unique_index(label_tail_candidates),
+            frozenset(loaded_layers),
         )
 
     def nodes_under(self, prefix: str) -> frozenset[str]:

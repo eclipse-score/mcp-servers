@@ -260,10 +260,11 @@ because the tested 25% graph cap dropped `score/os` and lost the measured signal
 `add_overlay_node` writes a provenance-bearing S-CORE node and relation to
 the sharded `score-context/nodes/` and `score-context/edges/` files. The
 generated Graphify code graph remains read-only; the merged view combines
-code, domain, and collaboration layers. Domain-layer nodes and edges carry
+code, domain, process, and collaboration layers. Domain-layer nodes and edges carry
 their adapter provenance through the merge, keeping derived upstream facts
 distinguishable from hand-authored local ones; code and collaboration entries
-carry none.
+carry none. Process-layer entries are read-only and carry provenance from the
+committed process projection.
 The versioned `score-context/policy.toml` is the single source of attention,
 privacy, and overlay thresholds. Validate it and the overlay locally with:
 

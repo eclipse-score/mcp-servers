@@ -14,6 +14,7 @@
 import json
 from pathlib import Path
 
+import pytest
 from context_discipline_mcp import (
     AttentionRecord,
     ContextDisciplineMCP,
@@ -288,7 +289,10 @@ def test_query_graph_reports_missing_graph_setup(tmp_path: Path) -> None:
     }
 
 
-def test_query_graph_keeps_provenance_out_of_term_matching(tmp_path: Path) -> None:
+def test_query_graph_keeps_provenance_out_of_term_matching(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("SCORE_PROCESS_GRAPH", str(tmp_path / "missing-process.json"))
     _write_graph(tmp_path)
     overlay = OverlayStore(tmp_path)
     overlay.upsert_node(

@@ -495,6 +495,7 @@ class ContextDisciplineMCP:
             set(focus_nodes),
             policy=self.policy,
             live_nodes=set(graph.nodes),
+            process_layer_loaded="process" in graph.loaded_layers,
             node_resolver=lambda value: resolve_node_id(value, graph, self.repo_path),
         )
         attention = AttentionRecord(

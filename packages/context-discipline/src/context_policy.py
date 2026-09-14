@@ -141,11 +141,31 @@ class OverlayPolicy:
 
 
 @dataclass(frozen=True)
+class ProcessPolicy:
+    enabled: bool = True
+    path: str = ""
+    gap_min: float = 0.30
+
+    def __post_init__(self) -> None:
+        if type(self.enabled) is not bool:
+            raise ValueError("enabled must be a boolean")
+        if type(self.path) is not str:
+            raise ValueError("path must be a string")
+        if (
+            type(self.gap_min) not in (int, float)
+            or not isfinite(self.gap_min)
+            or not 0.0 <= self.gap_min <= 1.0
+        ):
+            raise ValueError("gap_min must be between 0.0 and 1.0")
+
+
+@dataclass(frozen=True)
 class Policy:
     version: int = POLICY_VERSION
     attention: AttentionPolicy = field(default_factory=AttentionPolicy)
     privacy: PrivacyPolicy = field(default_factory=PrivacyPolicy)
     overlay: OverlayPolicy = field(default_factory=OverlayPolicy)
+    process: ProcessPolicy = field(default_factory=ProcessPolicy)
 
 
 _SECTION_FIELDS: dict[str, dict[str, type]] = {
@@ -180,6 +200,11 @@ _SECTION_FIELDS: dict[str, dict[str, type]] = {
         "max_attributes": int,
         "max_added_nodes_per_change": int,
         "max_added_edges_per_change": int,
+    },
+    "process": {
+        "enabled": bool,
+        "path": str,
+        "gap_min": float,
     },
 }
 
@@ -255,4 +280,5 @@ def load_policy(
         ),
         privacy=PrivacyPolicy(**_section_values("privacy", raw.get("privacy", {}))),
         overlay=OverlayPolicy(**_section_values("overlay", raw.get("overlay", {}))),
+        process=ProcessPolicy(**_section_values("process", raw.get("process", {}))),
     )
