@@ -216,6 +216,9 @@ Session N: Pattern emerges
 .score-local/            # Local session records (ephemeral)
 ```
 
+Unknown record types are skipped for forward compatibility; malformed lines
+still raise an error.
+
 ## Integration
 
 **With graphify-codegraph:**

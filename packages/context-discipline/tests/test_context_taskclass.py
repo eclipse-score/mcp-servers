@@ -18,6 +18,7 @@ from context_discipline_mcp import ContextDisciplineMCP
 from context_merge import MergedEdge, MergedGraph, MergedNode
 from context_policy import Policy
 from context_sessions import TaskClassRecord, TaskRecord
+from context_sources import ProcessSource, SourceGraph
 from context_taskclass import build_workflow_index, detect_task_class, process_facts
 
 PROCESS_GRAPH = (
@@ -186,14 +187,54 @@ def test_ambiguous_and_unknown_detections_ask_before_continuing(
         [],
     )
     assert ambiguous["detection"]["status"] == "ambiguous"
-    assert ambiguous["detection"]["announcement"].endswith("task class ambiguous")
-    assert {
-        option["id"] for option in ambiguous["detection"]["question"]["options"]
-    }.__contains__("none")
+    ambiguous_detection = ambiguous["detection"]
+    ambiguous_options = ambiguous_detection["question"]["options"]
+    assert ambiguous_detection["announcement"].startswith("Repository ")
+    assert "task class ambiguous:" in ambiguous_detection["announcement"]
+    assert all(
+        option["id"] in ambiguous_detection["announcement"]
+        for option in ambiguous_options
+        if option["id"] != "none"
+    )
+    assert ambiguous_detection["question"]["text"] == (
+        "Which process workflow applies to this task?"
+    )
+    assert ambiguous_options[-1]["id"] == "none"
 
     unknown = manager.initialize_session("Fix bug 1234 in lib score/result", [])
     assert unknown["detection"]["status"] == "unknown"
-    assert {
-        option["id"] for option in unknown["detection"]["question"]["options"]
-    }.__contains__("none")
+    assert unknown["detection"]["question"]["text"] == (
+        "No process workflow matched this task. Name a workflow identifier from "
+        "the process layer, or answer none to continue without a process class."
+    )
+    assert unknown["detection"]["question"]["options"] == [
+        {"id": "none", "title": "Continue without a process class"}
+    ]
     assert unknown["task_class"] == ""
+
+
+def test_initialize_loads_only_process_source(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("SCORE_PROCESS_GRAPH", str(PROCESS_GRAPH))
+    graphify_dir = tmp_path / "graphify-out"
+    graphify_dir.mkdir()
+    (graphify_dir / "graph.json").write_text("{not-json", encoding="utf-8")
+    load_count = 0
+    original_load = ProcessSource.load
+
+    def counted_load(source: ProcessSource, repo: Path, policy: Policy) -> SourceGraph:
+        nonlocal load_count
+        load_count += 1
+        return original_load(source, repo, policy)
+
+    monkeypatch.setattr(ProcessSource, "load", counted_load)
+    manager = ContextDisciplineMCP(str(tmp_path))
+
+    result = manager.initialize_session(
+        "Build unit tests for the mw/log error domain",
+        [],
+    )
+
+    assert result["detection"]["status"] == "confident"
+    assert load_count == 1

@@ -49,6 +49,7 @@ from context_sessions import (
     agent_salt,
     pseudonymize_agent,
 )
+from context_sources import load_process_graph
 from context_taskclass import Detection, detect_task_class, process_facts
 
 
@@ -195,6 +196,7 @@ def _detection_payload(
     detection: Detection,
     graph: MergedGraph,
     repo_name: str,
+    policy: Policy,
 ) -> dict[str, Any]:
     facts: dict[str, list[str]]
     if detection.task_class:
@@ -212,7 +214,19 @@ def _detection_payload(
     if detection.status == "unknown":
         announcement = f"Repository {repo_name} | task class unknown"
     elif detection.status == "ambiguous":
-        announcement = f"Repository {repo_name} | task class ambiguous"
+        best_score = detection.candidates[0].score
+        tie_floor = best_score * (1.0 - policy.process.gap_min)
+        tied = [
+            candidate
+            for candidate in detection.candidates
+            if candidate.score >= tie_floor
+        ]
+        candidate_text = ", ".join(
+            f"{candidate.title} ({candidate.id})" for candidate in tied
+        )
+        announcement = (
+            f"Repository {repo_name} | task class ambiguous: {candidate_text}"
+        )
     else:
         announcement = (
             f"Repository {repo_name} | task class {detection.title} "
@@ -230,9 +244,18 @@ def _detection_payload(
         **facts,
         "announcement": announcement,
     }
-    if detection.status in {"ambiguous", "unknown"}:
+    if detection.status == "unknown":
         payload["question"] = {
-            "text": "Which process task class should be used?",
+            "text": (
+                "No process workflow matched this task. Name a workflow "
+                "identifier from the process layer, or answer none to continue "
+                "without a process class."
+            ),
+            "options": [{"id": "none", "title": "Continue without a process class"}],
+        }
+    elif detection.status == "ambiguous":
+        payload["question"] = {
+            "text": "Which process workflow applies to this task?",
             "options": [
                 {"id": candidate.id, "title": candidate.title}
                 for candidate in detection.candidates
@@ -294,12 +317,12 @@ class ContextDisciplineMCP:
         detected_task_class = ""
         graph: MergedGraph | None = None
         if not task_class:
-            graph = MergedGraph.build(self.repo_path)
+            graph = load_process_graph(self.repo_path, self.policy)
             if "process" in graph.loaded_layers:
                 detection = detect_task_class(goal, graph, self.policy)
                 detected_task_class = detection.task_class
                 detection_payload = _detection_payload(
-                    detection, graph, self.repo_path.name
+                    detection, graph, self.repo_path.name, self.policy
                 )
         self.session_log.prune(self.policy.privacy.retention_days)
         self.session_log.append(
@@ -378,7 +401,7 @@ class ContextDisciplineMCP:
 
     def set_task_class(self, task_class: str, task_id: str = "") -> dict[str, Any]:
         """Record a user-selected process workflow for a task."""
-        graph = MergedGraph.build(self.repo_path)
+        graph = load_process_graph(self.repo_path, self.policy)
         selected = "" if task_class == "none" else task_class
         workflow_ids = {
             node.id

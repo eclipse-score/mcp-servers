@@ -24,7 +24,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Protocol
 
-from context_merge import MergedEdge, MergedNode, link_reasoning
+from context_merge import MergedEdge, MergedGraph, MergedNode, link_reasoning
 from context_overlay import OverlayStore, Provenance
 from context_policy import Policy
 from context_sessions import (
@@ -352,6 +352,13 @@ class ProcessSource:
             )
         except (OSError, UnicodeError, TypeError, ValueError):
             return SourceGraph(self.layer, (), (), self.read_only, False)
+
+
+def load_process_graph(repo: Path, policy: Policy) -> MergedGraph:
+    from context_merge import merge_sources
+
+    resolved_repo = repo.expanduser().resolve()
+    return merge_sources(resolved_repo, policy, (ProcessSource(),))
 
 
 DEFAULT_SOURCES = (

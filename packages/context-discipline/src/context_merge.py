@@ -19,6 +19,7 @@ import posixpath
 from collections.abc import Iterable
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Any
 
 from context_overlay import Provenance
 from context_sessions import ReasoningRecord, Record
@@ -79,56 +80,7 @@ class MergedGraph:
 
         repo = Path(repo_path).expanduser().resolve()
         policy = load_policy(repo)
-        nodes: dict[str, MergedNode] = {}
-        edges: dict[tuple[str, str, str], MergedEdge] = {}
-        source_file_candidates: dict[str, set[str]] = {}
-        label_candidates: dict[str, set[str]] = {}
-        label_casefold_candidates: dict[str, set[str]] = {}
-        label_tail_candidates: dict[str, set[str]] = {}
-        conflicts: set[str] = set()
-        edge_conflicts: set[tuple[str, str, str]] = set()
-        loaded_layers: set[str] = set()
-
-        for source in DEFAULT_SOURCES:
-            source_graph = source.load(repo, policy)
-            if source_graph.loaded:
-                loaded_layers.add(source.layer)
-
-            for node in source_graph.nodes:
-                if node.id in nodes:
-                    conflicts.add(node.id)
-                else:
-                    nodes[node.id] = node
-                label_candidates.setdefault(node.label, set()).add(node.id)
-                label_casefold_candidates.setdefault(node.label.casefold(), set()).add(
-                    node.id
-                )
-                label_tail_candidates.setdefault(label_tail(node.label), set()).add(
-                    node.id
-                )
-                for source_file in node.source_file_keys:
-                    source_file_candidates.setdefault(source_file, set()).add(node.id)
-            for edge in source_graph.edges:
-                key = (edge.source, edge.target, edge.relation)
-                if key in edges:
-                    edge_conflicts.add(key)
-                else:
-                    edges[key] = edge
-
-        return cls(
-            nodes,
-            edges,
-            tuple(sorted(conflicts)),
-            tuple(sorted(edge_conflicts)),
-            {
-                key: min(node_ids, key=lambda node_id: (len(node_id), node_id))
-                for key, node_ids in source_file_candidates.items()
-            },
-            _unique_index(label_candidates),
-            _unique_index(label_casefold_candidates),
-            _unique_index(label_tail_candidates),
-            frozenset(loaded_layers),
-        )
+        return merge_sources(repo, policy, DEFAULT_SOURCES)
 
     def nodes_under(self, prefix: str) -> frozenset[str]:
         """Return node IDs whose source files are at or below a path prefix."""
@@ -191,3 +143,58 @@ def _unique_index(candidates: dict[str, set[str]]) -> dict[str, str]:
         for key, node_ids in candidates.items()
         if len(node_ids) == 1
     }
+
+
+def merge_sources(
+    repo: Path,
+    policy: Any,
+    sources: Iterable[Any],
+) -> MergedGraph:
+    nodes: dict[str, MergedNode] = {}
+    edges: dict[tuple[str, str, str], MergedEdge] = {}
+    source_file_candidates: dict[str, set[str]] = {}
+    label_candidates: dict[str, set[str]] = {}
+    label_casefold_candidates: dict[str, set[str]] = {}
+    label_tail_candidates: dict[str, set[str]] = {}
+    conflicts: set[str] = set()
+    edge_conflicts: set[tuple[str, str, str]] = set()
+    loaded_layers: set[str] = set()
+
+    for source in sources:
+        source_graph = source.load(repo, policy)
+        if source_graph.loaded:
+            loaded_layers.add(source.layer)
+
+        for node in source_graph.nodes:
+            if node.id in nodes:
+                conflicts.add(node.id)
+            else:
+                nodes[node.id] = node
+            label_candidates.setdefault(node.label, set()).add(node.id)
+            label_casefold_candidates.setdefault(node.label.casefold(), set()).add(
+                node.id
+            )
+            label_tail_candidates.setdefault(label_tail(node.label), set()).add(node.id)
+            for source_file in node.source_file_keys:
+                source_file_candidates.setdefault(source_file, set()).add(node.id)
+        for edge in source_graph.edges:
+            key = (edge.source, edge.target, edge.relation)
+            if key in edges:
+                edge_conflicts.add(key)
+            else:
+                edges[key] = edge
+
+    return MergedGraph(
+        nodes,
+        edges,
+        tuple(sorted(conflicts)),
+        tuple(sorted(edge_conflicts)),
+        {
+            key: min(node_ids, key=lambda node_id: (len(node_id), node_id))
+            for key, node_ids in source_file_candidates.items()
+        },
+        _unique_index(label_candidates),
+        _unique_index(label_casefold_candidates),
+        _unique_index(label_tail_candidates),
+        frozenset(loaded_layers),
+    )
