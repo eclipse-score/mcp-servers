@@ -35,6 +35,7 @@ from context_sessions import (
     ReasoningRecord,
     Record,
     SessionLog,
+    TaskRecord,
 )
 
 
@@ -521,6 +522,26 @@ def test_prior_context_partitions_candidates_and_renders_items(
         live_nodes={"node__one"},
         policy=Policy(attention=AttentionPolicy(selection="threshold")),
     )
+    classified_result = get_prior_context(
+        make_log(
+            tmp_path / "classified",
+            [
+                TaskRecord(
+                    id="task__classified",
+                    session_id="session__above",
+                    text="matching task",
+                    task_class="wf__verification_unit_test",
+                ),
+                above,
+            ],
+        ),
+        "session__current",
+        "matching task",
+        {"node__one"},
+        now=now,
+        live_nodes={"node__one"},
+        policy=Policy(attention=AttentionPolicy(selection="threshold")),
+    )
     below_result = get_prior_context(
         make_log(tmp_path / "below", [below]),
         "session__current",
@@ -532,6 +553,7 @@ def test_prior_context_partitions_candidates_and_renders_items(
     )
 
     assert [item.reasoning_id for item in above_result.items] == ["reasoning__above"]
+    assert classified_result == above_result
     assert above_result.rejected == ()
     assert render_prior_context(above_result.items, Policy()) != ""
     assert below_result.items == ()

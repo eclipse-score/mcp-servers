@@ -20,6 +20,7 @@ from context_discipline_mcp import (
     OutcomeRecord,
     ReasoningRecord,
     SessionRecord,
+    TaskRecord,
     call_tool,
     expand_focus,
 )
@@ -79,8 +80,37 @@ def test_initialize_session_writes_one_session_record(tmp_path: Path) -> None:
     assert session_id == manager.session_id
     assert len(sessions) == 1
     assert sessions[0].goal == "Goal"
+    assert result["task_class"] == ""
+    assert [
+        record.task_class for record in records if isinstance(record, TaskRecord)
+    ] == ["", ""]
     assert "alice" not in raw_log
     assert manager.local_store.joinpath("agent-salt").stat().st_mode & 0o777 == 0o600
+
+
+def test_initialize_session_propagates_task_class_to_tasks(
+    tmp_path: Path,
+) -> None:
+    manager = ContextDisciplineMCP(str(tmp_path))
+
+    result = manager.initialize_session(
+        "Goal",
+        ["Subgoal", "Second subgoal"],
+        task_class="wf__verification_unit_test",
+    )
+
+    tasks = [
+        record
+        for record in manager.session_log.read_all()
+        if isinstance(record, TaskRecord)
+    ]
+    assert result["task_class"] == "wf__verification_unit_test"
+    assert [task.text for task in tasks] == [
+        "Goal",
+        "Subgoal",
+        "Second subgoal",
+    ]
+    assert [task.task_class for task in tasks] == ["wf__verification_unit_test"] * 3
 
 
 def test_initialize_session_resets_state_and_assigns_fresh_id(

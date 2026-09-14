@@ -88,6 +88,7 @@ class TaskRecord:
     session_id: str = ""
     text: str = ""
     parent_id: str | None = None
+    task_class: str = ""
     timestamp: str = field(default_factory=_timestamp)
     record_type: str = field(default="task", init=False)
 

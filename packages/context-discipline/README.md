@@ -79,6 +79,12 @@ is created lazily; its remaining purpose is adding `.score-local/` to
 
 ### Use from Your Agent
 
+#### Input language and task class
+
+Free-text fields are recorded in English. The optional `task_class` argument
+to `initialize_session` accepts a process workflow identifier such as
+`wf__verification_unit_test`; leave it empty when unknown.
+
 ```python
 # Agent initializes a session
 wm.initialize_session(

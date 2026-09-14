@@ -49,6 +49,36 @@ def test_session_log_round_trip_and_filtering(tmp_path: Path) -> None:
     assert log.other_sessions(first.id) == (other,)
 
 
+def test_task_record_without_task_class_defaults_to_empty(tmp_path: Path) -> None:
+    log = SessionLog(tmp_path)
+    log.path.parent.mkdir(parents=True)
+    log.path.write_text(
+        '{"id":"task__one","parent_id":null,"record_type":"task",'
+        '"session_id":"session__one","text":"Task",'
+        '"timestamp":"2026-01-01T00:00:00+00:00"}\n',
+        encoding="utf-8",
+    )
+
+    record = log.read_all()[0]
+
+    assert isinstance(record, TaskRecord)
+    assert record.task_class == ""
+
+
+def test_task_record_task_class_round_trips(tmp_path: Path) -> None:
+    log = SessionLog(tmp_path)
+    task = TaskRecord(
+        id="task__one",
+        session_id="session__one",
+        text="Task",
+        task_class="wf__verification_unit_test",
+    )
+
+    log.append(task)
+
+    assert log.read_all() == (task,)
+
+
 def test_session_log_reports_malformed_line_number(tmp_path: Path) -> None:
     log = SessionLog(tmp_path)
     log.path.parent.mkdir(parents=True)

@@ -26,15 +26,18 @@ tools:
       properties:
         goal:
           type: string
-          description: Main goal for the session
+          description: Main goal for the session. Write this in English.
         subgoals:
           type: array
           items:
             type: string
-          description: List of subgoals
+          description: List of subgoals. Write this in English.
         assumptions:
           type: object
-          description: Assumptions with confidence levels (high/medium/low)
+          description: Assumptions with confidence levels (high/medium/low). Write this in English.
+        task_class:
+          type: string
+          description: Optional process workflow identifier for the task class, for example wf__verification_unit_test. Leave empty when unknown; an empty value disables class-based partitioning and changes nothing else.
         agent:
           type: string
           description: Agent identity for the session
@@ -61,12 +64,12 @@ tools:
       properties:
         decision:
           type: string
-          description: What decision was made
+          description: What decision was made. Write this in English.
         reason:
           type: array
           items:
             type: string
-          description: Reasons for the decision
+          description: Reasons for the decision. Write this in English.
         reversible:
           type: boolean
           description: Can this decision be reversed?
@@ -96,14 +99,14 @@ tools:
       properties:
         task:
           type: string
-          description: Task description
+          description: Task description. Write this in English.
         verdict:
           type: string
           enum: ["pass", "fail"]
           description: Did the task succeed?
         rationale:
           type: string
-          description: Free-text justification stored for audit only
+          description: Free-text justification stored for audit only. Write this in English.
         coverage:
           type: number
           minimum: 0.0

@@ -220,6 +220,7 @@ class ContextDisciplineMCP:
         goal: str,
         subgoals: list[str],
         assumptions: list[str] | dict[str, str] | None = None,
+        task_class: str = "",
         agent: str = "unknown",
     ) -> dict[str, Any]:
         """
@@ -244,7 +245,11 @@ class ContextDisciplineMCP:
                 goal=goal,
             )
         )
-        goal_task = TaskRecord(session_id=self.session_id, text=goal)
+        goal_task = TaskRecord(
+            session_id=self.session_id,
+            text=goal,
+            task_class=task_class,
+        )
         self.goal_task_id = goal_task.id
         self.session_log.append(goal_task)
         for subgoal in subgoals:
@@ -253,6 +258,7 @@ class ContextDisciplineMCP:
                     session_id=self.session_id,
                     text=subgoal,
                     parent_id=goal_task.id,
+                    task_class=task_class,
                 )
             )
         self.working_memory.append(
@@ -290,6 +296,7 @@ class ContextDisciplineMCP:
 
         return {
             "session_id": self.session_id,
+            "task_class": task_class,
             "setup": self._graph_setup_status(),
         }
 
@@ -558,9 +565,30 @@ TOOLS = [
         "inputSchema": {
             "type": "object",
             "properties": {
-                "goal": {"type": "string"},
-                "subgoals": {"type": "array", "items": {"type": "string"}},
-                "assumptions": {"type": ["array", "object", "null"]},
+                "goal": {
+                    "type": "string",
+                    "description": "Main goal for the session. Write this in English.",
+                },
+                "subgoals": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "description": "List of subgoals. Write this in English.",
+                },
+                "assumptions": {
+                    "type": ["array", "object", "null"],
+                    "description": (
+                        "Assumptions with confidence levels. Write this in English."
+                    ),
+                },
+                "task_class": {
+                    "type": "string",
+                    "description": (
+                        "Optional process workflow identifier for the task class, "
+                        "for example wf__verification_unit_test. Leave empty when "
+                        "unknown; an empty value disables class-based partitioning "
+                        "and changes nothing else."
+                    ),
+                },
                 "agent": {"type": "string", "default": "unknown"},
             },
             "required": ["goal", "subgoals"],
@@ -585,8 +613,15 @@ TOOLS = [
         "inputSchema": {
             "type": "object",
             "properties": {
-                "decision": {"type": "string"},
-                "reason": {"type": "array", "items": {"type": "string"}},
+                "decision": {
+                    "type": "string",
+                    "description": "What decision was made. Write this in English.",
+                },
+                "reason": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "description": "Reasons for the decision. Write this in English.",
+                },
                 "reversible": {"type": "boolean", "default": True},
                 "grounded_nodes": {
                     "type": "array",
@@ -618,11 +653,17 @@ TOOLS = [
         "inputSchema": {
             "type": "object",
             "properties": {
-                "task": {"type": "string"},
+                "task": {
+                    "type": "string",
+                    "description": "Task description. Write this in English.",
+                },
                 "verdict": {"type": "string", "enum": ["pass", "fail"]},
                 "rationale": {
                     "type": "string",
-                    "description": "Free-text justification stored for audit only.",
+                    "description": (
+                        "Free-text justification stored for audit only. "
+                        "Write this in English."
+                    ),
                 },
                 "coverage": {"type": "number", "minimum": 0.0, "maximum": 1.0},
                 "surfaced_nodes": {"type": "array", "items": {"type": "string"}},
