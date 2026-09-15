@@ -36,5 +36,6 @@ dependencies:
       command: uvx
       args:
         - --from
-        - git+https://github.com/eclipse-score/mcp-servers#subdirectory=packages/graphify-codegraph
+        # Temporary test pin; replace with the release tag pin.
+        - git+https://github.com/eclipse-score/mcp-servers@metamodel_flow#subdirectory=packages/graphify-codegraph
         - graphify-codegraph
