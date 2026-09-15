@@ -29,7 +29,10 @@ _REQUIREMENT_TYPE_ORDER = (
 _VERSION_SUFFIX = re.compile(r"\[version==[^]]+\]$")
 _CONTROL_CHARS = re.compile(r"[\x00-\x1f\x7f]")
 _SAFE_NODE_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$")
-_DEFAULT_POLICY_LIMITS = (20000, 60000, 200, 500)
+_MAX_NODES = 20000
+_MAX_EDGES = 60000
+_MAX_TITLE_CHARS = 200
+_MAX_ATTRIBUTE_CHARS = 500
 
 
 @dataclass(frozen=True)
@@ -134,32 +137,16 @@ _LINKS: dict[str, dict[str, tuple[str, frozenset[str]]]] = {
 }
 
 
-def _policy_limits(
-    _repo: str | None = None,
-) -> tuple[tuple[int, int, int, int], bool]:
-    """Return the standalone projection limits."""
-    return _DEFAULT_POLICY_LIMITS, True
-
-
 def build_requirements(
     needs_json_path: Path,
-    *,
-    repo: str,
-    observed_at: str,
-    policy_repo: str | None = None,
 ) -> tuple[
-    tuple[RequirementNode, ...],
-    tuple[RequirementEdge, ...],
-    AdapterReport,
+    tuple[RequirementNode, ...], tuple[RequirementEdge, ...], AdapterReport, str
 ]:
     """Build a deterministic requirements projection from needs JSON."""
-    document, _digest = _load_input(needs_json_path)
+    document, digest = _load_input(needs_json_path)
     versions = document["versions"]
     version = next(iter(versions.values()))
     needs = version["needs"]
-    (max_nodes, max_edges, title_limit, attribute_limit), _ = _policy_limits(
-        policy_repo or repo
-    )
 
     skipped_needs = 0
     ignored_types = 0
@@ -187,8 +174,8 @@ def build_requirements(
             node = RequirementNode(
                 node_id,
                 need_type,
-                _title(need.get("title"), title_limit),
-                _attributes(need, attribute_limit),
+                _title(need.get("title"), _MAX_TITLE_CHARS),
+                _attributes(need, _MAX_ATTRIBUTE_CHARS),
             )
         except ValueError:
             skipped_needs += 1
@@ -198,13 +185,14 @@ def build_requirements(
             continue
         node_data[node_id] = (node, need_type)
         need_data[node_id] = need
-        if len(node_data) > max_nodes:
+        if len(node_data) > _MAX_NODES:
             raise ValueError(
-                f"requirements node count exceeds policy limit {max_nodes}"
+                f"requirements node count exceeds policy limit {_MAX_NODES}"
             )
 
     skipped_links = 0
     edges: list[RequirementEdge] = []
+    edge_keys: set[tuple[str, str, str]] = set()
     for source_id in sorted(node_data):
         _, source_type = node_data[source_id]
         need = need_data[source_id]
@@ -223,10 +211,14 @@ def build_requirements(
                 if target is None or target[1] not in target_types:
                     skipped_links += 1
                     continue
+                edge_key = (source_id, relation, target_id)
+                if edge_key in edge_keys:
+                    continue
+                edge_keys.add(edge_key)
                 edges.append(RequirementEdge(source_id, target_id, relation))
-                if len(edges) > max_edges:
+                if len(edges) > _MAX_EDGES:
                     raise ValueError(
-                        f"requirements edge count exceeds policy limit {max_edges}"
+                        f"requirements edge count exceeds policy limit {_MAX_EDGES}"
                     )
 
     nodes = tuple(
@@ -250,6 +242,7 @@ def build_requirements(
             skipped_links=skipped_links,
             type_counts=type_counts,
         ),
+        digest,
     )
 
 
@@ -262,12 +255,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--observed-at", default=datetime.now(UTC).isoformat())
     args = parser.parse_args(argv)
     try:
-        nodes, edges, report = build_requirements(
-            args.needs,
-            repo=args.repo,
-            observed_at=args.observed_at,
-        )
-        digest = hashlib.sha256(args.needs.read_bytes()).hexdigest()
+        nodes, edges, report, digest = build_requirements(args.needs)
         payload = {
             "schema_version": 1,
             "source": {

@@ -95,7 +95,7 @@ def test_process_source_loads_provenance_and_layer(
     assert node.provenance.adapter == "process_description"
     assert node.provenance.sha == "sha256:def"
     assert node.provenance.observed_at == "2026-01-01T00:00:00Z"
-    assert node.attributes == {}
+    assert dict(node.attributes) == {}
     assert "process" in graph.loaded_layers
 
 

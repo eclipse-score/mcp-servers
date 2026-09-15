@@ -133,7 +133,7 @@ def test_requirements_source_loads_provenance_attributes_and_drops_dangling_edge
     assert source.freshness.stale is False
     node = source.nodes[0]
     assert node.layer == "requirements"
-    assert node.attributes["version"] == "2"
+    assert dict(node.attributes)["version"] == "2"
     assert node.provenance is not None
     assert node.provenance.adapter == "requirements_projection"
     assert len(source.edges) == 1

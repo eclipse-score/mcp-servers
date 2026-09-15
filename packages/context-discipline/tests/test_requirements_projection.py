@@ -32,7 +32,11 @@ def _needs() -> dict[str, object]:
             "security": "NO",
             "reqtype": "Functional",
             "docname": "requirements/index",
-            "derived_from": ["feat_req__one[version==1]", "feat_req__missing"],
+            "derived_from": [
+                "feat_req__one[version==1]",
+                "feat_req__one[version==1]",
+                "feat_req__missing",
+            ],
             "satisfied_by": ["comp__one[version==1]"],
             "covers": ["aou_req__one[version==1]"],
         },
@@ -93,17 +97,14 @@ def test_build_requirements_is_deterministic_and_preserves_requirement_metadata(
 
     first = build_requirements(
         path,
-        repo="eclipse-score/baselibs",
-        observed_at=OBSERVED_AT,
     )
     second = build_requirements(
         path,
-        repo="eclipse-score/baselibs",
-        observed_at=OBSERVED_AT,
     )
-    nodes, edges, report = first
+    nodes, edges, report, digest = first
 
     assert first == second
+    assert digest
     assert report.nodes == 7
     assert report.edges == 5
     assert report.skipped_needs == 2
@@ -120,6 +121,9 @@ def test_build_requirements_is_deterministic_and_preserves_requirement_metadata(
     assert [node.id for node in nodes] == sorted(node.id for node in nodes)
     assert [(edge.source, edge.relation, edge.target) for edge in edges] == sorted(
         (edge.source, edge.relation, edge.target) for edge in edges
+    )
+    assert len(edges) == len(
+        {(edge.source, edge.relation, edge.target) for edge in edges}
     )
     requirement = next(node for node in nodes if node.id == "comp_req__one")
     assert len(requirement.title) == 200

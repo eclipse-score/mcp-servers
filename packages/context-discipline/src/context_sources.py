@@ -366,7 +366,7 @@ class ProcessSource:
                         node_type,
                         self.layer,
                         provenance=provenance,
-                        attributes=attributes,
+                        attributes=tuple(sorted(attributes.items())),
                     )
                 )
             edges: list[MergedEdge] = []
@@ -491,7 +491,7 @@ class RequirementsSource:
                         node_type,
                         self.layer,
                         provenance=provenance,
-                        attributes=attributes,
+                        attributes=tuple(sorted(attributes.items())),
                     )
                 )
             edges: list[MergedEdge] = []
