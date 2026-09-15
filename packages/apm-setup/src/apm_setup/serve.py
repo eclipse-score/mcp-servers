@@ -119,10 +119,14 @@ def verify_setup(arguments: dict[str, Any]) -> dict[str, Any]:
         "graphify_installed": shutil.which("graphify") is not None,
         "graph_exists": (repo / "graphify-out/graph.json").exists(),
         "context_store_exists": (repo / ".score-local").is_dir(),
-        "hooks_approval_command": "apm approve context-discipline",
+        "hooks_approval_command": "apm approve --pending",
         "hooks_note": (
             "Hooks are optional executable primitives; this package works fully "
-            "without them."
+            "without them. In APM 0.26, nested virtual marketplace packages are "
+            "not discovered by apm approve; use an explicit project "
+            "executables.allow entry with the verified key "
+            "github.com/eclipse-score/mcp-servers/packages/"
+            "context-discipline#metamodel_flow."
         ),
     }
 

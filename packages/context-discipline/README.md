@@ -44,7 +44,7 @@ apm install <path>/packages/context-discipline \
   --target copilot \
   --trust-transitive-mcp
 apm compile -t copilot --force-instructions
-apm approve context-discipline
+apm approve --pending
 ```
 
 Use `--force-instructions` so APM writes an always-on `AGENTS.md`; without it,
@@ -54,12 +54,35 @@ agent's discretion.
 Approval is optional: it enables executable hooks for Copilot, Claude, Cursor,
 Gemini, Codex, Windsurf, and Kiro; unsupported targets such as opencode and
 grok-build skip hooks silently. The core package works fully without approval.
-The verified APM 0.26 command approves the direct package only. Its transitive
-executable packages are not discoverable by `apm approve` in this release, so
-deploying every executable requires corresponding project `executables.allow`
-entries for the transitive package keys. `apm approve --recommended` only
-changes anything when the active org policy defines recommendations; this
-consumer has none.
+These observations come from APM 0.26: `apm approve --pending` prints the
+exact key to approve, and that key is what you pass to `apm approve`. However,
+APM 0.26 does not discover nested virtual marketplace packages such as
+`apm_modules/<owner>/<repo>/packages/<pkg>` in the `apm approve` scanner at
+all; the observed installed path was
+`apm_modules/eclipse-score/mcp-servers/packages/context-discipline`. For that
+install form, `--pending`, `--list`, `--all`, and every package-specific
+invocation report the package as absent, so approval through `apm approve` is
+not available. Use an explicit project `executables.allow` entry with the
+verified dependency key instead:
+
+```yaml
+executables:
+  allow:
+    github.com/eclipse-score/mcp-servers/packages/context-discipline#metamodel_flow:
+      hooks: true
+      mcp: true
+```
+
+After that entry is added, the next install deploys the hooks
+(`exec_status: deployed`). We also measured APM 0.30.0 in a fresh pinned
+marketplace consumer: its `--pending` scanner found the nested packages and
+printed version keys, but approving those printed keys and reinstalling still
+left the executable packages gated, so that output is not documented as a
+working deployment flow here. The identity mismatch is that APM 0.30's
+approval scanner emits `#<version>` identities while its install-time gate
+expects `#<ref>`. `apm approve --recommended` only acts on recommendations
+from an active org policy.
+
 The hooks inject the session-start protocol and ask for confirmation on tool
 use before a session exists. The verbatim announcement wording still depends
 on the model: only `UserPromptSubmit` carries prompt text, and APM does not
