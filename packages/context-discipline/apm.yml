@@ -21,6 +21,8 @@ targets:
   - cursor
   - codex
   - gemini
+  - windsurf
+  - kiro
   - opencode
 dependencies:
   apm:

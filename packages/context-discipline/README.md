@@ -44,11 +44,20 @@ apm install <path>/packages/context-discipline \
   --target copilot \
   --trust-transitive-mcp
 apm compile -t copilot --force-instructions
+apm approve eclipse-score/mcp-servers
 ```
 
 Use `--force-instructions` so APM writes an always-on `AGENTS.md`; without it,
 the guidance remains in individual instruction files and is loaded only at the
 agent's discretion.
+
+Approval is optional: it enables executable hooks for Copilot, Claude, Cursor,
+Gemini, Codex, Windsurf, and Kiro; unsupported targets such as opencode and
+grok-build skip hooks silently. The core package works fully without approval.
+The hooks inject the session-start protocol and ask for confirmation on tool
+use before a session exists. The verbatim announcement wording still depends
+on the model: only `UserPromptSubmit` carries prompt text, and APM does not
+normalize that event name across Copilot and Claude.
 
 ### Testing a branch
 
