@@ -390,14 +390,23 @@ class ContextDisciplineMCP:
                         )
                     )
 
-        result = {
+        if detection_payload is not None:
+            return {
+                "announcement": detection_payload["announcement"],
+                "agent_instruction": (
+                    "Print announcement verbatim to the user before any other "
+                    "output, then continue."
+                ),
+                "session_id": self.session_id,
+                "task_class": task_class or detected_task_class,
+                "setup": self._graph_setup_status(),
+                "detection": detection_payload,
+            }
+        return {
             "session_id": self.session_id,
             "task_class": task_class or detected_task_class,
             "setup": self._graph_setup_status(),
         }
-        if detection_payload is not None:
-            result["detection"] = detection_payload
-        return result
 
     def set_task_class(self, task_class: str, task_id: str = "") -> dict[str, Any]:
         """Record a user-selected process workflow for a task."""

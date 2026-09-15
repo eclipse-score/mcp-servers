@@ -17,6 +17,16 @@ description: Track working memory, decisions, and intersession context
 applyTo: "**"
 ---
 
+## Mandatory session-start protocol
+
+Call `initialize_session` as the first tool call of every coding session,
+before reading files, searching, or answering. This protocol has no exception
+for small, familiar, or low-risk tasks. If a session was started without
+calling it, call it as soon as the omission is noticed, before the next edit.
+When the result contains an announcement, print that string verbatim to the
+user before any other output. If a question is present, ask the user before
+continuing and record the answer with `set_task_class`.
+
 # Working Memory Discipline
 
 When solving a coding task, maintain explicit working memory and track decisions. This guidance feeds the local session log and durable context overlay.
@@ -51,10 +61,10 @@ symbol-only input can contribute no structural signal at the relevant graph
 granularity; `focus_size == 0` in the response means the structural axis was
 silent.
 
-When `initialize_session` returns `detection`, print
-`detection.announcement` verbatim to the user. If `detection.question` is
-present, ask the user before continuing and record the answer with
-`set_task_class`.
+When `initialize_session` returns `detection`, its announcement is also
+available as `detection.announcement`; print the announcement verbatim to the
+user. If `detection.question` is present, ask the user before continuing and
+record the answer with `set_task_class`.
 
 ## Pattern: Initialize → Navigate → Decide → Record
 
@@ -131,9 +141,15 @@ Missing nodes: [any edge cases not covered]
 
 ## When NOT to Use
 
+The detailed per-step bookkeeping in this pattern can be reduced for:
+
 - Simple one-file fixes
-- Well-known codebase (you built it)
+- Well-known codebases
 - Low-risk changes (add one function)
+
+This exception applies only to verbose assumption, navigation, decision, and
+outcome tracking. The mandatory session-start protocol and the announcement
+rule above apply unconditionally.
 
 ## Durable Context Overlay
 

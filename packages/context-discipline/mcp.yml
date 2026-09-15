@@ -20,7 +20,7 @@ depends_on:
 
 tools:
   - name: initialize_session
-    description: Initialize a working memory session
+    description: Initialize a working memory session; call this as the first action of every session. If the result contains announcement, print it verbatim to the user before any other output.
     input_schema:
       type: object
       properties:

@@ -29,6 +29,10 @@ from context_merge import MergedGraph
 from context_overlay import OverlayNode, OverlayStore, Provenance
 from context_policy import Policy
 
+PROCESS_GRAPH = (
+    Path(__file__).parents[2] / "metamodel-flow" / "model" / "process_graph.json"
+)
+
 
 def _write_graph(tmp_path: Path) -> Path:
     graph_path = tmp_path / "graphify-out" / "graph.json"
@@ -247,16 +251,41 @@ def test_graph_source_file_index_picks_shortest_id(tmp_path: Path) -> None:
     assert graph.source_file_index["src/source.py"] == "a"
 
 
-def test_initialize_session_reports_missing_graph_setup(tmp_path: Path) -> None:
+def test_initialize_session_reports_missing_graph_setup(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("SCORE_PROCESS_GRAPH", str(tmp_path / "missing-process.json"))
     manager = ContextDisciplineMCP(str(tmp_path))
 
     result = manager.initialize_session("Goal", [])
 
+    assert set(result) == {"session_id", "task_class", "setup"}
+    assert "announcement" not in result
+    assert "agent_instruction" not in result
     assert result["setup"] == {
         "ok": False,
         "graph_path": str(tmp_path / "graphify-out" / "graph.json"),
         "next": "Call setup_graphify with install_graphify=true.",
     }
+
+
+def test_initialize_session_exposes_announcement_first(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("SCORE_PROCESS_GRAPH", str(PROCESS_GRAPH))
+    manager = ContextDisciplineMCP(str(tmp_path))
+
+    result = manager.initialize_session(
+        "Build unit tests for the mw/log error domain",
+        [],
+    )
+
+    assert list(result)[:2] == ["announcement", "agent_instruction"]
+    assert result["announcement"] == result["detection"]["announcement"]
+    assert result["agent_instruction"] == (
+        "Print announcement verbatim to the user before any other output, "
+        "then continue."
+    )
 
 
 def test_initialize_session_reports_existing_graph_setup(tmp_path: Path) -> None:

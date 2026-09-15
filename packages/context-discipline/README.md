@@ -80,6 +80,15 @@ is created lazily; its remaining purpose is adding `.score-local/` to
 
 ### Use from Your Agent
 
+#### Mandatory session start
+
+Call `initialize_session` as the first tool call of every coding session,
+before reading files, searching, or answering. This requirement applies to
+small, familiar, and low-risk tasks as well. If it was missed, call it before
+the next edit. When the result contains `announcement`, print that string
+verbatim to the user before any other output. If it contains a `question`, ask
+the user before continuing and record the answer with `set_task_class`.
+
 #### Input language and task class
 
 Free-text fields are recorded in English. The optional `task_class` argument

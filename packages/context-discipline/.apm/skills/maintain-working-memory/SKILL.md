@@ -16,6 +16,16 @@ name: maintain-working-memory
 description: Use context-discipline MCP tools to track goals, assumptions, and decisions during agentic sessions
 ---
 
+## Mandatory session-start protocol
+
+Call `initialize_session` as the first tool call of every coding session,
+before reading files, searching, or answering. This is mandatory even for
+small, familiar, or low-risk tasks. If the session-start call was omitted,
+make it as soon as the omission is noticed, before the next edit. When the
+result contains `announcement`, print it verbatim to the user before any
+other output. If it contains a question, ask the user before continuing and
+record the answer with `set_task_class`.
+
 # Maintain Working Memory Skill
 
 Use the `context-discipline` MCP tools to track your session explicitly without custom YAML maintenance.
