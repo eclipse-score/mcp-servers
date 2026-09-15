@@ -43,12 +43,21 @@ PROCESS_ID_RE = re.compile(PROCESS_ID_PATTERN)
 
 
 @dataclass(frozen=True)
+class Freshness:
+    source_ref: str
+    current_ref: str
+    generated_at: str
+    stale: bool
+
+
+@dataclass(frozen=True)
 class SourceGraph:
     layer: str
     nodes: tuple[MergedNode, ...]
     edges: tuple[MergedEdge, ...]
     read_only: bool
     loaded: bool = False
+    freshness: Freshness | None = None
 
 
 class GraphSource(Protocol):
@@ -56,6 +65,33 @@ class GraphSource(Protocol):
     read_only: bool
 
     def load(self, repo: Path, policy: Policy) -> SourceGraph: ...
+
+
+def _current_ref(repo: Path) -> str:
+    git_path = repo / ".git"
+    try:
+        if git_path.is_file():
+            gitdir_value = git_path.read_text(encoding="utf-8").strip()
+            if not gitdir_value.startswith("gitdir: "):
+                return ""
+            git_path = (repo / gitdir_value.removeprefix("gitdir: ")).resolve()
+        head = (git_path / "HEAD").read_text(encoding="utf-8").strip()
+        if head.startswith("ref: "):
+            ref_path = git_path / head.removeprefix("ref: ")
+            return ref_path.read_text(encoding="utf-8").strip()
+        return head
+    except (OSError, UnicodeError):
+        return ""
+
+
+def _freshness(source_ref: str, generated_at: str, repo: Path) -> Freshness:
+    current_ref = _current_ref(repo)
+    return Freshness(
+        source_ref=source_ref,
+        current_ref=current_ref,
+        generated_at=generated_at,
+        stale=bool(source_ref and current_ref and source_ref != current_ref),
+    )
 
 
 def _session_edges(records: tuple[Record, ...]) -> tuple[MergedEdge, ...]:
@@ -289,6 +325,12 @@ class ProcessSource:
                 observed_at=source["generated_at"],
                 sha=source["digest"],
             )
+            freshness = Freshness(
+                source_ref=source["commit"],
+                current_ref="",
+                generated_at=source["generated_at"],
+                stale=False,
+            )
             nodes: list[MergedNode] = []
             node_ids: set[str] = set()
             for raw_node in nodes_raw:
@@ -324,6 +366,7 @@ class ProcessSource:
                         node_type,
                         self.layer,
                         provenance=provenance,
+                        attributes=attributes,
                     )
                 )
             edges: list[MergedEdge] = []
@@ -354,6 +397,132 @@ class ProcessSource:
                 tuple(edges),
                 self.read_only,
                 True,
+                freshness,
+            )
+        except (OSError, UnicodeError, TypeError, ValueError):
+            return SourceGraph(self.layer, (), (), self.read_only, False)
+
+
+class RequirementsSource:
+    layer = "requirements"
+    read_only = True
+
+    def _path(self, repo: Path, policy: Policy) -> Path | None:
+        if not policy.requirements.enabled:
+            return None
+        configured = os.environ.get("SCORE_REQUIREMENTS_GRAPH")
+        if configured:
+            path = Path(configured)
+            return path if path.is_absolute() else repo / path
+        if policy.requirements.path:
+            configured_path = Path(policy.requirements.path)
+            return (
+                configured_path
+                if configured_path.is_absolute()
+                else repo / configured_path
+            )
+        return repo / ".score-local" / "requirements_graph.json"
+
+    def load(self, repo: Path, policy: Policy) -> SourceGraph:
+        path = self._path(repo, policy)
+        if path is None or not path.exists():
+            return SourceGraph(self.layer, (), (), self.read_only, False)
+        try:
+            raw = json.loads(path.read_text(encoding="utf-8"))
+            if (
+                type(raw) is not dict
+                or type(raw.get("schema_version")) is not int
+                or raw.get("schema_version") != 1
+            ):
+                raise ValueError("invalid requirements graph schema")
+            source = raw.get("source")
+            nodes_raw = raw.get("nodes")
+            edges_raw = raw.get("edges")
+            if type(source) is not dict:
+                raise ValueError("invalid requirements graph source")
+            required_source = ("repo", "commit", "digest", "generated_at")
+            if any(type(source.get(key)) is not str for key in required_source):
+                raise ValueError("invalid requirements graph source fields")
+            if type(nodes_raw) is not list or type(edges_raw) is not list:
+                raise ValueError("invalid requirements graph arrays")
+            limits = policy.overlay
+            if len(nodes_raw) > limits.max_nodes or len(edges_raw) > limits.max_edges:
+                raise ValueError("requirements graph exceeds policy limits")
+            provenance = Provenance(
+                repo=source["repo"],
+                adapter="requirements_projection",
+                confidence=1.0,
+                observed_at=source["generated_at"],
+                sha=source["digest"],
+            )
+            freshness = _freshness(source["commit"], source["generated_at"], repo)
+            nodes: list[MergedNode] = []
+            node_ids: set[str] = set()
+            for raw_node in nodes_raw:
+                if type(raw_node) is not dict:
+                    raise ValueError("invalid requirements graph node")
+                node_id = raw_node.get("id")
+                node_type = raw_node.get("type")
+                title = raw_node.get("title")
+                attributes = raw_node.get("attributes", {})
+                if not all(type(value) is str for value in (node_id, node_type, title)):
+                    raise ValueError("invalid requirements graph node fields")
+                if (
+                    len(title) > limits.max_title_chars
+                    or type(attributes) is not dict
+                    or len(attributes) > limits.max_attributes
+                    or any(
+                        type(key) is not str or type(value) is not str
+                        for key, value in attributes.items()
+                    )
+                    or any(
+                        len(value) > limits.max_attribute_chars
+                        for value in attributes.values()
+                    )
+                ):
+                    raise ValueError("invalid requirements graph attributes")
+                if node_id in node_ids:
+                    raise ValueError("duplicate requirements graph node")
+                node_ids.add(node_id)
+                nodes.append(
+                    MergedNode(
+                        node_id,
+                        title,
+                        node_type,
+                        self.layer,
+                        provenance=provenance,
+                        attributes=attributes,
+                    )
+                )
+            edges: list[MergedEdge] = []
+            for raw_edge in edges_raw:
+                if type(raw_edge) is not dict:
+                    raise ValueError("invalid requirements graph edge")
+                edge_source = raw_edge.get("source")
+                edge_target = raw_edge.get("target")
+                relation = raw_edge.get("relation")
+                if not all(
+                    type(value) is str for value in (edge_source, edge_target, relation)
+                ):
+                    raise ValueError("invalid requirements graph edge fields")
+                if edge_source not in node_ids or edge_target not in node_ids:
+                    continue
+                edges.append(
+                    MergedEdge(
+                        edge_source,
+                        edge_target,
+                        relation,
+                        self.layer,
+                        provenance,
+                    )
+                )
+            return SourceGraph(
+                self.layer,
+                tuple(nodes),
+                tuple(edges),
+                self.read_only,
+                True,
+                freshness,
             )
         except (OSError, UnicodeError, TypeError, ValueError):
             return SourceGraph(self.layer, (), (), self.read_only, False)
@@ -371,4 +540,5 @@ DEFAULT_SOURCES = (
     OverlaySource(),
     ProcessSource(),
     SessionSource(),
+    RequirementsSource(),
 )

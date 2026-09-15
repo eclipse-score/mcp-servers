@@ -25,6 +25,10 @@ from context_overlay import Provenance
 from context_sessions import ReasoningRecord, Record
 
 
+def _empty_attributes() -> dict[str, str]:
+    return {}
+
+
 @dataclass(frozen=True)
 class MergedNode:
     id: str
@@ -34,6 +38,7 @@ class MergedNode:
     source_file: str = ""
     provenance: Provenance | None = None
     source_file_keys: tuple[str, ...] = ()
+    attributes: dict[str, str] = field(default_factory=_empty_attributes)
 
 
 @dataclass(frozen=True)

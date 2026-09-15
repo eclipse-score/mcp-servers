@@ -25,6 +25,7 @@ only-include = [
   "src/context_merge.py",
   "src/context_overlay.py",
   "src/context_policy.py",
+  "src/requirements_projection.py",
   "src/context_sessions.py",
   "src/context_sources.py",
   "src/context_taskclass.py",

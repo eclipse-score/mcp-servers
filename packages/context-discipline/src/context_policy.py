@@ -160,12 +160,25 @@ class ProcessPolicy:
 
 
 @dataclass(frozen=True)
+class RequirementsPolicy:
+    enabled: bool = True
+    path: str = ""
+
+    def __post_init__(self) -> None:
+        if type(self.enabled) is not bool:
+            raise ValueError("enabled must be a boolean")
+        if type(self.path) is not str:
+            raise ValueError("path must be a string")
+
+
+@dataclass(frozen=True)
 class Policy:
     version: int = POLICY_VERSION
     attention: AttentionPolicy = field(default_factory=AttentionPolicy)
     privacy: PrivacyPolicy = field(default_factory=PrivacyPolicy)
     overlay: OverlayPolicy = field(default_factory=OverlayPolicy)
     process: ProcessPolicy = field(default_factory=ProcessPolicy)
+    requirements: RequirementsPolicy = field(default_factory=RequirementsPolicy)
 
 
 _SECTION_FIELDS: dict[str, dict[str, type]] = {
@@ -205,6 +218,10 @@ _SECTION_FIELDS: dict[str, dict[str, type]] = {
         "enabled": bool,
         "path": str,
         "gap_min": float,
+    },
+    "requirements": {
+        "enabled": bool,
+        "path": str,
     },
 }
 
@@ -281,4 +298,7 @@ def load_policy(
         privacy=PrivacyPolicy(**_section_values("privacy", raw.get("privacy", {}))),
         overlay=OverlayPolicy(**_section_values("overlay", raw.get("overlay", {}))),
         process=ProcessPolicy(**_section_values("process", raw.get("process", {}))),
+        requirements=RequirementsPolicy(
+            **_section_values("requirements", raw.get("requirements", {}))
+        ),
     )

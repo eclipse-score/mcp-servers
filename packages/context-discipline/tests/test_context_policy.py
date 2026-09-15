@@ -19,6 +19,7 @@ from context_policy import (
     OverlayPolicy,
     PrivacyPolicy,
     ProcessPolicy,
+    RequirementsPolicy,
     load_policy,
 )
 
@@ -30,6 +31,7 @@ def test_missing_policy_uses_defaults(tmp_path: Path) -> None:
     assert policy.privacy == PrivacyPolicy()
     assert policy.overlay == OverlayPolicy()
     assert policy.process == ProcessPolicy()
+    assert policy.requirements == RequirementsPolicy()
 
 
 def test_policy_loads_written_values(tmp_path: Path) -> None:
@@ -90,6 +92,28 @@ def test_unknown_policy_key_is_rejected(tmp_path: Path) -> None:
 def test_unknown_policy_section_is_rejected(tmp_path: Path) -> None:
     path = tmp_path / "policy.toml"
     path.write_text("version = 1\n[unknown]\nvalue = 1\n", encoding="utf-8")
+    with pytest.raises(ValueError, match="unknown"):
+        load_policy(tmp_path, "policy.toml")
+
+
+def test_policy_without_requirements_section_keeps_requirements_defaults(
+    tmp_path: Path,
+) -> None:
+    path = tmp_path / "policy.toml"
+    path.write_text("version = 1\n[process]\nenabled = false\n", encoding="utf-8")
+
+    policy = load_policy(tmp_path, "policy.toml")
+
+    assert policy.process.enabled is False
+    assert policy.requirements == RequirementsPolicy()
+
+
+def test_unknown_requirements_policy_key_is_rejected(tmp_path: Path) -> None:
+    path = tmp_path / "policy.toml"
+    path.write_text(
+        "version = 1\n[requirements]\nunknown = true\n",
+        encoding="utf-8",
+    )
     with pytest.raises(ValueError, match="unknown"):
         load_policy(tmp_path, "policy.toml")
 

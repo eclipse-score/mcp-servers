@@ -61,6 +61,7 @@ def test_default_sources_are_ordered_and_isolated(
         "domain",
         "process",
         "collaboration",
+        "requirements",
     ]
     policy = Policy()
     code = CodeGraphSource().load(tmp_path, policy)
@@ -80,8 +81,13 @@ def test_process_source_loads_provenance_and_layer(
     _process_graph(path)
     monkeypatch.setenv("SCORE_PROCESS_GRAPH", str(path))
 
+    source = ProcessSource().load(tmp_path, Policy())
     graph = MergedGraph.build(tmp_path)
 
+    assert source.freshness is not None
+    assert source.freshness.source_ref == "abc"
+    assert source.freshness.current_ref == ""
+    assert source.freshness.stale is False
     node = graph.nodes["gd_req__one"]
     assert node.layer == "process"
     assert node.provenance is not None
@@ -89,6 +95,7 @@ def test_process_source_loads_provenance_and_layer(
     assert node.provenance.adapter == "process_description"
     assert node.provenance.sha == "sha256:def"
     assert node.provenance.observed_at == "2026-01-01T00:00:00Z"
+    assert node.attributes == {}
     assert "process" in graph.loaded_layers
 
 
