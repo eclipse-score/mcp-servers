@@ -39,7 +39,7 @@ Then, from your project root:
 apm marketplace add https://github.com/eclipse-score/mcp-servers
 apm install context-discipline@eclipse-score-apm-marketplace --target copilot --trust-transitive-mcp
 apm compile -t copilot --force-instructions
-apm approve eclipse-score/mcp-servers
+apm approve eclipse-score/mcp-servers/packages/context-discipline
 ```
 
 Use `--force-instructions` so APM writes an always-on `AGENTS.md`; without it,
@@ -49,6 +49,7 @@ agent's discretion.
 Approval is optional: it enables executable hooks for Copilot, Claude, Cursor,
 Gemini, Codex, Windsurf, and Kiro; unsupported targets such as opencode and
 grok-build skip hooks silently. The core package works fully without approval.
+For the fleet-wide org-vetted set, use `apm approve --recommended`.
 
 Installing `context-discipline` also installs its transitive dependencies:
 `graphify-codegraph` and `apm-setup`.
@@ -58,7 +59,7 @@ Installing `context-discipline` also installs its transitive dependencies:
 ```bash
 apm install /path/to/mcp-servers/packages/context-discipline --target copilot --trust-transitive-mcp
 apm compile -t copilot --force-instructions
-apm approve eclipse-score/mcp-servers
+apm approve eclipse-score/mcp-servers/packages/context-discipline
 ```
 
 Installing `context-discipline` also installs its transitive dependencies:
@@ -71,7 +72,7 @@ git clone https://github.com/eclipse-score/mcp-servers
 cd mcp-servers
 apm install ./packages/context-discipline --target copilot --trust-transitive-mcp
 apm compile -t copilot --force-instructions
-apm approve eclipse-score/mcp-servers
+apm approve eclipse-score/mcp-servers/packages/context-discipline
 ```
 
 Installing `context-discipline` also installs its transitive dependencies:

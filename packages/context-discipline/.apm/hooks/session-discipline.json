@@ -6,6 +6,19 @@
           {
             "type": "command",
             "command": "python3 \"./scripts/session_discipline_hook.py\" session-start",
+            "windows": "python \"./scripts/session_discipline_hook.py\" session-start",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "sessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"./scripts/session_discipline_hook.py\" session-start",
+            "windows": "python \"./scripts/session_discipline_hook.py\" session-start",
             "timeout": 10
           }
         ]
@@ -17,6 +30,7 @@
           {
             "type": "command",
             "command": "python3 \"./scripts/session_discipline_hook.py\" pre-tool-use",
+            "windows": "python \"./scripts/session_discipline_hook.py\" pre-tool-use",
             "timeout": 10
           }
         ]
