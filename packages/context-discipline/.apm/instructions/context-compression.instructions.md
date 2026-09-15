@@ -24,10 +24,7 @@ reading files, searching, or running shell commands. There is no exception for
 small, familiar, or low-risk tasks. Print `announcement` verbatim when
 present; ask the user and record the answer with `set_task_class` when a
 question is present. See the working-memory discipline instruction for the
-complete protocol. The reply begins with this line, quoted verbatim from
-`announcement`, before any plan or commentary:
-
-`Repository baselibs | task class Create/Perform Unit Test (wf__verification_unit_test) | responsible rl__contributor | approval rl__committer`
+complete protocol.
 
 # Context Compression Guidelines
 
