@@ -9,9 +9,10 @@ applyTo: "**/*.rst"
 
 # S-CORE Authoring Workflow
 
-When authoring or changing an S-CORE artifact, first identify its normative
-need type, options, links, and graph constraints. The metamodel projection is
-normative; this workflow guidance is not.
+After calling `initialize_session`, the first authoring step when changing an
+S-CORE artifact is to identify its normative need type, options, links, and
+graph constraints. The metamodel projection is normative; this workflow
+guidance is not.
 
 Do not invent need types or options. If the model does not express a required
 concept, update the upstream metamodel through its normal review process before

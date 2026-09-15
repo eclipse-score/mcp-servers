@@ -17,6 +17,15 @@ description: Guidelines for compressing and summarizing information before retur
 applyTo: "**"
 ---
 
+## Mandatory session-start protocol
+
+Call `initialize_session` as the first tool call of every session, before
+reading files, searching, or running shell commands. There is no exception for
+small, familiar, or low-risk tasks. Print `announcement` verbatim when
+present; ask the user and record the answer with `set_task_class` when a
+question is present. See the working-memory discipline instruction for the
+complete protocol.
+
 # Context Compression Guidelines
 
 Every tool output risks exhausting your context window. Compress before re-inserting.

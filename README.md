@@ -38,8 +38,12 @@ Then, from your project root:
 ```bash
 apm marketplace add https://github.com/eclipse-score/mcp-servers
 apm install context-discipline@eclipse-score-apm-marketplace --target copilot --trust-transitive-mcp
-apm compile -t copilot
+apm compile -t copilot --force-instructions
 ```
+
+Use `--force-instructions` so APM writes an always-on `AGENTS.md`; without it,
+the guidance remains in individual instruction files and is loaded only at the
+agent's discretion.
 
 Installing `context-discipline` also installs its transitive dependencies:
 `graphify-codegraph` and `apm-setup`.
@@ -48,7 +52,7 @@ Installing `context-discipline` also installs its transitive dependencies:
 
 ```bash
 apm install /path/to/mcp-servers/packages/context-discipline --target copilot --trust-transitive-mcp
-apm compile -t copilot
+apm compile -t copilot --force-instructions
 ```
 
 Installing `context-discipline` also installs its transitive dependencies:
@@ -60,7 +64,7 @@ Installing `context-discipline` also installs its transitive dependencies:
 git clone https://github.com/eclipse-score/mcp-servers
 cd mcp-servers
 apm install ./packages/context-discipline --target copilot --trust-transitive-mcp
-apm compile -t copilot
+apm compile -t copilot --force-instructions
 ```
 
 Installing `context-discipline` also installs its transitive dependencies:
@@ -140,7 +144,7 @@ apm install context-discipline@eclipse-score-apm-marketplace --trust-transitive-
   ↓
   Installs context-discipline plus graphify-codegraph and apm-setup
 
-apm compile -t copilot
+apm compile -t copilot --force-instructions
   ↓
   Generates .github/copilot-instructions.md
   

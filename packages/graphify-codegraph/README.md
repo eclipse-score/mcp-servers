@@ -61,8 +61,12 @@ Returns: {"query": "...", "matches": [...], "setup": {...}}
 # Step 1: Install Graphify; it brings the setup MCP package with it
 apm install graphify-codegraph@eclipse-score-apm-marketplace --target copilot \
     --trust-transitive-mcp
-apm compile -t copilot
+apm compile -t copilot --force-instructions
 ```
+
+Use `--force-instructions` so APM writes an always-on `AGENTS.md`; without it,
+the guidance remains in individual instruction files and is loaded only at the
+agent's discretion.
 
 Then call `verify_setup` followed by `setup_graphify` through the `apm-setup`
 MCP server, passing the absolute path of your project repository.

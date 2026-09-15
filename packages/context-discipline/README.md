@@ -43,8 +43,12 @@ apm init --yes --target copilot
 apm install <path>/packages/context-discipline \
   --target copilot \
   --trust-transitive-mcp
-apm compile -t copilot
+apm compile -t copilot --force-instructions
 ```
+
+Use `--force-instructions` so APM writes an always-on `AGENTS.md`; without it,
+the guidance remains in individual instruction files and is loaded only at the
+agent's discretion.
 
 ### Testing a branch
 

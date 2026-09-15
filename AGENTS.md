@@ -232,9 +232,13 @@ cd packages/your-package-name
 python -m your_package_name.src.serve  # If you have MCP
 
 # Verify installed tools
-apm compile -t copilot
+apm compile -t copilot --force-instructions
 cat .github/copilot-instructions.md  # Should include your guidance
 ```
+
+Use `--force-instructions` so APM writes an always-on `AGENTS.md`; without it,
+the guidance remains in individual instruction files and is loaded only at the
+agent's discretion.
 
 ## Two Existing Packages: Reference Implementations
 
