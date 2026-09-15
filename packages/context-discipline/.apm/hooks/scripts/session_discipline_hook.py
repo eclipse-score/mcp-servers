@@ -18,12 +18,13 @@ from __future__ import annotations
 
 import json
 import sys
-from datetime import UTC, datetime
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
 MARKER_PATH = Path(".score-local/hook_session.json")
 SESSION_LOG_PATH = Path(".score-local/sessions.jsonl")
+UTC = timezone(timedelta(0))
 
 
 def _timestamp() -> str:
