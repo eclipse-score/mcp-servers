@@ -24,6 +24,7 @@ from context_discipline_mcp import (
     TaskRecord,
     call_tool,
     expand_focus,
+    handle,
 )
 from context_merge import MergedGraph
 from context_overlay import OverlayNode, OverlayStore, Provenance
@@ -280,12 +281,70 @@ def test_initialize_session_exposes_announcement_first(
         [],
     )
 
-    assert list(result)[:2] == ["announcement", "agent_instruction"]
+    assert list(result)[:2] == ["agent_instruction", "announcement"]
     assert result["announcement"] == result["detection"]["announcement"]
     assert result["agent_instruction"] == (
-        "Print announcement verbatim to the user before any other output, "
-        "then continue."
+        "Print the announcement string verbatim as the first line of the reply "
+        "to the user, before any other text, without paraphrasing or "
+        "summarising."
     )
+
+
+def test_handle_emits_announcement_before_json_result(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("SCORE_PROCESS_GRAPH", str(PROCESS_GRAPH))
+    manager = ContextDisciplineMCP(str(tmp_path))
+
+    raw_response = handle(
+        manager,
+        {
+            "jsonrpc": "2.0",
+            "id": 1,
+            "method": "tools/call",
+            "params": {
+                "name": "initialize_session",
+                "arguments": {
+                    "goal": "Build unit tests for the mw/log error domain",
+                    "subgoals": [],
+                },
+            },
+        },
+    )
+    assert raw_response is not None
+    response = json.loads(raw_response)
+    content = response["result"]["content"]
+    result = json.loads(content[1]["text"])
+
+    assert len(content) == 2
+    assert content[0] == {"type": "text", "text": result["announcement"]}
+    assert content[1] == {"type": "text", "text": json.dumps(result)}
+
+
+def test_handle_keeps_single_json_block_without_announcement(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("SCORE_PROCESS_GRAPH", str(tmp_path / "missing.json"))
+    manager = ContextDisciplineMCP(str(tmp_path))
+
+    raw_response = handle(
+        manager,
+        {
+            "jsonrpc": "2.0",
+            "id": 1,
+            "method": "tools/call",
+            "params": {
+                "name": "initialize_session",
+                "arguments": {"goal": "Goal", "subgoals": []},
+            },
+        },
+    )
+    assert raw_response is not None
+    response = json.loads(raw_response)
+    content = response["result"]["content"]
+
+    assert len(content) == 1
+    assert "announcement" not in json.loads(content[0]["text"])
 
 
 def test_initialize_session_reports_existing_graph_setup(tmp_path: Path) -> None:

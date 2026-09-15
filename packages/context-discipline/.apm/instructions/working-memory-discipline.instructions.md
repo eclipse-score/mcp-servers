@@ -25,7 +25,10 @@ for small, familiar, or low-risk tasks. If a session was started without
 calling it, call it as soon as the omission is noticed, before the next edit.
 When the result contains an announcement, print that string verbatim to the
 user before any other output. If a question is present, ask the user before
-continuing and record the answer with `set_task_class`.
+continuing and record the answer with `set_task_class`. The reply begins with
+this line, quoted verbatim from `announcement`, before any plan or commentary:
+
+`Repository baselibs | task class Create/Perform Unit Test (wf__verification_unit_test) | responsible rl__contributor | approval rl__committer`
 
 # Working Memory Discipline
 

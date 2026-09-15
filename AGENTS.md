@@ -233,7 +233,7 @@ python -m your_package_name.src.serve  # If you have MCP
 
 # Verify installed tools
 apm compile -t copilot --force-instructions
-cat .github/copilot-instructions.md  # Should include your guidance
+cat AGENTS.md  # Should include your guidance
 ```
 
 Use `--force-instructions` so APM writes an always-on `AGENTS.md`; without it,

@@ -146,7 +146,7 @@ apm install context-discipline@eclipse-score-apm-marketplace --trust-transitive-
 
 apm compile -t copilot --force-instructions
   ↓
-  Generates .github/copilot-instructions.md
+  Generates AGENTS.md
   
 Agent runs
   ↓

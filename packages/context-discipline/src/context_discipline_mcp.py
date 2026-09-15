@@ -392,11 +392,12 @@ class ContextDisciplineMCP:
 
         if detection_payload is not None:
             return {
-                "announcement": detection_payload["announcement"],
                 "agent_instruction": (
-                    "Print announcement verbatim to the user before any other "
-                    "output, then continue."
+                    "Print the announcement string verbatim as the first line "
+                    "of the reply to the user, before any other text, without "
+                    "paraphrasing or summarising."
                 ),
+                "announcement": detection_payload["announcement"],
                 "session_id": self.session_id,
                 "task_class": task_class or detected_task_class,
                 "setup": self._graph_setup_status(),
@@ -1001,7 +1002,14 @@ def handle(manager: ContextDisciplineMCP, request: dict[str, Any]) -> str | None
         try:
             params = request.get("params", {})
             result = call_tool(manager, params["name"], params.get("arguments", {}))
-            content = [{"type": "text", "text": json.dumps(result)}]
+            json_content = {"type": "text", "text": json.dumps(result)}
+            if isinstance(result, dict) and result.get("announcement"):
+                content = [
+                    {"type": "text", "text": result["announcement"]},
+                    json_content,
+                ]
+            else:
+                content = [json_content]
             return json.dumps(
                 {"jsonrpc": "2.0", "id": request_id, "result": {"content": content}}
             )
