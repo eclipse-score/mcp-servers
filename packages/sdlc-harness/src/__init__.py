@@ -11,25 +11,4 @@
 # SPDX-License-Identifier: Apache-2.0
 # *******************************************************************************
 
-[tool.uv.workspace]
-members = ["libs/score-context", "packages/sdlc-harness"]
-
-[dependency-groups]
-dev = [
-  "pyright>=1.1.411",
-  "pytest>=9.1.1",
-  "ruff>=0.16.5",
-]
-
-[tool.ruff]
-line-length = 88
-target-version = "py312"
-
-[tool.ruff.lint]
-select = ["E", "F", "I", "UP", "B", "SIM"]
-
-[tool.pyright]
-include = ["libs/score-context/src", "libs/score-context/tests"]
-pythonVersion = "3.12"
-typeCheckingMode = "strict"
-reportMissingTypeStubs = false
+"""SDLC Harness MCP package for Eclipse S-CORE."""

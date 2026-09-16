@@ -167,11 +167,13 @@ Create `src/serve.py`:
 import sys
 import json
 
+
 def main():
     """MCP server entry point."""
     # Read from stdin, write to stdout
     # Implement your MCP protocol here
     pass
+
 
 if __name__ == "__main__":
     main()
@@ -282,6 +284,7 @@ When wrapping an external CLI tool:
 # src/serve.py
 import subprocess, sys
 
+
 def main():
     subprocess.run([sys.executable, "-m", "<external>.serve"], check=True)
 ```
@@ -296,9 +299,11 @@ When building your own MCP server:
 # src/your_package.py
 from dataclasses import dataclass
 
+
 @dataclass
 class YourData:
     field: str
+
 
 class YourMCP:
     def tool_name(self, arg):
@@ -371,9 +376,11 @@ Every package needs:
 ```python
 # tests/test_your_module.py
 import sys
+
 sys.path.insert(0, "src")
 
 from your_module import YourClass
+
 
 def test_tool():
     obj = YourClass()

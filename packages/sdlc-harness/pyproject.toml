@@ -1,0 +1,22 @@
+# *******************************************************************************
+# Copyright (c) 2026 Contributors to the Eclipse Foundation
+#
+# SPDX-License-Identifier: Apache-2.0
+# *******************************************************************************
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "score-sdlc-harness"
+version = "0.1.0"
+description = "Traceable SDLC lifecycle and Sphinx-needs MCP server"
+requires-python = ">=3.11"
+
+[project.scripts]
+sdlc-harness = "sdlc_harness.serve:main"
+
+[tool.hatch.build.targets.wheel]
+only-include = ["src"]
+sources = ["src"]

@@ -83,7 +83,8 @@ apm marketplace add /path/to/mcp-servers
 apm marketplace browse eclipse-score-apm-marketplace
 ```
 
-The browse command should list `context-discipline` and `graphify-codegraph`.
+The browse command should list `context-discipline`, `graphify-codegraph`, and
+`sdlc-harness`.
 
 ### Package changes
 

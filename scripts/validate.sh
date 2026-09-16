@@ -67,7 +67,7 @@ fi
 echo ""
 echo "2. Package Structure"
 
-for pkg in packages/apm-setup packages/graphify-codegraph packages/context-discipline; do
+for pkg in packages/apm-setup packages/graphify-codegraph packages/context-discipline packages/sdlc-harness; do
 	pkg_name=$(basename "$pkg")
 	
 	check "  $pkg_name: apm.yml" "test -f $pkg/apm.yml"
@@ -102,6 +102,9 @@ check "  graphify-codegraph: __init__.py" "test -f packages/graphify-codegraph/s
 check "  graphify-codegraph: serve.py" "test -f packages/graphify-codegraph/src/serve.py"
 check "  apm-setup: __init__.py" "test -f packages/apm-setup/src/__init__.py"
 check "  apm-setup: serve.py" "test -f packages/apm-setup/src/apm_setup/serve.py"
+check "  sdlc-harness: pyproject.toml" "test -f packages/sdlc-harness/pyproject.toml"
+check "  sdlc-harness: __init__.py" "test -f packages/sdlc-harness/src/sdlc_harness/__init__.py"
+check "  sdlc-harness: serve.py" "test -f packages/sdlc-harness/src/sdlc_harness/serve.py"
 
 echo ""
 echo "6. Git Configuration"

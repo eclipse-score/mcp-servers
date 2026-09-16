@@ -25,6 +25,13 @@
       "version": "0.1.0",
       "category": "Productivity",
       "source": "./packages/graphify-codegraph"
+    },
+    {
+      "name": "sdlc-harness",
+      "description": "Traceable SDLC lifecycle, implementation evidence, and Sphinx-needs tooling for AI agents.",
+      "version": "0.1.0",
+      "category": "Productivity",
+      "source": "./packages/sdlc-harness"
     }
   ]
 }

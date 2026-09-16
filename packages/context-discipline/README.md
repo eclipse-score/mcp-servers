@@ -47,7 +47,7 @@ apm install context-discipline --trust-transitive-mcp
 wm.initialize_session(
     goal="Refactor auth module",
     subgoals=["Understand current flow", "Identify dependencies"],
-    assumptions={"Password hashing uses bcrypt": "high", "No 2FA": "low"}
+    assumptions={"Password hashing uses bcrypt": "high", "No 2FA": "low"},
 )
 
 # Agent explores code
@@ -56,7 +56,7 @@ auth_structure = wm.query_graph("Show me auth.py structure")
 # Agent records findings
 wm.record_decision(
     decision="Use existing auth module",
-    reason=["Reduces complexity", "Proven in production"]
+    reason=["Reduces complexity", "Proven in production"],
 )
 
 # At the end: record what worked
@@ -65,7 +65,7 @@ wm.record_outcome(
     verdict="pass",
     coverage=0.85,
     surfaced_nodes=["PasswordHasher", "TokenManager", "User"],
-    missing_nodes=["MFAService", "SessionCache"]
+    missing_nodes=["MFAService", "SessionCache"],
 )
 ```
 
@@ -147,4 +147,4 @@ No changes needed—local optimization is self-contained.
 
 ## License
 
-Apache License 2.0 (SPDX-License-Identifier: Apache-2.0)
+Apache License 2.0

@@ -41,9 +41,9 @@ wm.initialize_session(
         "Identify all auth functions",
         "Map dependencies on sync calls",
         "Implement async versions",
-        "Update call sites"
+        "Update call sites",
     ],
-    assumptions=["auth.py is the only auth module"]
+    assumptions=["auth.py is the only auth module"],
 )
 ```
 
@@ -61,7 +61,10 @@ wm.query_graph("All functions in lib/auth.py")
 wm.initialize_session(
     goal="Track assumptions",
     subgoals=[],
-    assumptions={"auth.py is only auth module": "high", "No external code imports auth": "medium"},
+    assumptions={
+        "auth.py is only auth module": "high",
+        "No external code imports auth": "medium",
+    },
 )
 
 # Before risky decisions, check for unverified ones
@@ -70,7 +73,9 @@ if unverified:
     print(f"WARNING: {len(unverified)} unverified assumptions")
     for a in unverified:
         if a.confidence in ["low", "medium"]:
-            print(f"  - {a.key} (confidence: {a.confidence}) - VERIFY BEFORE PROCEEDING")
+            print(
+                f"  - {a.key} (confidence: {a.confidence}) - VERIFY BEFORE PROCEEDING"
+            )
 ```
 
 ### Record decisions
@@ -82,9 +87,9 @@ wm.record_decision(
     reason=[
         "Minimizes risk of partial refactoring",
         "Only 3 call sites to update",
-        "Can test refactored functions independently"
+        "Can test refactored functions independently",
     ],
-    reversible=True
+    reversible=True,
 )
 ```
 

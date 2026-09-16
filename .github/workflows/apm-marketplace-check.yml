@@ -52,13 +52,16 @@ jobs:
 
       - name: Test remote marketplace MCP servers
         env:
+          MCP_REPO: ${{ github.event.pull_request.head.repo.full_name || github.repository }}
           MCP_REF: ${{ github.event.pull_request.head.sha || github.sha }}
         run: |
           smoke_dir="$(mktemp -d)"
           cd "$smoke_dir"
-          apm marketplace add https://github.com/eclipse-score/mcp-servers \
+          apm marketplace add "https://github.com/${MCP_REPO}" \
             --name eclipse-score-apm-marketplace --ref "$MCP_REF"
           apm install context-discipline@eclipse-score-apm-marketplace \
+            --target vscode --trust-transitive-mcp
+          apm install sdlc-harness@eclipse-score-apm-marketplace \
             --target vscode --trust-transitive-mcp
           python - <<'PY'
           import json
@@ -68,14 +71,15 @@ jobs:
           config_path = Path(".vscode/mcp.json")
           config = json.loads(config_path.read_text(encoding="utf-8"))
           revision = os.environ["MCP_REF"]
+            repository = os.environ["MCP_REPO"]
           for server in config["servers"].values():
               args = server.get("args", [])
               for index, argument in enumerate(args):
-                  if argument.startswith("git+https://github.com/eclipse-score/mcp-servers#"):
+                if argument.startswith("git+https://github.com/") and "#" in argument:
+                  subdirectory = argument.split("#", 1)[1]
                       args[index] = argument.replace(
-                          "git+https://github.com/eclipse-score/mcp-servers#",
-                          f"git+https://github.com/eclipse-score/mcp-servers@{revision}#",
-                          1,
+                    argument,
+                    f"git+https://github.com/{repository}@{revision}#{subdirectory}",
                       )
           config_path.write_text(json.dumps(config, indent=2) + "\n", encoding="utf-8")
           PY

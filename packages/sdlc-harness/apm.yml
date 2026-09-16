@@ -11,25 +11,27 @@
 # SPDX-License-Identifier: Apache-2.0
 # *******************************************************************************
 
-[tool.uv.workspace]
-members = ["libs/score-context", "packages/sdlc-harness"]
-
-[dependency-groups]
-dev = [
-  "pyright>=1.1.411",
-  "pytest>=9.1.1",
-  "ruff>=0.16.5",
-]
-
-[tool.ruff]
-line-length = 88
-target-version = "py312"
-
-[tool.ruff.lint]
-select = ["E", "F", "I", "UP", "B", "SIM"]
-
-[tool.pyright]
-include = ["libs/score-context/src", "libs/score-context/tests"]
-pythonVersion = "3.12"
-typeCheckingMode = "strict"
-reportMissingTypeStubs = false
+name: sdlc-harness
+version: 0.1.0
+description: SDLC lifecycle guidance and implementation evidence for AI agents in Eclipse S-CORE.
+license: Apache-2.0
+targets:
+  - copilot
+  - claude
+  - cursor
+  - codex
+  - gemini
+  - opencode
+dependencies:
+  apm:
+    - path: ../context-discipline
+    - path: ../graphify-codegraph
+  mcp:
+    - name: sdlc-harness
+      registry: false
+      transport: stdio
+      command: uvx
+      args:
+        - --from
+        - git+https://github.com/eclipse-score/mcp-servers#subdirectory=packages/sdlc-harness
+        - sdlc-harness

@@ -83,7 +83,7 @@ When using context-discipline working memory:
 # Session starts with goal
 wm.initialize_session(
     goal="Understand authentication flow",
-    subgoals=["Find auth entry points", "Trace to database"]
+    subgoals=["Find auth entry points", "Trace to database"],
 )
 
 # Query the graph via working memory

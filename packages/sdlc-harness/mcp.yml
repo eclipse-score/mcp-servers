@@ -1,0 +1,134 @@
+# *******************************************************************************
+# Copyright (c) 2026 Contributors to the Eclipse Foundation
+#
+# See the NOTICE file(s) distributed with this work for additional
+# information regarding copyright ownership.
+#
+# This program and the accompanying materials are made available under the
+# terms of the Apache License Version 2.0 which is available at
+# https://www.apache.org/licenses/LICENSE-2.0
+#
+# SPDX-License-Identifier: Apache-2.0
+# *******************************************************************************
+
+name: sdlc-harness
+version: 0.1.0
+description: MCP server for SDLC lifecycle management and sphinx-needs traceability
+entry_point: sdlc_harness.serve
+tools:
+  - name: record_implementation_evidence
+    description: Link a task to requirement IDs, source files, and real test results.
+    input_schema:
+      type: object
+      properties:
+        issue_id: {type: string}
+        task_id: {type: string}
+        requirement_ids: {type: array, items: {type: string}}
+        source_files: {type: array, items: {type: string}}
+        tests: {type: array, items: {type: object}}
+        status: {type: string, enum: [completed, blocked, failed, in_progress]}
+        summary: {type: string}
+        stage_dir: {type: string, default: .stage}
+      required: [issue_id, task_id, requirement_ids, source_files, tests, status, summary]
+  - name: assess_implementation_progress
+    description: Report task completion percentage, source-file links, need links, and test evidence.
+    input_schema:
+      type: object
+      properties:
+        issue_id: {type: string}
+        stage_dir: {type: string, default: .stage}
+      required: [issue_id]
+  - name: write_sphinx_progress_report
+    description: Write an RST progress report with a task table and sphinx-needs needflow.
+    input_schema:
+      type: object
+      properties:
+        issue_id: {type: string}
+        report_path: {type: string}
+        stage_dir: {type: string, default: .stage}
+      required: [issue_id, report_path]
+  - name: assess_sdlc_issue
+    description: Assess SDLC drafts for missing analysis, evidence, plans, and tasks.
+    input_schema:
+      type: object
+      properties:
+        issue_id:
+          type: string
+        stage_dir:
+          type: string
+          default: .stage
+      required: [issue_id]
+  - name: bootstrap_sdlc_issue
+    description: Create a complete review-marked SDLC draft from one requirement.
+    input_schema:
+      type: object
+      properties:
+        issue_id:
+          type: string
+        title:
+          type: string
+        requirement:
+          type: string
+        stage_dir:
+          type: string
+          default: .stage
+      required: [issue_id, title, requirement]
+  - name: trace_need
+    description: Return a sphinx-needs trace chain, including linked needs and reverse references.
+    input_schema:
+      type: object
+      properties:
+        need_id:
+          type: string
+        needs_json_path:
+          type: string
+      required: [need_id, needs_json_path]
+  - name: write_stage_artifact
+    description: Write a numbered requirement, specification, architecture, plan, or task artifact.
+    input_schema:
+      type: object
+      properties:
+        issue_id:
+          type: string
+        artifact_type:
+          type: string
+          enum: [requirement, specification, architecture, plan, task]
+        title:
+          type: string
+        content:
+          type: string
+        links:
+          type: object
+        stage_dir:
+          type: string
+      required: [issue_id, artifact_type, title, content]
+  - name: record_loopback
+    description: Record a discovered specification gap and mark its artifact for review.
+    input_schema:
+      type: object
+      properties:
+        issue_id:
+          type: string
+        trigger:
+          type: string
+        stage_returned_to:
+          type: string
+          enum: [requirement, specification, architecture, plan, task]
+        affected_artifact:
+          type: string
+        stage_dir:
+          type: string
+      required: [issue_id, trigger, stage_returned_to, affected_artifact]
+  - name: check_stage_completeness
+    description: Check whether an issue has the prerequisite artifacts for an SDLC stage.
+    input_schema:
+      type: object
+      properties:
+        issue_id:
+          type: string
+        stage:
+          type: string
+          enum: [specification, architecture, plan, implementation, review]
+        stage_dir:
+          type: string
+      required: [issue_id, stage]
