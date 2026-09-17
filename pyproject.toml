@@ -37,6 +37,7 @@ include = [
   "packages/context-discipline/src/context_overlay.py",
   "packages/context-discipline/src/context_policy.py",
   "packages/context-discipline/src/context_sessions.py",
+  "packages/context-discipline/src/context_discipline_mcp.py",
   "packages/context-discipline/tests",
 ]
 pythonVersion = "3.12"

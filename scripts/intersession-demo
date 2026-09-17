@@ -95,9 +95,11 @@ with TemporaryDirectory() as directory:
         set(B_CANDIDATE_NODES),
         now=datetime(2026, 1, 2, tzinfo=UTC),
     )
-    if not prior:
+    if not prior.items:
         raise RuntimeError("demo expected prior context but none was surfaced")
-    covered = {node_id for item in prior for node_id in item.grounded_nodes}
+    covered = {
+        node_id for item in prior.items for node_id in item.grounded_nodes
+    }
     b_grounded_with = set(B_CANDIDATE_NODES) - covered
     r_with = redundancy(A_NODES, b_grounded_with)
 
@@ -113,7 +115,7 @@ with TemporaryDirectory() as directory:
     )
     print(
         "  with prior context:    "
-        f"{len(prior)} prior item surfaced, covering node__api, node__service"
+        f"{len(prior.items)} prior item surfaced, covering node__api, node__service"
     )
     print(
         "                         B grounds "

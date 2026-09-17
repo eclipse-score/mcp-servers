@@ -57,7 +57,7 @@ class WorkingMemoryEntry:
     timestamp: str
     type: str  # "goal", "assumption", "finding", "decision", "outcome"
     content: str
-    metadata: dict = None
+    metadata: dict[str, Any] | None = None
 
     def __post_init__(self):
         if self.metadata is None:
@@ -75,7 +75,7 @@ class LocalObservation:
     path_length: int
     surfaced_nodes: list[str]
     missing_nodes: list[str]
-    timestamp: str = None
+    timestamp: str | None = None
 
     def __post_init__(self):
         if self.timestamp is None:
@@ -208,7 +208,7 @@ class ContextDisciplineMCP:
         self._agent_salt = agent_salt(self.local_store)
 
         self.session_id = f"session__{uuid4().hex[:8]}"
-        self.working_memory = []
+        self.working_memory: list[WorkingMemoryEntry] = []
         self.observations_path = self.local_store / "observations.jsonl"
         self.session_log = SessionLog(self.repo_path, local_store)
         self.overlay_store = OverlayStore(self.repo_path)
@@ -282,7 +282,7 @@ class ContextDisciplineMCP:
                             metadata={"confidence": "unknown"},
                         )
                     )
-            elif isinstance(assumptions, dict):
+            else:
                 # Handle dict of assumption -> confidence
                 for assumption, confidence in assumptions.items():
                     self.working_memory.append(
@@ -473,7 +473,8 @@ class ContextDisciplineMCP:
         assumptions = [
             entry.content
             for entry in self.working_memory
-            if entry.type == "assumption" and entry.metadata.get("confidence") != "high"
+            if entry.type == "assumption"
+            and (entry.metadata or {}).get("confidence") != "high"
         ]
         return assumptions
 
@@ -558,7 +559,7 @@ class ContextDisciplineMCP:
         return {"node": asdict(node), "edge": asdict(edge)}
 
 
-TOOLS = [
+TOOLS: list[dict[str, Any]] = [
     {
         "name": "initialize_session",
         "description": "Initialize working memory for a coding session.",
@@ -826,7 +827,7 @@ def handle(manager: ContextDisciplineMCP, request: dict[str, Any]) -> str | None
     request_id = request.get("id")
     method = request.get("method")
     if method == "initialize":
-        result = {
+        result: dict[str, Any] = {
             "protocolVersion": "2024-11-05",
             "capabilities": {"tools": {}},
             "serverInfo": {"name": "context-discipline", "version": "0.1.0"},
