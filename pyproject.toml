@@ -16,9 +16,9 @@ members = ["libs/score-context"]
 
 [dependency-groups]
 dev = [
-  "pyright>=1.1.411",
+  "pyright>=1.1.414",
   "pytest>=9.1.1",
-  "ruff>=0.16.5",
+  "ruff>=0.16.7",
 ]
 
 [tool.ruff]
