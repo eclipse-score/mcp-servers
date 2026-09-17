@@ -23,6 +23,7 @@ from context_discipline_mcp import (
     TaskRecord,
     call_tool,
     expand_focus,
+    handle,
 )
 from context_merge import MergedGraph
 from context_overlay import OverlayNode, OverlayStore, Provenance
@@ -256,6 +257,45 @@ def test_initialize_session_reports_missing_graph_setup(tmp_path: Path) -> None:
         "graph_path": str(tmp_path / "graphify-out" / "graph.json"),
         "next": "Call setup_graphify with install_graphify=true.",
     }
+
+
+def test_resolve_requirements_is_listed_and_dispatches(
+    tmp_path: Path,
+) -> None:
+    requirements_path = tmp_path / ".score-local" / "requirements_graph.json"
+    requirements_path.parent.mkdir()
+    requirements_path.write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "source": {"repo": "example", "commit": "abc"},
+                "nodes": [
+                    {
+                        "id": "comp_req__x",
+                        "type": "comp_req",
+                        "title": "Requirement X",
+                        "attributes": {},
+                    }
+                ],
+                "edges": [],
+            }
+        ),
+        encoding="utf-8",
+    )
+    manager = ContextDisciplineMCP(str(tmp_path))
+
+    listed = json.loads(handle(manager, {"id": 1, "method": "tools/list"}) or "")
+    listed_names = [tool["name"] for tool in listed["result"]["tools"]]
+    dispatched = call_tool(
+        manager,
+        "resolve_requirements",
+        {"requirement_ids": ["comp_req__x"]},
+    )
+
+    assert "resolve_requirements" in listed_names
+    assert dispatched["loaded"] is True
+    assert dispatched["results"][0]["known"] is True
+    assert dispatched["results"][0]["id"] == "comp_req__x"
 
 
 def test_initialize_session_reports_existing_graph_setup(tmp_path: Path) -> None:

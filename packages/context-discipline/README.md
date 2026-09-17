@@ -26,6 +26,7 @@ Provides an MCP server with these tools:
 |------|----------|
 | `initialize_session` | Start with goal, subgoals, assumptions |
 | `query_graph` | Ask the merged code, domain, and collaboration graph |
+| `resolve_requirements` | Check requirement IDs against the local projected requirements graph |
 | `record_decision` | Track a decision + reasoning |
 | `record_outcome` | Record pass/fail + coverage for learning |
 | `get_working_memory` | View all session entries |
@@ -124,6 +125,33 @@ wm.record_outcome(
 `rationale`. A failure is direct counter-evidence and needs no volume. A pass
 is only weak evidence for a different task, so the default `outcome_reward = 0`
 avoids amplifying early accidents into apparent structure in a small corpus.
+
+### Resolve requirement IDs
+
+Use `resolve_requirements` before copying a Sphinx-Needs requirement ID into an
+artefact. The tool reports whether each ID is known and, when requested, returns
+typed incoming and outgoing links without inventing nodes or titles:
+
+```text
+resolve_requirements(
+  requirement_ids=["comp_req__x[version==1]", "comp_req__typo"],
+  include_links=True,
+)
+```
+
+The projector creates the local, git-ignored artefact used by this tool:
+
+```bash
+python -m requirements_projection \
+  --needs bazel-bin/needs.json \
+  --out .score-local/requirements_graph.json \
+  --repo . \
+  --source-ref <commit>
+```
+
+`.score-local/requirements_graph.json` is local build output and is intentionally
+not committed. If it is unavailable, the tool reports that the graph is
+unavailable rather than treating an ID as nonexistent.
 
 ### View Results
 

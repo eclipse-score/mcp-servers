@@ -57,6 +57,23 @@ tools:
       required:
         - query
 
+  - name: resolve_requirements
+    description: Resolve Sphinx-Needs requirement IDs against the locally projected requirements graph; reports whether each ID exists and returns typed links. Never invents IDs; reports explicitly when no projected graph is available.
+    input_schema:
+      type: object
+      properties:
+        requirement_ids:
+          type: array
+          items:
+            type: string
+          description: Requirement IDs to resolve
+        include_links:
+          type: boolean
+          default: true
+          description: Include typed incoming and outgoing links
+      required:
+        - requirement_ids
+
   - name: record_decision
     description: Record a decision with reasoning; grounded nodes may be repo-relative source paths or canonical graph node IDs, and paths are resolved against the graph
     input_schema:

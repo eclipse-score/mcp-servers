@@ -150,6 +150,11 @@ Don't commit working memory:
 
 These are ephemeral scaffolding for your reasoning, not deliverables.
 
+Before writing a requirement ID into any artefact, resolve it with the
+`resolve_requirements` tool. A result with `known: false` and
+`reason: "not_found"` means the ID does not exist and must not be used;
+`requirements_graph_unavailable` means the ID is unverified, not invalid.
+
 ## Key Principles
 
 1. **Explicit initialization** — Know your goal before exploring
