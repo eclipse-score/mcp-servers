@@ -8,7 +8,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
-from refresh_process_graph import main, type_deltas
+from refresh_process_graph import _SOURCE_FILE_HEADER, main, type_deltas
 
 FIXTURE = Path(__file__).parent / "data" / "process_needs_min.json"
 SOURCE_COMMIT = "531b538c89849af3807cfaf77a96a49a3225818a"
@@ -64,10 +64,7 @@ def test_refresh_rewrites_source_metadata_without_machine_paths(
     source = (
         tmp_path / "packages" / "metamodel-flow" / "model" / "process_source.txt"
     ).read_text(encoding="utf-8")
-    assert source.startswith(
-        "# " + "SPDX" + "-License-Identifier: " + "Apache" + "-2.0\n"
-        "# Copyright (c) 2026 Contributors to the Eclipse Foundation\n"
-    )
+    assert source.startswith(_SOURCE_FILE_HEADER)
     assert source.endswith("\n")
     assert "/home/ubuntu" not in source
     assert [
@@ -90,10 +87,50 @@ def test_refresh_is_byte_deterministic(
         tmp_path / "packages" / "metamodel-flow" / "model" / "process_graph.json"
     )
     first = artifact_path.read_bytes()
+    source_path = (
+        tmp_path / "packages" / "metamodel-flow" / "model" / "process_source.txt"
+    )
+    first_source = source_path.read_bytes()
     capsys.readouterr()
 
     assert main([*args]) == 0
     second = artifact_path.read_bytes()
+    second_source = source_path.read_bytes()
+    summary = capsys.readouterr().out
 
     assert first == second
+    assert first_source == second_source
+    assert "artefact is already current" in summary
+
+
+def test_refresh_rewrites_changed_source_commit(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    summary_path = tmp_path / "summary.md"
+    first_args = _refresh_args(tmp_path, summary_path)
+
+    assert main([*first_args]) == 0
+    artifact_path = (
+        tmp_path / "packages" / "metamodel-flow" / "model" / "process_graph.json"
+    )
+    source_path = (
+        tmp_path / "packages" / "metamodel-flow" / "model" / "process_source.txt"
+    )
+    first_artifact = artifact_path.read_bytes()
+    first_source = source_path.read_bytes()
     capsys.readouterr()
+
+    second_args = [
+        *first_args[:3],
+        "different-upstream-commit",
+        *first_args[4:],
+    ]
+    assert main(second_args) == 0
+    summary = capsys.readouterr().out
+
+    assert artifact_path.read_bytes() != first_artifact
+    assert source_path.read_bytes() != first_source
+    assert (
+        "Source commit: `531b538c89849af3807cfaf77a96a49a3225818a` "
+        "→ `different-upstream-commit`"
+    ) in summary

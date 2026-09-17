@@ -254,13 +254,12 @@ def build_overlay(
     )
 
 
-def write_artifact(
+def build_artifact(
     needs: Path,
-    out: Path,
     source_commit: str,
     observed_at: str,
-) -> AdapterReport:
-    """Write a deterministic process projection artefact."""
+) -> tuple[dict[str, Any], AdapterReport]:
+    """Build a deterministic process projection artefact payload."""
     nodes, edges, report = build_overlay(
         needs,
         repo="eclipse-score/process_description",
@@ -293,8 +292,25 @@ def write_artifact(
             for edge in edges
         ],
     }
+
+    return payload, report
+
+
+def write_artifact_payload(payload: dict[str, Any], out: Path) -> None:
+    """Write a process projection artefact payload."""
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+
+
+def write_artifact(
+    needs: Path,
+    out: Path,
+    source_commit: str,
+    observed_at: str,
+) -> AdapterReport:
+    """Write a deterministic process projection artefact."""
+    payload, report = build_artifact(needs, source_commit, observed_at)
+    write_artifact_payload(payload, out)
     return report
 
 

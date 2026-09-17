@@ -13,13 +13,19 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import cast
 
-from process_projection import AdapterReport, write_artifact
+from process_projection import (
+    AdapterReport,
+    build_artifact,
+    write_artifact_payload,
+)
 
 _SOURCE_REPO_URL = "https://github.com/eclipse-score/process_description.git"
-_SPDX_LINE = "# " + "SPDX" + "-License-Identifier: " + "Apache" + "-2.0"
+# REUSE-IgnoreStart
 _SOURCE_FILE_HEADER = (
-    _SPDX_LINE + "\n# Copyright (c) 2026 Contributors to the Eclipse Foundation\n"
+    "# SPDX-License-Identifier: Apache-2.0\n"
+    "# Copyright (c) 2026 Contributors to the Eclipse Foundation\n"
 )
+# REUSE-IgnoreEnd
 
 
 @dataclass(frozen=True)
@@ -45,11 +51,7 @@ def _empty_stats() -> ArtifactStats:
     return ArtifactStats(commit="", node_counts={}, nodes=0, edges=0)
 
 
-def _read_stats(path: Path) -> ArtifactStats | None:
-    try:
-        payload = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, TypeError, ValueError):
-        return None
+def _stats_from_payload(payload: object) -> ArtifactStats | None:
     if not isinstance(payload, dict):
         return None
     typed_payload = cast(dict[str, object], payload)
@@ -85,6 +87,30 @@ def _read_stats(path: Path) -> ArtifactStats | None:
     )
 
 
+def _read_artifact(
+    path: Path,
+) -> tuple[dict[str, object], ArtifactStats] | None:
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, TypeError, ValueError):
+        return None
+    stats = _stats_from_payload(payload)
+    if not isinstance(payload, dict) or stats is None:
+        return None
+    return cast(dict[str, object], payload), stats
+
+
+def _without_generated_at(payload: Mapping[str, object]) -> dict[str, object]:
+    normalized = dict(payload)
+    source = payload.get("source")
+    if isinstance(source, dict):
+        typed_source = cast(dict[str, object], source)
+        normalized["source"] = {
+            key: value for key, value in typed_source.items() if key != "generated_at"
+        }
+    return normalized
+
+
 def _source_text(source_commit: str) -> str:
     return (
         _SOURCE_FILE_HEADER
@@ -103,6 +129,7 @@ def _summary(
     new: ArtifactStats,
     report: AdapterReport,
     source_commit: str,
+    current: bool,
 ) -> str:
     deltas = type_deltas(old.node_counts, new.node_counts)
     lines = [
@@ -128,6 +155,12 @@ def _summary(
             f"skipped_links={report.skipped_links}",
             "- The artefact is generated and reviewed via this summary, "
             "not by reading the JSON.",
+            (
+                "- The artefact is already current; both model files were "
+                "left untouched."
+                if current
+                else "- The artefact was refreshed from the upstream projection."
+            ),
             "",
         ]
     )
@@ -146,13 +179,20 @@ def refresh(
     model_dir = repo_root / "packages" / "metamodel-flow" / "model"
     artifact_path = model_dir / "process_graph.json"
     source_path = model_dir / "process_source.txt"
-    old = _read_stats(artifact_path) or _empty_stats()
-    report = write_artifact(needs, artifact_path, source_commit, observed_at)
-    new = _read_stats(artifact_path)
+    existing = _read_artifact(artifact_path)
+    old = existing[1] if existing is not None else _empty_stats()
+    existing_payload = existing[0] if existing is not None else None
+    payload, report = build_artifact(needs, source_commit, observed_at)
+    new = _stats_from_payload(payload)
     if new is None:
         raise ValueError("generated process graph artefact could not be parsed")
-    source_path.write_text(_source_text(source_commit), encoding="utf-8")
-    summary = _summary(old, new, report, source_commit)
+    current = existing_payload is not None and _without_generated_at(
+        existing_payload
+    ) == _without_generated_at(payload)
+    if not current:
+        write_artifact_payload(payload, artifact_path)
+        source_path.write_text(_source_text(source_commit), encoding="utf-8")
+    summary = _summary(old, new, report, source_commit, current)
     if summary_out is not None:
         summary_out.parent.mkdir(parents=True, exist_ok=True)
         summary_out.write_text(summary, encoding="utf-8")

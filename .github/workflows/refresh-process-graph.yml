@@ -111,8 +111,9 @@ jobs:
           pr_number="$(gh pr list \
             --head bot/process-graph-refresh \
             --base "$GITHUB_REF_NAME" \
+            --state open \
             --json number \
-            --jq '.[0].number')"
+            --jq '.[0].number // empty')"
           if [ -n "$pr_number" ]; then
             gh pr edit "$pr_number" \
               --title "Refresh process graph from $UPSTREAM_SHA" \
