@@ -1,0 +1,126 @@
+# *******************************************************************************
+# Copyright (c) 2026 Contributors to the Eclipse Foundation
+#
+# See the NOTICE file(s) distributed with this work for additional
+# information regarding copyright ownership.
+#
+# This program and the accompanying materials are made available under the
+# terms of the Apache License Version 2.0 which is available at
+# https://www.apache.org/licenses/LICENSE-2.0
+#
+# SPDX-License-Identifier: Apache-2.0
+# *******************************************************************************
+
+name: Refresh process graph
+
+on:
+  schedule:
+    - cron: "0 4 * * 1"
+  workflow_dispatch:
+    inputs:
+      source_ref:
+        description: Upstream process_description ref
+        required: false
+        default: main
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: refresh-process-graph-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.ref_name }}
+          fetch-depth: 0
+
+      - name: Check out upstream process description
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: eclipse-score/process_description
+          ref: ${{ inputs.source_ref || 'main' }}
+          path: upstream
+          fetch-depth: 0
+
+      - name: Resolve upstream commit
+        run: echo "UPSTREAM_SHA=$(git -C upstream rev-parse HEAD)" >> "$GITHUB_ENV"
+
+      - name: Build upstream needs artefact
+        working-directory: upstream
+        run: bazel build //:needs_json
+
+      - name: Locate upstream needs artefact
+        run: |
+          needs_path="upstream/bazel-bin/needs_json/_build/needs/needs.json"
+          if [ ! -f "$needs_path" ]; then
+            echo "upstream needs artefact not found: $needs_path" >&2
+            exit 1
+          fi
+          echo "NEEDS_PATH=$needs_path" >> "$GITHUB_ENV"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
+        with:
+          enable-cache: true
+
+      - name: Sync workspace
+        run: uv sync
+
+      - name: Refresh process graph
+        run: |
+          uv run python packages/metamodel-flow/src/refresh_process_graph.py \
+            --needs "$NEEDS_PATH" \
+            --source-commit "$UPSTREAM_SHA" \
+            --repo-root "$GITHUB_WORKSPACE" \
+            --observed-at "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            --summary-out "$RUNNER_TEMP/summary.md"
+
+      - name: Check for process graph changes
+        id: changes
+        run: |
+          if git diff --quiet -- packages/metamodel-flow/model; then
+            echo "process graph already current"
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Commit and push refresh branch
+        if: steps.changes.outputs.changed == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -C bot/process-graph-refresh "$GITHUB_SHA"
+          git add packages/metamodel-flow/model
+          git commit -s -m "refresh process graph from $UPSTREAM_SHA"
+          git push --force-with-lease origin HEAD:bot/process-graph-refresh
+
+      - name: Create or update refresh pull request
+        if: steps.changes.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          pr_number="$(gh pr list \
+            --head bot/process-graph-refresh \
+            --base "$GITHUB_REF_NAME" \
+            --json number \
+            --jq '.[0].number')"
+          if [ -n "$pr_number" ]; then
+            gh pr edit "$pr_number" \
+              --title "Refresh process graph from $UPSTREAM_SHA" \
+              --body-file "$RUNNER_TEMP/summary.md"
+          else
+            gh pr create \
+              --base "$GITHUB_REF_NAME" \
+              --head bot/process-graph-refresh \
+              --title "Refresh process graph from $UPSTREAM_SHA" \
+              --body-file "$RUNNER_TEMP/summary.md"
+          fi
