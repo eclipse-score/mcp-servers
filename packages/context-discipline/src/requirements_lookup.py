@@ -71,9 +71,8 @@ class RequirementsIndex:
         source = cast(dict[object, object], source_value)
         typed_source: dict[str, str] = {}
         for key, value in source.items():
-            if not isinstance(key, str) or not isinstance(value, str):
-                return cls._empty(path)
-            typed_source[key] = value
+            if isinstance(key, str) and isinstance(value, str):
+                typed_source[key] = value
 
         nodes: dict[str, RequirementEntry] = {}
         typed_nodes = cast(list[object], nodes_value)

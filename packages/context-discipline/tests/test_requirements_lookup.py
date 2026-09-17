@@ -202,6 +202,24 @@ def test_known_id_returns_sorted_typed_links(tmp_path: Path) -> None:
     ]
 
 
+def test_non_string_source_metadata_is_ignored(tmp_path: Path) -> None:
+    path = tmp_path / "requirements.json"
+    payload = _payload()
+    source = cast(dict[str, object], payload["source"])
+    source["invalid"] = 42
+    _write_graph(path, payload)
+
+    index = RequirementsIndex.load(tmp_path, str(path))
+
+    assert index.loaded is True
+    assert index.source == {
+        "repo": "eclipse-score/example",
+        "commit": "abc123",
+        "digest": "sha256:digest",
+        "generated_at": "2026-01-01T00:00:00+00:00",
+    }
+
+
 def test_version_pins_and_duplicates_keep_first_request(tmp_path: Path) -> None:
     path = tmp_path / "requirements.json"
     _write_graph(path)

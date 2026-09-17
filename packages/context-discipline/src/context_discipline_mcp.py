@@ -27,7 +27,6 @@ from pathlib import Path
 from typing import Any
 from uuid import uuid4
 
-import requirements_lookup
 from context_attention import (
     PriorContext,
     RejectedCandidate,
@@ -49,7 +48,7 @@ from context_sessions import (
     agent_salt,
     pseudonymize_agent,
 )
-from requirements_lookup import RequirementsIndex
+from requirements_lookup import RequirementsIndex, resolve_requirements
 
 
 @dataclass
@@ -375,11 +374,7 @@ class ContextDisciplineMCP:
     ) -> dict[str, Any]:
         """Resolve requirement IDs against the local projected requirements graph."""
         index = RequirementsIndex.load(self.repo_path)
-        return requirements_lookup.resolve_requirements(
-            index,
-            requirement_ids,
-            include_links,
-        )
+        return resolve_requirements(index, requirement_ids, include_links)
 
     def record_decision(
         self,
