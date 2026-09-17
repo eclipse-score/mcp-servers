@@ -3,4 +3,4 @@
 
 source_repo_url=https://github.com/eclipse-score/process_description.git
 source_commit=531b538c89849af3807cfaf77a96a49a3225818a
-generator_command=python -m process_projection --needs /home/ubuntu/work/pd/bazel-bin/needs_json/_build/needs/needs.json --out packages/metamodel-flow/model/process_graph.json --source-commit 531b538c89849af3807cfaf77a96a49a3225818a --observed-at 2026-09-14T16:14:00+00:00
+generator_command=python packages/metamodel-flow/src/refresh_process_graph.py --needs <needs.json from 'bazel build //:needs_json' in process_description> --source-commit 531b538c89849af3807cfaf77a96a49a3225818a

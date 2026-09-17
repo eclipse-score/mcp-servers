@@ -254,6 +254,50 @@ def build_overlay(
     )
 
 
+def write_artifact(
+    needs: Path,
+    out: Path,
+    source_commit: str,
+    observed_at: str,
+) -> AdapterReport:
+    """Write a deterministic process projection artefact."""
+    nodes, edges, report = build_overlay(
+        needs,
+        repo="eclipse-score/process_description",
+        observed_at=observed_at,
+    )
+    digest = hashlib.sha256(needs.read_bytes()).hexdigest()
+    payload = {
+        "schema_version": 1,
+        "source": {
+            "repo": "eclipse-score/process_description",
+            "commit": source_commit,
+            "digest": f"sha256:{digest}",
+            "generated_at": observed_at,
+        },
+        "nodes": [
+            {
+                "id": node.id,
+                "type": node.type,
+                "title": node.title,
+                "attributes": node.attributes,
+            }
+            for node in nodes
+        ],
+        "edges": [
+            {
+                "source": edge.source,
+                "relation": edge.relation,
+                "target": edge.target,
+            }
+            for edge in edges
+        ],
+    }
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+    return report
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--needs", type=Path, required=True)
@@ -262,40 +306,12 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--observed-at", default=datetime.now(UTC).isoformat())
     args = parser.parse_args(argv)
     try:
-        nodes, edges, report = build_overlay(
+        report = write_artifact(
             args.needs,
-            repo="eclipse-score/process_description",
-            observed_at=args.observed_at,
+            args.out,
+            args.source_commit,
+            args.observed_at,
         )
-        digest = hashlib.sha256(args.needs.read_bytes()).hexdigest()
-        payload = {
-            "schema_version": 1,
-            "source": {
-                "repo": "eclipse-score/process_description",
-                "commit": args.source_commit,
-                "digest": f"sha256:{digest}",
-                "generated_at": args.observed_at,
-            },
-            "nodes": [
-                {
-                    "id": node.id,
-                    "type": node.type,
-                    "title": node.title,
-                    "attributes": node.attributes,
-                }
-                for node in nodes
-            ],
-            "edges": [
-                {
-                    "source": edge.source,
-                    "relation": edge.relation,
-                    "target": edge.target,
-                }
-                for edge in edges
-            ],
-        }
-        args.out.parent.mkdir(parents=True, exist_ok=True)
-        args.out.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
     except (OSError, ValueError) as exc:
         parser.error(str(exc))
     print(

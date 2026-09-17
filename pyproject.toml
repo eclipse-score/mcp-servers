@@ -39,6 +39,7 @@ include = [
   "packages/context-discipline/src/context_sessions.py",
   "packages/context-discipline/src/requirements_projection.py",
   "packages/context-discipline/tests",
+  "packages/metamodel-flow/src/refresh_process_graph.py",
 ]
 pythonVersion = "3.12"
 typeCheckingMode = "strict"

@@ -11,7 +11,7 @@ from pathlib import Path
 
 import process_projection as adapter
 import pytest
-from process_projection import build_overlay, strip_version
+from process_projection import build_overlay, strip_version, write_artifact
 
 FIXTURE = Path(__file__).parent / "data" / "process_needs_min.json"
 OBSERVED_AT = "2026-07-22T00:00:00+00:00"
@@ -94,6 +94,16 @@ def test_main_writes_deterministic_golden_projection(tmp_path: Path) -> None:
         "title": "A development requirement",
         "attributes": {"status": "approved", "tags": "process,requirement"},
     }
+
+
+def test_write_artifact_returns_projection_report(tmp_path: Path) -> None:
+    output = tmp_path / "process_graph.json"
+
+    report = write_artifact(FIXTURE, output, "abc123", OBSERVED_AT)
+
+    assert report.nodes == 8
+    assert report.edges == 10
+    assert output.exists()
 
 
 @pytest.mark.parametrize(
