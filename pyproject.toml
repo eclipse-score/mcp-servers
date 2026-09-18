@@ -16,9 +16,9 @@ members = ["libs/score-context"]
 
 [dependency-groups]
 dev = [
-  "pyright>=1.1.411",
+  "pyright>=1.1.414",
   "pytest>=9.1.1",
-  "ruff>=0.16.5",
+  "ruff>=0.16.7",
 ]
 
 [tool.ruff]
@@ -29,7 +29,18 @@ target-version = "py312"
 select = ["E", "F", "I", "UP", "B", "SIM"]
 
 [tool.pyright]
-include = ["libs/score-context/src", "libs/score-context/tests"]
+include = [
+  "libs/score-context/src",
+  "libs/score-context/tests",
+  "packages/context-discipline/src/context_attention.py",
+  "packages/context-discipline/src/context_merge.py",
+  "packages/context-discipline/src/context_overlay.py",
+  "packages/context-discipline/src/context_policy.py",
+  "packages/context-discipline/src/context_sessions.py",
+  "packages/context-discipline/src/context_discipline_mcp.py",
+  "packages/context-discipline/tests",
+]
 pythonVersion = "3.12"
 typeCheckingMode = "strict"
 reportMissingTypeStubs = false
+extraPaths = ["packages/context-discipline/src"]
