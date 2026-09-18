@@ -48,6 +48,7 @@ from context_sessions import (
     agent_salt,
     pseudonymize_agent,
 )
+from requirements_lookup import RequirementsIndex, resolve_requirements
 
 
 @dataclass
@@ -366,6 +367,15 @@ class ContextDisciplineMCP:
         )
         return result
 
+    def resolve_requirements(
+        self,
+        requirement_ids: list[str],
+        include_links: bool = True,
+    ) -> dict[str, Any]:
+        """Resolve requirement IDs against the local projected requirements graph."""
+        index = RequirementsIndex.load(self.repo_path)
+        return resolve_requirements(index, requirement_ids, include_links)
+
     def record_decision(
         self,
         decision: str,
@@ -605,6 +615,49 @@ TOOLS: list[dict[str, Any]] = [
         },
     },
     {
+        "name": "resolve_requirements",
+        "description": (
+            "Resolve Sphinx-Needs requirement IDs against the locally projected "
+            "requirements graph; reports whether each ID exists and returns its "
+            "typed links. Never invents IDs; reports explicitly when no projected "
+            "graph is available."
+        ),
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "requirement_ids": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "description": "Requirement IDs to resolve.",
+                },
+                "include_links": {
+                    "type": "boolean",
+                    "default": True,
+                    "description": "Include typed incoming and outgoing links.",
+                },
+            },
+            "required": ["requirement_ids"],
+        },
+        "outputSchema": {
+            "type": "object",
+            "properties": {
+                "loaded": {"type": "boolean"},
+                "graph_path": {"type": "string"},
+                "source": {"type": "object"},
+                "results": {
+                    "type": "array",
+                    "items": {"type": "object"},
+                },
+                "unknown": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                },
+                "next": {"type": "string"},
+            },
+            "required": ["loaded", "graph_path", "source", "results", "unknown"],
+        },
+    },
+    {
         "name": "record_decision",
         "description": (
             "Record a decision and its reasons. Grounded nodes may be "
@@ -799,6 +852,8 @@ def call_tool(
         return manager.initialize_session(**arguments)
     if name == "query_graph":
         return manager.query_graph(**arguments)
+    if name == "resolve_requirements":
+        return manager.resolve_requirements(**arguments)
     if name == "record_decision":
         return manager.record_decision(**arguments)
     if name == "record_outcome":
