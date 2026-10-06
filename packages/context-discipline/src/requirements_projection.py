@@ -72,7 +72,7 @@ def is_safe_node_id(value: str) -> bool:
     return _SAFE_NODE_ID.fullmatch(value) is not None
 
 
-def _load_input(path: Path) -> tuple[Mapping[str, Any], str]:
+def _load_input(path: Path) -> tuple[Mapping[str, Any], dict[str, Any], str]:
     raw = path.read_bytes()
     try:
         document = json.loads(raw)
@@ -95,7 +95,7 @@ def _load_input(path: Path) -> tuple[Mapping[str, Any], str]:
     if not isinstance(needs, dict):
         raise ValueError("selected needs JSON version field 'needs' must be an object")
     needs = cast(dict[str, Any], needs)
-    return document, hashlib.sha256(raw).hexdigest()
+    return document, needs, hashlib.sha256(raw).hexdigest()
 
 
 def _title(value: Any, limit: int) -> str:
@@ -148,10 +148,7 @@ def build_requirements(
     tuple[RequirementNode, ...], tuple[RequirementEdge, ...], AdapterReport, str
 ]:
     """Build a deterministic requirements projection from needs JSON."""
-    document, digest = _load_input(needs_json_path)
-    versions = document["versions"]
-    version = next(iter(versions.values()))
-    needs = version["needs"]
+    document, needs, digest = _load_input(needs_json_path)
 
     skipped_needs = 0
     ignored_types = 0
