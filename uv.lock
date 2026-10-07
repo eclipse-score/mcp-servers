@@ -5,6 +5,7 @@ requires-python = ">=3.12"
 [manifest]
 members = [
     "score-context",
+    "score-sdlc-harness",
 ]
 
 [manifest.dependency-groups]
@@ -231,6 +232,11 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [{ name = "pydantic", specifier = ">=2" }]
+
+[[package]]
+name = "score-sdlc-harness"
+version = "0.1.0"
+source = { editable = "packages/sdlc-harness" }
 
 [[package]]
 name = "typing-extensions"

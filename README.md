@@ -4,12 +4,13 @@ Local-only agent packages for code understanding, working memory...
 
 ## What You Get
 
-Two ready-to-use packages for your AI agent:
+Ready-to-use packages for your AI agent:
 
 | Package | What It Does |
 |---------|---|
 | **graphify-codegraph** | Query code structure (what classes/functions exist, how they're connected) |
 | **context-discipline** | Working memory + outcome recording (agent tracks decisions and learns from past work) |
+| **sdlc-harness** | Traceable SDLC lifecycle, task evidence, and loopback logging |
 
 **Local only:** Everything runs in your project. Observations stored in `.score-local/` (not committed).
 
@@ -130,6 +131,21 @@ Working memory system + local learning.
 - `get_unverified_assumptions()` — Check uncertain assumptions
 
 See [packages/context-discipline/README.md](packages/context-discipline/README.md) for details.
+
+### sdlc-harness
+
+Traceable SDLC lifecycle, task evidence, and loopback logging for AI agents.
+
+**MCP tools:**
+- `bootstrap_sdlc_issue()` - Initialize structured stage artifacts from a requirement
+- `write_stage_artifact()` - Write numbered requirement, specification, architecture, plan, or task
+- `assess_sdlc_issue()` - Assess stage artifacts for completeness and evidence
+- `check_stage_completeness()` - Verify prerequisite artifacts for a stage
+- `record_implementation_evidence()` - Record task test outcomes and status
+- `assess_implementation_progress()` - Report task completion and evidence summary
+- `record_loopback()` - Record discovered gaps and mark affected artifacts for review
+
+See [packages/sdlc-harness/README.md](packages/sdlc-harness/README.md) for details.
 
 ---
 

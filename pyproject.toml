@@ -12,7 +12,7 @@
 # *******************************************************************************
 
 [tool.uv.workspace]
-members = ["libs/score-context"]
+members = ["libs/score-context", "packages/sdlc-harness"]
 
 [dependency-groups]
 dev = [
