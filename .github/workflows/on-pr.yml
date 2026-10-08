@@ -25,7 +25,7 @@ permissions:
 jobs:
   score-pr-checks:
     name: S-CORE PR checks
-    uses: eclipse-score/cicd-workflows/.github/workflows/on-pr.yml@d2083d5dac0e309643d9f495e61342dfbaf07ed5
+    uses: eclipse-score/cicd-workflows/.github/workflows/on-pr.yml@b8c78474a9177cabd2becbad431ff78c63ed5e8c
 
   python-checks:
     name: Python checks
