@@ -139,7 +139,7 @@ You don't call the CLI repeatedly—that's the whole point of generating the gra
 
 **Q: Command not found: graphify**
 ```bash
-uv tool install 'graphifyy[mcp]'
+uv tool install 'graphifyy[mcp]==0.9.53'
 # Verify: which graphify
 ```
 
