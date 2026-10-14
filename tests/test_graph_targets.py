@@ -36,7 +36,27 @@ def test_targets_selects_pinned_eclipse_score_repos() -> None:
         }
     }
 
-    assert graph_targets.targets(known_good, ["target_sw"]) == [
+    assert graph_targets.targets(known_good, ["target_sw"], pinned=True) == [
         {"name": "baselibs", "ref": SHA}
     ]
-    assert len(graph_targets.targets(known_good, ["target_sw", "tooling"])) == 2
+    assert len(graph_targets.targets(known_good, ["target_sw", "tooling"], True)) == 2
+
+
+def test_targets_defaults_to_branch_heads() -> None:
+    known_good = {
+        "modules": {
+            "target_sw": {
+                "score_baselibs": {
+                    "repo": "https://github.com/eclipse-score/baselibs.git",
+                    "hash": SHA,
+                },
+                "score_itf": {"repo": "https://github.com/eclipse-score/itf.git"},
+                "foreign": {"repo": "https://github.com/other/repo.git"},
+            }
+        }
+    }
+
+    assert graph_targets.targets(known_good, ["target_sw"]) == [
+        {"name": "baselibs", "ref": ""},
+        {"name": "itf", "ref": ""},
+    ]

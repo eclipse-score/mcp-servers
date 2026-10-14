@@ -18,6 +18,11 @@ on:
   schedule:
     - cron: "17 2 * * *"
   workflow_dispatch:
+    inputs:
+      known_good:
+        description: Build the known_good.json hashes instead of the main branch heads
+        type: boolean
+        default: false
   pull_request:
     paths:
       - .github/workflows/central-graphs.yml
@@ -43,9 +48,10 @@ jobs:
         id: select
         env:
           LIMIT: ${{ github.event_name == 'pull_request' && '1' || '0' }}
+          KNOWN_GOOD: ${{ inputs.known_good && '--known-good' || '' }}
         run: |
           curl -fsSL "$KNOWN_GOOD_URL" -o known_good.json
-          echo "matrix=$(python scripts/graph_targets.py known_good.json --limit "$LIMIT")" >> "$GITHUB_OUTPUT"
+          echo "matrix=$(python scripts/graph_targets.py known_good.json --limit "$LIMIT" $KNOWN_GOOD)" >> "$GITHUB_OUTPUT"
 
   graph:
     name: Graph ${{ matrix.name }}
@@ -61,7 +67,7 @@ jobs:
       matrix: ${{ fromJSON(needs.targets.outputs.matrix) }}
     env:
       NAME: ${{ matrix.name }}
-      REF: ${{ matrix.ref }}
+      CHANNEL: ${{ inputs.known_good && 'known-good' || 'main' }}
     steps:
       - name: Check out target repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -76,6 +82,8 @@ jobs:
 
       - name: Build code graph
         run: |
+          COMMIT="$(git -C src rev-parse HEAD)"
+          echo "COMMIT=${COMMIT}" >> "$GITHUB_ENV"
           uv tool install 'graphifyy[mcp]==0.9.53'
           (cd src && graphify extract . --code-only)
           mkdir out
@@ -96,7 +104,8 @@ jobs:
           metadata = {
               "schema": 1,
               "repository": f"eclipse-score/{os.environ['NAME']}",
-              "commit": os.environ["REF"],
+              "commit": os.environ["COMMIT"],
+              "channel": os.environ["CHANNEL"],
               "graphify": "0.9.53",
               "needs_source": sys.argv[1] or None,
               "built_at": datetime.now(UTC).isoformat(timespec="seconds"),
@@ -126,7 +135,7 @@ jobs:
         id: push
         if: github.event_name != 'pull_request'
         run: |
-          digest="$(oras push "${GRAPH_REPOSITORY}/${NAME}:${REF},known-good" \
+          digest="$(oras push "${GRAPH_REPOSITORY}/${NAME}:${COMMIT},${CHANNEL}" \
             --artifact-type application/vnd.eclipse-score.graph.v1 \
             --format go-template='{{.digest}}' \
             graph.tar.gz:application/vnd.eclipse-score.graph.v1.tar+gzip)"
