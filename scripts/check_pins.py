@@ -13,56 +13,64 @@ MCP_SOURCE_RE = re.compile(
 )
 VERSION_RE = re.compile(r"^version:\s*['\"]?([^'\"\s]+)", re.MULTILINE)
 GRAPHIFY_PIN_RE = re.compile(r'"graphifyy\[mcp\]==([^"]+)"')
-GRAPHIFY_RE = re.compile(r"graphifyy(\[mcp\])?(==[\w.]+)?")
+GRAPHIFY_RE = re.compile(r"(?<![\w.-])graphifyy(\[[\w,]+\])?(==[\w.]+)?(?![\w-])")
+INSTALL_CONTEXT_RE = re.compile(r"\b(pip|pipx|uv|uvx)\b|--from\b|--with\b")
 SCANNED_SUFFIXES = {".md", ".py", ".toml", ".yml", ".yaml", ""}
 EXCLUDED_DIRS = {".git", ".venv", "node_modules", "graphify-out"}
+EXCLUDED_FILES = {Path(__file__).resolve(), ROOT / "tests" / "test_check_pins.py"}
 
 
-def graphify_pin() -> str:
-    pyproject = ROOT / "packages/graphify-codegraph/pyproject.toml"
+def graphify_pin(root: Path = ROOT) -> str:
+    pyproject = root / "packages/graphify-codegraph/pyproject.toml"
     match = GRAPHIFY_PIN_RE.search(pyproject.read_text(encoding="utf-8"))
     if match is None:
         raise SystemExit(f"No graphifyy[mcp]==<version> dependency in {pyproject}")
     return match.group(1)
 
 
-def check_mcp_sources() -> list[str]:
+def check_mcp_sources(root: Path = ROOT) -> list[str]:
     errors: list[str] = []
-    for path in sorted(ROOT.glob("packages/*/*.yml")):
+    for path in sorted(root.glob("packages/*/*.yml")):
         text = path.read_text(encoding="utf-8")
         version = VERSION_RE.search(text)
         for match in MCP_SOURCE_RE.finditer(text):
             expected = f"@v{version.group(1)}" if version else None
             if match.group(1) != expected:
                 errors.append(
-                    f"{path.relative_to(ROOT)}: MCP source must be pinned to "
+                    f"{path.relative_to(root)}: MCP source must be pinned to "
                     f"{expected or 'a release tag'}, found {match.group(1) or 'no ref'}"
                 )
     return errors
 
 
-def scanned_files() -> list[Path]:
+def scanned_files(root: Path = ROOT) -> list[Path]:
     files: list[Path] = []
-    for path in ROOT.rglob("*"):
-        if any(part in EXCLUDED_DIRS for part in path.parts) or not path.is_file():
+    for path in root.rglob("*"):
+        relative = path.relative_to(root)
+        if any(part in EXCLUDED_DIRS for part in relative.parts) or not path.is_file():
             continue
-        if path.suffix in SCANNED_SUFFIXES and path != Path(__file__).resolve():
+        if path.suffix in SCANNED_SUFFIXES and path not in EXCLUDED_FILES:
             files.append(path)
     return sorted(files)
 
 
-def check_graphify_installs(pin: str) -> list[str]:
+def is_install_spec(line: str, match: re.Match[str]) -> bool:
+    quoted = match.start() > 0 and line[match.start() - 1] in "\"'"
+    return quoted or INSTALL_CONTEXT_RE.search(line) is not None
+
+
+def check_graphify_installs(pin: str, root: Path = ROOT) -> list[str]:
     errors: list[str] = []
-    for path in scanned_files():
+    for path in scanned_files(root):
         try:
             lines = path.read_text(encoding="utf-8").splitlines()
         except UnicodeDecodeError:
             continue
         for number, line in enumerate(lines, start=1):
             for match in GRAPHIFY_RE.finditer(line):
-                if match.group(2) != f"=={pin}":
+                if is_install_spec(line, match) and match.group(2) != f"=={pin}":
                     errors.append(
-                        f"{path.relative_to(ROOT)}:{number}: graphifyy must be "
+                        f"{path.relative_to(root)}:{number}: graphifyy must be "
                         f"pinned to =={pin}"
                     )
     return errors
