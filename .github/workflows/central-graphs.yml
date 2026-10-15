@@ -18,11 +18,6 @@ on:
   schedule:
     - cron: "17 2 * * *"
   workflow_dispatch:
-    inputs:
-      known_good:
-        description: Build the known_good.json hashes instead of the main branch heads
-        type: boolean
-        default: false
   pull_request:
     paths:
       - .github/workflows/central-graphs.yml
@@ -32,7 +27,8 @@ permissions:
   contents: read
 
 env:
-  KNOWN_GOOD_URL: https://raw.githubusercontent.com/eclipse-score/reference_integration/main/known_good.json
+  # Only the module list is taken from here; graphs are built from each module's main HEAD.
+  MODULES_URL: https://raw.githubusercontent.com/eclipse-score/reference_integration/main/known_good.json
   GRAPH_REPOSITORY: ghcr.io/eclipse-score/mcp-servers/graphs
 
 jobs:
@@ -44,14 +40,13 @@ jobs:
     steps:
       - name: Check out
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - name: Select targets from known_good.json
+      - name: Select modules
         id: select
         env:
           LIMIT: ${{ github.event_name == 'pull_request' && '1' || '0' }}
-          KNOWN_GOOD: ${{ inputs.known_good && '--known-good' || '' }}
         run: |
-          curl -fsSL "$KNOWN_GOOD_URL" -o known_good.json
-          echo "matrix=$(python scripts/graph_targets.py known_good.json --limit "$LIMIT" $KNOWN_GOOD)" >> "$GITHUB_OUTPUT"
+          curl -fsSL "$MODULES_URL" -o modules.json
+          echo "matrix=$(python scripts/graph_targets.py modules.json --limit "$LIMIT")" >> "$GITHUB_OUTPUT"
 
   graph:
     name: Graph ${{ matrix.name }}
@@ -67,13 +62,12 @@ jobs:
       matrix: ${{ fromJSON(needs.targets.outputs.matrix) }}
     env:
       NAME: ${{ matrix.name }}
-      CHANNEL: ${{ inputs.known_good && 'known-good' || 'main' }}
+      CHANNEL: main
     steps:
       - name: Check out target repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: eclipse-score/${{ matrix.name }}
-          ref: ${{ matrix.ref }}
           path: src
           persist-credentials: false
 

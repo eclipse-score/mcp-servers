@@ -12,38 +12,8 @@ spec.loader.exec_module(graph_targets)
 SHA = "ee40fece5abacb28ea641b448446a04175038b17"
 
 
-def test_targets_selects_pinned_eclipse_score_repos() -> None:
-    known_good = {
-        "modules": {
-            "target_sw": {
-                "score_baselibs": {
-                    "repo": "https://github.com/eclipse-score/baselibs.git",
-                    "hash": SHA,
-                },
-                "unpinned": {"repo": "https://github.com/eclipse-score/itf.git"},
-                "foreign": {"repo": "https://github.com/other/repo.git", "hash": SHA},
-                "injected": {
-                    "repo": "https://github.com/eclipse-score/x.git",
-                    "hash": "$(id)",
-                },
-            },
-            "tooling": {
-                "score_tooling": {
-                    "repo": "https://github.com/eclipse-score/tooling.git",
-                    "hash": SHA,
-                }
-            },
-        }
-    }
-
-    assert graph_targets.targets(known_good, ["target_sw"], pinned=True) == [
-        {"name": "baselibs", "ref": SHA}
-    ]
-    assert len(graph_targets.targets(known_good, ["target_sw", "tooling"], True)) == 2
-
-
-def test_targets_defaults_to_branch_heads() -> None:
-    known_good = {
+def test_targets_selects_eclipse_score_repos() -> None:
+    modules = {
         "modules": {
             "target_sw": {
                 "score_baselibs": {
@@ -51,12 +21,20 @@ def test_targets_defaults_to_branch_heads() -> None:
                     "hash": SHA,
                 },
                 "score_itf": {"repo": "https://github.com/eclipse-score/itf.git"},
+                "duplicate": {"repo": "https://github.com/eclipse-score/itf"},
                 "foreign": {"repo": "https://github.com/other/repo.git"},
-            }
+                "injected": {"repo": "https://github.com/eclipse-score/$(id).git"},
+            },
+            "tooling": {
+                "score_tooling": {
+                    "repo": "https://github.com/eclipse-score/tooling.git",
+                }
+            },
         }
     }
 
-    assert graph_targets.targets(known_good, ["target_sw"]) == [
-        {"name": "baselibs", "ref": ""},
-        {"name": "itf", "ref": ""},
+    assert graph_targets.targets(modules, ["target_sw"]) == [
+        {"name": "baselibs"},
+        {"name": "itf"},
     ]
+    assert len(graph_targets.targets(modules, ["target_sw", "tooling"])) == 3
