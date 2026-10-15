@@ -39,8 +39,10 @@ include = [
   "packages/context-discipline/src/context_sessions.py",
   "packages/context-discipline/src/context_discipline_mcp.py",
   "packages/context-discipline/tests",
+  "packages/graphify-codegraph/src",
+  "packages/graphify-codegraph/tests",
 ]
 pythonVersion = "3.12"
 typeCheckingMode = "strict"
 reportMissingTypeStubs = false
-extraPaths = ["packages/context-discipline/src"]
+extraPaths = ["packages/context-discipline/src", "packages/graphify-codegraph/src"]

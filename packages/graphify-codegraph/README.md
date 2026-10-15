@@ -175,3 +175,18 @@ Make sure you:
 
 This guidance package: Apache License 2.0  
 External graphify tool: [Graphify Labs License](https://github.com/Graphify-Labs/graphify/blob/main/LICENSE)
+
+## Where the graph comes from
+
+The server needs no setup in the repository and never writes into the worktree:
+
+1. An existing `graphify-out/graph.json` in the repository is used as is.
+2. Otherwise the graph lives in `~/.local/share/score-agent/<repo>-<hash>/`.
+   For eclipse-score repositories an empty cache is first seeded from
+   `ghcr.io/eclipse-score/mcp-servers/graphs/<repo>` (merge-base commit, then `main`);
+   the download is checked against its sha256 digest.
+3. Whenever HEAD moved, a code-only build runs in the background and replaces the
+   graph; the server reloads it automatically.
+
+Set `SCORE_AGENT_OFFLINE=1` to skip the download, `SCORE_AGENT_GRAPH=off` for the
+plain graphify behaviour.
