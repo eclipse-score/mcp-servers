@@ -169,6 +169,24 @@ Result: Fewer tokens, faster time-to-solution (all local)
 
 ---
 
+## Releasing
+
+MCP sources are pinned to a commit SHA with the version as a comment:
+
+```yaml
+- git+https://github.com/eclipse-score/mcp-servers@<sha>#subdirectory=packages/apm-setup # v0.1.0
+```
+
+1. On an up-to-date `main`, run `python3 scripts/prepare_release.py 0.2.0`.
+   It sets all package versions and pins the MCP sources to the current HEAD.
+2. Open a PR with only these changes and merge it.
+3. The `Release` workflow sees the new version, runs `scripts/check_pins.py --release`
+   (pinned commit may only differ in version metadata) and the tests, then creates
+   the tag `v0.2.0` and the GitHub release.
+
+If other changes land on `main` before the release PR, the release check fails;
+rerun step 1 on the new `main`.
+
 ## More Information
 
 - **Setup MCP:** See [packages/apm-setup/README.md](packages/apm-setup/README.md)
