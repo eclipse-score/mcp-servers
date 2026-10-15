@@ -31,5 +31,5 @@ dependencies:
       command: uvx
       args:
         - --from
-        - git+https://github.com/eclipse-score/mcp-servers#subdirectory=packages/apm-setup
+        - git+https://github.com/eclipse-score/mcp-servers@v0.1.0#subdirectory=packages/apm-setup
         - apm-setup

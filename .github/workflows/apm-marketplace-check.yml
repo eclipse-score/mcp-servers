@@ -63,6 +63,7 @@ jobs:
           python - <<'PY'
           import json
           import os
+          import re
           from pathlib import Path
 
           config_path = Path(".vscode/mcp.json")
@@ -71,13 +72,12 @@ jobs:
           for server in config["servers"].values():
               args = server.get("args", [])
               for index, argument in enumerate(args):
-                  if argument.startswith("git+https://github.com/eclipse-score/mcp-servers#"):
-                      args[index] = argument.replace(
-                          "git+https://github.com/eclipse-score/mcp-servers#",
-                          f"git+https://github.com/eclipse-score/mcp-servers@{revision}#",
-                          1,
-                      )
+                  args[index] = re.sub(
+                      r"^git\+https://github\.com/eclipse-score/mcp-servers(@[^#]+)?#",
+                      f"git+https://github.com/eclipse-score/mcp-servers@{revision}#",
+                      argument,
+                  )
           config_path.write_text(json.dumps(config, indent=2) + "\n", encoding="utf-8")
           PY
-          uv tool install 'graphifyy[mcp]'
+          uv tool install 'graphifyy[mcp]==0.9.53'
           python "$GITHUB_WORKSPACE/scripts/check_remote_mcp.py"

@@ -36,5 +36,5 @@ dependencies:
       command: uvx
       args:
         - --from
-        - git+https://github.com/eclipse-score/mcp-servers#subdirectory=packages/graphify-codegraph
+        - git+https://github.com/eclipse-score/mcp-servers@v0.1.0#subdirectory=packages/graphify-codegraph
         - graphify-codegraph
