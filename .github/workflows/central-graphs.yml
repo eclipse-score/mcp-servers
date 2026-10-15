@@ -76,7 +76,7 @@ jobs:
 
       - name: Build code graph
         run: |
-          COMMIT="$(git -C src rev-parse HEAD)"
+          export COMMIT="$(git -C src rev-parse HEAD)"
           echo "COMMIT=${COMMIT}" >> "$GITHUB_ENV"
           uv tool install 'graphifyy[mcp]==0.9.53'
           (cd src && graphify extract . --code-only)
