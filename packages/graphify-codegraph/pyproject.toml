@@ -19,5 +19,5 @@ dependencies = ["graphifyy[mcp]==0.9.53"]
 graphify-codegraph = "serve:main"
 
 [tool.hatch.build.targets.wheel]
-only-include = ["src/serve.py"]
+only-include = ["src/serve.py", "src/graph_cache.py"]
 sources = ["src"]

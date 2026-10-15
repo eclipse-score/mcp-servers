@@ -16,12 +16,17 @@
 
 import subprocess
 import sys
+from pathlib import Path
+
+from graph_cache import prepare
 
 
 def main() -> None:
     """Launch graphify's built-in MCP server."""
+    graph, _ = prepare(Path.cwd())
+    command = [sys.executable, "-m", "graphify.serve"]
     try:
-        subprocess.run([sys.executable, "-m", "graphify.serve"], check=True)
+        subprocess.run([*command, str(graph)] if graph else command, check=True)
     except (FileNotFoundError, subprocess.CalledProcessError):
         print(
             "Error: graphify not found. Install with: uv tool install "
