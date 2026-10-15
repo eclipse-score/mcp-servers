@@ -25,7 +25,9 @@ MARKETPLACE_VERSION_RE = re.compile(r"^\s+version:\s*['\"]?([^'\"\s]+)", re.MULT
 PYPROJECT_VERSION_RE = re.compile(r'^version\s*=\s*"([^"]+)"', re.MULTILINE)
 RELEASE_FILE_RE = re.compile(
     r"apm\.yml|uv\.lock|packages/[^/]+/(?:apm\.yml|mcp\.yml|pyproject\.toml)"
+    r"|features/src/[^/]+/(?:install\.sh|devcontainer-feature\.json)"
 )
+FEATURE_VERSION_RE = re.compile(r'^\s*"version":\s*"([^"]+)"', re.MULTILINE)
 GRAPHIFY_PIN_RE = re.compile(r'"graphifyy\[mcp\]==([^"]+)"')
 GRAPHIFY_RE = re.compile(r"(?<![\w.-])graphifyy(\[[\w,]+\])?(==[\w.]+)?(?![\w-])")
 INSTALL_CONTEXT_RE = re.compile(r"\b(pip|pipx|uv|uvx)\b|--from\b|--with\b")
@@ -42,12 +44,30 @@ def graphify_pin(root: Path = ROOT) -> str:
     return match.group(1)
 
 
+def release_version(root: Path = ROOT) -> str | None:
+    manifest = root / "apm.yml"
+    match = (
+        VERSION_RE.search(manifest.read_text(encoding="utf-8"))
+        if manifest.exists()
+        else None
+    )
+    return match.group(1) if match else None
+
+
+def pinned_files(root: Path = ROOT) -> list[Path]:
+    return sorted(root.glob("packages/*/*.yml")) + sorted(
+        root.glob("features/src/*/install.sh")
+    )
+
+
 def check_mcp_sources(root: Path = ROOT) -> list[str]:
     errors: list[str] = []
-    for path in sorted(root.glob("packages/*/*.yml")):
+    release = release_version(root)
+    for path in pinned_files(root):
         text = path.read_text(encoding="utf-8")
-        version = VERSION_RE.search(text)
-        expected = f"v{version.group(1)}" if version else "v<version>"
+        match = VERSION_RE.search(text)
+        version = release if path.name == "install.sh" else match and match.group(1)
+        expected = f"v{version}" if version else "v<version>"
         for match in MCP_SOURCE_RE.finditer(text):
             ref, comment = match.group(1), match.group(2)
             where = path.relative_to(root)
@@ -93,6 +113,9 @@ def check_versions(root: Path = ROOT) -> list[str]:
                 found.append(
                     (str(path.relative_to(root)), match.group(1) if match else "none")
                 )
+    for path in sorted(root.glob("features/src/*/devcontainer-feature.json")):
+        match = FEATURE_VERSION_RE.search(path.read_text(encoding="utf-8"))
+        found.append((str(path.relative_to(root)), match.group(1) if match else "none"))
     return [
         f"{where}: version {version} differs from release version {release.group(1)}"
         for where, version in found
@@ -103,7 +126,7 @@ def check_versions(root: Path = ROOT) -> list[str]:
 def pinned_commits(root: Path = ROOT) -> set[str]:
     return {
         match.group(1) or ""
-        for path in root.glob("packages/*/*.yml")
+        for path in pinned_files(root)
         for match in MCP_SOURCE_RE.finditer(path.read_text(encoding="utf-8"))
     }
 

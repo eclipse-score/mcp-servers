@@ -22,6 +22,7 @@ SOURCE_RE = re.compile(
 )
 TOP_VERSION_RE = re.compile(r"^(version:\s*)\S+", re.MULTILINE)
 MARKETPLACE_VERSION_RE = re.compile(r"^(\s+version:\s*)\S+", re.MULTILINE)
+FEATURE_VERSION_RE = re.compile(r'^(\s*"version":\s*)"[^"]*"', re.MULTILINE)
 PYPROJECT_VERSION_RE = re.compile(r'^(version\s*=\s*)"[^"]*"', re.MULTILINE)
 
 
@@ -45,6 +46,10 @@ def update(path: Path, version: str, commit: str) -> bool:
     new = text
     if path.name == "pyproject.toml":
         new = PYPROJECT_VERSION_RE.sub(rf'\g<1>"{version}"', new, count=1)
+    elif path.name == "devcontainer-feature.json":
+        new = FEATURE_VERSION_RE.sub(rf'\g<1>"{version}"', new, count=1)
+    elif path.name == "install.sh":
+        new = SOURCE_RE.sub(rf"\g<1>@{commit}\g<2> # v{version}", new)
     else:
         new = TOP_VERSION_RE.sub(rf"\g<1>{version}", new, count=1)
         new = SOURCE_RE.sub(rf"\g<1>@{commit}\g<2> # v{version}", new)
@@ -65,6 +70,10 @@ def prepare(version: str, commit: str, root: Path = ROOT) -> list[Path]:
         for package in package_dirs(root)
         for name in ("apm.yml", "mcp.yml", "pyproject.toml")
         if (package / name).exists()
+    ]
+    files += [
+        *sorted(root.glob("features/src/*/install.sh")),
+        *sorted(root.glob("features/src/*/devcontainer-feature.json")),
     ]
     return [path for path in files if update(path, version, commit)]
 

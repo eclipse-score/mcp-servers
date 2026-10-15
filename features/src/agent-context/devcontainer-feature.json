@@ -1,0 +1,9 @@
+{
+    "id": "agent-context",
+    "version": "0.1.0",
+    "name": "S-CORE agent context",
+    "description": "Registers the S-CORE code graph MCP server for the coding agents in the container.",
+    "documentationURL": "https://github.com/eclipse-score/mcp-servers/tree/main/features/src/agent-context",
+    "licenseURL": "https://github.com/eclipse-score/mcp-servers/blob/main/LICENSE",
+    "postCreateCommand": "python3 /usr/local/share/agent-context/register_mcp.py"
+}
