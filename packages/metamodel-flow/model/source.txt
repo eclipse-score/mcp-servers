@@ -1,0 +1,7 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (c) 2026 Contributors to the Eclipse Foundation
+
+source_repo_url=https://github.com/eclipse-score/docs-as-code.git
+source_path=src/extensions/score_metamodel/metamodel.yaml
+source_commit=ba32a15e215ff3b836fe8e13d6779fac5cdb8365
+generator_command=uv run python packages/metamodel-flow/src/refresh_model.py --ref ba32a15e215ff3b836fe8e13d6779fac5cdb8365

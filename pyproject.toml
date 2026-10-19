@@ -18,6 +18,7 @@ members = ["libs/score-context", "packages/sdlc-harness"]
 dev = [
   "pyright>=1.1.414",
   "pytest>=9.1.1",
+  "ruamel-yaml==0.19.1",
   "ruff>=0.17.1",
 ]
 
@@ -41,8 +42,11 @@ include = [
   "packages/context-discipline/tests",
   "packages/graphify-codegraph/src",
   "packages/graphify-codegraph/tests",
+  "packages/metamodel-flow/src/generate_agent_context.py",
+  "packages/metamodel-flow/src/refresh_model.py",
+  "packages/metamodel-flow/tests/test_refresh_model.py",
 ]
 pythonVersion = "3.12"
 typeCheckingMode = "strict"
 reportMissingTypeStubs = false
-extraPaths = ["packages/context-discipline/src", "packages/graphify-codegraph/src"]
+extraPaths = ["packages/context-discipline/src", "packages/graphify-codegraph/src", "packages/metamodel-flow/src"]

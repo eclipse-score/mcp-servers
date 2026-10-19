@@ -59,5 +59,10 @@ marketplace:
       source: ./packages/sdlc-harness
       version: "0.1.0"
       category: Productivity
+    - name: metamodel-flow
+      description: Normative S-CORE artifact model guidance generated from the docs-as-code metamodel.
+      source: ./packages/metamodel-flow
+      version: "0.1.0"
+      category: Productivity
 
 
