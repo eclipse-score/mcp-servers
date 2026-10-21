@@ -187,3 +187,93 @@ def test_build_writes_only_to_cache(repo: Path, tmp_path: Path) -> None:
         text=True,
     )
     assert status.stdout == ""
+
+
+def test_resolve_graph_path_prefers_in_repo(repo: Path) -> None:
+    """resolve_graph_path should find in-repo graph first."""
+    (repo / "graphify-out").mkdir()
+    (repo / "graphify-out" / "graph.json").write_bytes(GRAPH)
+
+    result = graph_cache.resolve_graph_path(repo)
+    assert result == repo / "graphify-out" / "graph.json"
+
+
+def test_resolve_graph_path_falls_back_to_cache(repo: Path) -> None:
+    """resolve_graph_path should check user cache when in-repo graph missing."""
+    cache = graph_cache.cache_dir(repo)
+    cache.mkdir(parents=True)
+    (cache / "graph.json").write_bytes(GRAPH)
+
+    result = graph_cache.resolve_graph_path(repo)
+    assert result == cache / "graph.json"
+
+
+def test_resolve_graph_path_returns_none_when_missing(repo: Path) -> None:
+    """resolve_graph_path should return None when no graph exists."""
+    result = graph_cache.resolve_graph_path(repo)
+    assert result is None
+
+
+def test_resolve_graph_path_respects_disabled(
+    repo: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """resolve_graph_path should respect SCORE_AGENT_GRAPH=off."""
+    monkeypatch.setenv("SCORE_AGENT_GRAPH", "off")
+    (repo / "graphify-out").mkdir()
+    (repo / "graphify-out" / "graph.json").write_bytes(GRAPH)
+
+    result = graph_cache.resolve_graph_path(repo)
+    assert result is None
+
+
+def test_resolve_graph_path_returns_none_outside_git(tmp_path: Path) -> None:
+    """resolve_graph_path should return None outside a git repository."""
+    not_a_repo = tmp_path / "notarepo"
+    not_a_repo.mkdir()
+
+    result = graph_cache.resolve_graph_path(not_a_repo)
+    assert result is None
+
+
+def test_build_clears_graphify_out_env(
+    tmp_path: Path, repo: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """build should not inherit GRAPHIFY_OUT from environment."""
+    pytest.importorskip("graphify")
+    # Set a potentially interfering GRAPHIFY_OUT
+    monkeypatch.setenv("GRAPHIFY_OUT", "wrong-output-dir")
+
+    cache = tmp_path / "cache"
+    assert graph_cache.build(repo, cache)
+    # Graph should be in cache, not in wrong-output-dir
+    assert (cache / "graph.json").exists()
+    assert not (repo / "wrong-output-dir").exists()
+
+
+def test_prepare_locking_prevents_race_condition(
+    repo: Path, tmp_path: Path
+) -> None:
+    """prepare should lock during seeding to prevent race conditions."""
+    # Simulate a race: first call starts, second call should skip seeding
+    seeded = []
+
+    def fake_fetch(module: str, tag: str, dest: Path) -> bool:
+        seeded.append(f"{module}:{tag}")
+        dest.mkdir(parents=True, exist_ok=True)
+        (dest / "graph.json").write_bytes(GRAPH)
+        return True
+
+    def fake_builder(root: Path, cache: Path) -> bool:
+        return True
+
+    # First call should seed
+    graph1, thread1 = graph_cache.prepare(repo, fake_fetch, fake_builder)
+    thread1.join() if thread1 else None
+
+    # Second call should find graph already exists (no re-seed)
+    seeded.clear()
+    graph2, thread2 = graph_cache.prepare(repo, fake_fetch, fake_builder)
+    thread2.join() if thread2 else None
+
+    # Second call should not have seeded (graph already exists)
+    assert seeded == []

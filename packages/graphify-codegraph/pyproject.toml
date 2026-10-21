@@ -21,3 +21,8 @@ graphify-codegraph = "serve:main"
 [tool.hatch.build.targets.wheel]
 only-include = ["src/serve.py", "src/graph_cache.py"]
 sources = ["src"]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+]

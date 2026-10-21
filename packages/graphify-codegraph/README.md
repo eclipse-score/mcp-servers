@@ -126,6 +126,17 @@ wm.query_graph("Find all database connections")
 
 You don't call the CLI repeatedly—that's the whole point of generating the graph once and querying it many times.
 
+**Programmatic access:** The `resolve_graph_path()` function provides the same lookup logic for other integrations:
+
+```python
+from graph_cache import resolve_graph_path
+
+# Find graph.json (in-repo or user cache)
+graph = resolve_graph_path(Path.cwd())
+if graph:
+    data = json.loads(graph.read_text())
+```
+
 ## Files in This Package
 
 - [README.md](README.md) — This file

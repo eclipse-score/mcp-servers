@@ -21,7 +21,6 @@ then ``main``). The cache is refreshed by a local code-only build in the
 background whenever HEAD moved.
 """
 
-import fcntl
 import hashlib
 import io
 import json
@@ -36,6 +35,12 @@ import urllib.request
 from collections.abc import Callable
 from pathlib import Path
 from typing import IO, Any
+
+# Platform-compatible locking (fcntl is Unix-only)
+try:
+    import fcntl
+except ImportError:
+    fcntl = None  # type: ignore[assignment]
 
 REGISTRY = "https://ghcr.io"
 NAMESPACE = "eclipse-score/mcp-servers/graphs"
@@ -130,6 +135,52 @@ def _unpack(blob: bytes, dest: Path) -> None:
         partial.replace(dest / name)
 
 
+def resolve_graph_path(cwd: Path) -> Path | None:
+    """Resolve the graph path for a repository (shared with context-discipline).
+    
+    Returns the path to the graph.json file, checking in order:
+    1. Repository's graphify-out/graph.json
+    2. User cache under ~/.local/share/score-agent
+    
+    Returns None if:
+    - SCORE_AGENT_GRAPH=off is set
+    - Not in a git repository
+    """
+    if os.environ.get("SCORE_AGENT_GRAPH", "").lower() in {"0", "off", "false"}:
+        return None
+    root = repo_root(cwd)
+    if root is None:
+        return None
+    in_repo = root / "graphify-out" / "graph.json"
+    if in_repo.exists():
+        return in_repo
+    cache = cache_dir(root)
+    graph = cache / "graph.json"
+    if graph.exists():
+        return graph
+    return None
+
+
+def _acquire_lock(cache: Path) -> io.TextIOWrapper | None:
+    """Acquire cache lock in a platform-compatible way."""
+    cache.mkdir(parents=True, exist_ok=True)
+    lock_file = (cache / ".lock").open("w")
+    if fcntl is not None:
+        try:
+            fcntl.flock(lock_file, fcntl.LOCK_EX | fcntl.LOCK_NB)  # type: ignore[attr-defined]
+        except BlockingIOError:
+            lock_file.close()
+            return None
+    return lock_file
+
+
+def _release_lock(lock_file: io.TextIOWrapper) -> None:
+    """Release cache lock."""
+    if fcntl is not None:
+        fcntl.flock(lock_file, fcntl.LOCK_UN)  # type: ignore[attr-defined]
+    lock_file.close()
+
+
 def fetch(module: str, tag: str, dest: Path, opener: Opener = _open) -> bool:
     """Download graph ``module:tag`` into ``dest``; verify the blob digest."""
     if not TAG_RE.fullmatch(tag) or not TAG_RE.fullmatch(module):
@@ -176,12 +227,23 @@ def build(root: Path, cache: Path) -> bool:
     """Build a code-only graph into ``cache`` unless another build holds the lock."""
     head = git(root, "rev-parse", "HEAD") or ""
     cache.mkdir(parents=True, exist_ok=True)
-    with (cache / ".lock").open("w") as lock:
+    
+    # Platform-compatible file locking
+    if fcntl is not None:
+        lock_file = (cache / ".lock").open("w")
         try:
-            fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            fcntl.flock(lock_file, fcntl.LOCK_EX | fcntl.LOCK_NB)  # type: ignore[attr-defined]
         except BlockingIOError:
+            lock_file.close()
             return False
+    else:
+        lock_file = (cache / ".lock").open("w")
+    
+    try:
         out = cache / "build"
+        # Clear GRAPHIFY_OUT to prevent interference with --out flag
+        env = os.environ.copy()
+        env.pop("GRAPHIFY_OUT", None)
         with (cache / "build.log").open("w") as build_log:
             result = subprocess.run(
                 [
@@ -198,6 +260,7 @@ def build(root: Path, cache: Path) -> bool:
                 stdout=build_log,
                 stderr=subprocess.STDOUT,
                 check=False,
+                env=env,
             )
         built = out / "graphify-out" / "graph.json"
         if result.returncode != 0 or not built.exists():
@@ -205,6 +268,11 @@ def build(root: Path, cache: Path) -> bool:
             return False
         built.replace(cache / "graph.json")
         (cache / "head").write_text(head, encoding="utf-8")
+    finally:
+        if fcntl is not None:
+            fcntl.flock(lock_file, fcntl.LOCK_UN)  # type: ignore[attr-defined]
+        lock_file.close()
+    
     log("local graph build finished")
     return True
 
@@ -226,10 +294,20 @@ def prepare(
     cache = cache_dir(root)
     graph = cache / "graph.json"
     module = module_name(root)
+    
+    # Seed from registry with locking to prevent race conditions
     if not graph.exists() and module and not os.environ.get("SCORE_AGENT_OFFLINE"):
-        for tag in candidate_tags(root):
-            if fetcher(module, tag, cache):
-                break
+        lock_file = _acquire_lock(cache)
+        if lock_file is not None:
+            try:
+                # Recheck after acquiring lock (another process may have seeded)
+                if not graph.exists():
+                    for tag in candidate_tags(root):
+                        if fetcher(module, tag, cache):
+                            break
+            finally:
+                _release_lock(lock_file)
+    
     head_file = cache / "head"
     head = git(root, "rev-parse", "HEAD")
     current = head_file.exists() and head_file.read_text(encoding="utf-8") == head
