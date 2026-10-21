@@ -12,13 +12,13 @@
 # *******************************************************************************
 
 [tool.uv.workspace]
-members = ["libs/score-context"]
+members = ["libs/score-context", "packages/sdlc-harness"]
 
 [dependency-groups]
 dev = [
   "pyright>=1.1.414",
   "pytest>=9.1.1",
-  "ruff>=0.16.9",
+  "ruff>=0.17.0",
 ]
 
 [tool.ruff]
