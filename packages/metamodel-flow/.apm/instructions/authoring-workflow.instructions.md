@@ -1,11 +1,11 @@
-<!-- SPDX-License-Identifier: Apache-2.0 -->
-<!-- Copyright (c) 2026 Contributors to the Eclipse Foundation -->
-
 ---
 name: authoring-workflow
 description: Workflow for authoring and changing S-CORE artifacts against the normative metamodel
 applyTo: "**/*.rst"
 ---
+
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+<!-- Copyright (c) 2026 Contributors to the Eclipse Foundation -->
 
 # S-CORE Authoring Workflow
 

@@ -56,7 +56,7 @@ graph_checks:
           - or:
               - safety == QM
               - safety == ASIL_B
-    check:
+    check_all:
       required_link:
         or:
           - status == valid

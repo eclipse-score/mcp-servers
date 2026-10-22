@@ -22,8 +22,9 @@ SHA = "a" * 40
 def _valid_model(tmp_path: Path) -> Path:
     text = (DATA / "simple_model.yaml").read_text(encoding="utf-8")
     text = text.replace(
-        "    check:\n      link1: opt1 == test\n",
-        "    check:\n      link1: opt1 == test\n    explanation: Link must be valid.\n",
+        "    check_all:\n      link1: opt1 == test\n",
+        "    check_all:\n      link1: opt1 == test\n"
+        "    explanation: Link must be valid.\n",
     )
     path = tmp_path / "metamodel.yaml"
     path.write_text(text, encoding="utf-8")
@@ -131,3 +132,39 @@ def test_full_sha_is_used_without_lookup() -> None:
 def test_invalid_commit_is_not_fetched() -> None:
     with pytest.raises(ValueError):
         refresh_model.fetch_metamodel("main", _fetcher(DATA / "simple_model.yaml"))
+
+
+@pytest.mark.parametrize("raw", [b"", b"- a\n- b\n"])
+def test_refresh_rejects_non_mapping_root_without_writing(
+    tmp_path: Path, raw: bytes
+) -> None:
+    root = _package(tmp_path)
+    model = root / "model" / "agent_context.json"
+    before = model.read_bytes()
+    source = tmp_path / "metamodel.yaml"
+    source.write_bytes(raw)
+
+    with pytest.raises(ValueError, match="root must be a mapping"):
+        refresh_model.refresh(SHA, package_root=root, fetcher=_fetcher(source))
+
+    assert model.read_bytes() == before
+    assert not (root / ".apm").exists()
+
+
+def test_check_reports_drift_when_only_a_graph_check_changes(tmp_path: Path) -> None:
+    root = _package(tmp_path)
+    source = _valid_model(tmp_path)
+    refresh_model.refresh(SHA, package_root=root, fetcher=_fetcher(source))
+    assert not refresh_model.refresh(
+        SHA, package_root=root, check=True, fetcher=_fetcher(source)
+    )
+
+    text = source.read_text(encoding="utf-8")
+    source.write_text(
+        text.replace("      link1: opt1 == test\n", "      link1: opt1 == other\n"),
+        encoding="utf-8",
+    )
+
+    assert refresh_model.refresh(
+        SHA, package_root=root, check=True, fetcher=_fetcher(source)
+    )

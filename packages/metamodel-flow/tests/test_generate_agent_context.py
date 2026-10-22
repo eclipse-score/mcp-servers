@@ -16,9 +16,11 @@ import hashlib
 from pathlib import Path
 from typing import Any
 
+import pytest
 from generate_agent_context import (
     build_projection,
     load_metamodel_yaml,
+    project_metamodel,
     render_projection,
 )
 
@@ -97,3 +99,74 @@ def test_type_options_override_inherited_base_options() -> None:
         "required": False,
         "inherited": False,
     }
+
+
+INLINE_MODEL = b"""
+needs_types:
+  plain:
+    title: Plain
+  explicit:
+    title: Explicit
+    prefix: ex_
+    mandatory_options:
+      id: ^ex_[0-9]+$
+graph_checks:
+  one_rule:
+    needs:
+      include: plain
+    check_one:
+      fulfils: safety == QM
+    explanation: One linked need must be QM.
+"""
+
+
+def test_check_type_and_checks_are_preserved() -> None:
+    projection = project_metamodel(INLINE_MODEL)
+    rule = projection["graph_rules"][0]
+
+    assert rule["check_type"] == "check_one"
+    assert rule["check_raw"] == {"fulfils": "safety == QM"}
+    assert _projection(SIMPLE_MODEL_PATH)["graph_rules"][0]["check_type"] == (
+        "check_all"
+    )
+
+
+@pytest.mark.parametrize(
+    "checks",
+    [
+        "",
+        "    check_all:\n      a: x\n    check_one:\n      a: x\n",
+        "    check:\n      a: x\n",
+    ],
+)
+def test_graph_check_needs_exactly_one_check_type(checks: str) -> None:
+    raw = f"graph_checks:\n  rule:\n    needs:\n      include: t\n{checks}"
+
+    with pytest.raises(ValueError, match="exactly one of check_all, check_one"):
+        project_metamodel(raw.encode())
+
+
+def test_default_id_pattern_uses_directive_prefix_and_keeps_explicit_id() -> None:
+    projection = project_metamodel(INLINE_MODEL)
+    ids = {
+        need_type["name"]: [o for o in need_type["options"] if o["name"] == "id"]
+        for need_type in projection["need_types"]
+    }
+
+    assert ids["plain"] == [
+        {
+            "name": "id",
+            "pattern": "^plain__[0-9a-z_]+$",
+            "required": True,
+            "inherited": False,
+        }
+    ]
+    assert ids["explicit"] == [
+        {"name": "id", "pattern": "^ex_[0-9]+$", "required": True, "inherited": False}
+    ]
+
+
+@pytest.mark.parametrize("raw", [b"", b"# only a comment\n", b"- a\n- b\n", b"text\n"])
+def test_non_mapping_root_is_rejected(raw: bytes) -> None:
+    with pytest.raises(ValueError, match="root must be a mapping"):
+        project_metamodel(raw)

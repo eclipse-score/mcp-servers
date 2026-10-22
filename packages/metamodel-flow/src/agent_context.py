@@ -73,6 +73,7 @@ class GraphRule:
     name: str
     applies_to: tuple[str, ...]
     condition_raw: JsonValue
+    check_type: str
     check_raw: JsonValue
     explanation: str
 
@@ -271,6 +272,13 @@ def _need_type(value: Any, index: int) -> NeedType:
     )
 
 
+def _check_type(value: Any, field: str) -> str:
+    check_type = _string(value, field)
+    if check_type not in ("check_all", "check_one"):
+        raise _error(field, "expected 'check_all' or 'check_one'")
+    return check_type
+
+
 def _graph_rule(value: Any, index: int) -> GraphRule:
     field = f"graph_rules[{index}]"
     mapping = _mapping(value, field)
@@ -283,6 +291,7 @@ def _graph_rule(value: Any, index: int) -> GraphRule:
         condition_raw=_json_value(
             mapping.get("condition_raw"), f"{field}.condition_raw"
         ),
+        check_type=_check_type(mapping.get("check_type"), f"{field}.check_type"),
         check_raw=_json_value(mapping.get("check_raw"), f"{field}.check_raw"),
         explanation=_string(mapping.get("explanation"), f"{field}.explanation"),
     )

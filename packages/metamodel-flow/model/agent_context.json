@@ -272,6 +272,12 @@
           "inherited": false
         },
         {
+          "name": "id",
+          "pattern": "^aou_req__[0-9a-z_]+$",
+          "required": true,
+          "inherited": false
+        },
+        {
           "name": "reqtype",
           "pattern": "^(Functional|Interface|Process|Non-Functional)$",
           "required": true,
@@ -403,6 +409,12 @@
           "inherited": true
         },
         {
+          "name": "id",
+          "pattern": "^comp__[0-9a-z_]+$",
+          "required": true,
+          "inherited": false
+        },
+        {
           "name": "safety",
           "pattern": "^(QM|ASIL_B)$",
           "required": true,
@@ -506,6 +518,12 @@
           "inherited": true
         },
         {
+          "name": "id",
+          "pattern": "^comp_arc_dyn__[0-9a-z_]+$",
+          "required": true,
+          "inherited": false
+        },
+        {
           "name": "safety",
           "pattern": "^(QM|ASIL_B)$",
           "required": true,
@@ -581,6 +599,12 @@
           "pattern": "^.*$",
           "required": false,
           "inherited": true
+        },
+        {
+          "name": "id",
+          "pattern": "^comp_arc_sta__[0-9a-z_]+$",
+          "required": true,
+          "inherited": false
         },
         {
           "name": "safety",
@@ -679,6 +703,12 @@
           "name": "hash",
           "pattern": "^.*$",
           "required": false,
+          "inherited": false
+        },
+        {
+          "name": "id",
+          "pattern": "^comp_req__[0-9a-z_]+$",
+          "required": true,
           "inherited": false
         },
         {
@@ -810,6 +840,12 @@
           "inherited": false
         },
         {
+          "name": "id",
+          "pattern": "^comp_saf_dfa__[0-9a-z_]+$",
+          "required": true,
+          "inherited": false
+        },
+        {
           "name": "mitigation_issue",
           "pattern": "^https://github\\.com/[^/]+/[^/]+/issues/\\d+$",
           "required": false,
@@ -919,6 +955,12 @@
           "inherited": false
         },
         {
+          "name": "id",
+          "pattern": "^comp_saf_fmea__[0-9a-z_]+$",
+          "required": true,
+          "inherited": false
+        },
+        {
           "name": "mitigation_issue",
           "pattern": "^https://github\\.com/[^/]+/[^/]+/issues/\\d+$",
           "required": false,
@@ -1007,6 +1049,12 @@
         {
           "name": "content",
           "pattern": "^[\\s\\S]+$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "id",
+          "pattern": "^comp_sec_ana__[0-9a-z_]+$",
           "required": true,
           "inherited": false
         },
@@ -1100,6 +1148,12 @@
           "inherited": false
         },
         {
+          "name": "id",
+          "pattern": "^comp_sec_threat__[0-9a-z_]+$",
+          "required": true,
+          "inherited": false
+        },
+        {
           "name": "source_code_link",
           "pattern": "^https://github.com/.*",
           "required": false,
@@ -1170,6 +1224,12 @@
           "inherited": false
         },
         {
+          "name": "id",
+          "pattern": "^dec_rec__[0-9a-z_]+$",
+          "required": true,
+          "inherited": false
+        },
+        {
           "name": "source_code_link",
           "pattern": "^https://github.com/.*",
           "required": false,
@@ -1229,6 +1289,12 @@
           "inherited": true
         },
         {
+          "name": "id",
+          "pattern": "^doc_concept__[0-9a-z_]+$",
+          "required": true,
+          "inherited": false
+        },
+        {
           "name": "source_code_link",
           "pattern": "^https://github.com/.*",
           "required": false,
@@ -1273,6 +1339,12 @@
           "pattern": "^.*$",
           "required": false,
           "inherited": true
+        },
+        {
+          "name": "id",
+          "pattern": "^doc_getstrt__[0-9a-z_]+$",
+          "required": true,
+          "inherited": false
         },
         {
           "name": "source_code_link",
@@ -1331,6 +1403,12 @@
           "pattern": "^.*$",
           "required": false,
           "inherited": true
+        },
+        {
+          "name": "id",
+          "pattern": "^doc_tool__[0-9a-z_]+$",
+          "required": true,
+          "inherited": false
         },
         {
           "name": "reviewer",
@@ -1430,6 +1508,12 @@
           "inherited": true
         },
         {
+          "name": "id",
+          "pattern": "^doc__[0-9a-z_]+$",
+          "required": true,
+          "inherited": false
+        },
+        {
           "name": "report_version",
           "pattern": "^v(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(\\.(0|[1-9]\\d*))?$",
           "required": false,
@@ -1509,6 +1593,12 @@
           "pattern": "^.*$",
           "required": false,
           "inherited": true
+        },
+        {
+          "name": "id",
+          "pattern": "^feat__[0-9a-z_]+$",
+          "required": true,
+          "inherited": false
         },
         {
           "name": "safety",
@@ -1600,6 +1690,12 @@
           "inherited": true
         },
         {
+          "name": "id",
+          "pattern": "^feat_arc_dyn__[0-9a-z_]+$",
+          "required": true,
+          "inherited": false
+        },
+        {
           "name": "safety",
           "pattern": "^(QM|ASIL_B)$",
           "required": true,
@@ -1676,6 +1772,12 @@
           "pattern": "^.*$",
           "required": false,
           "inherited": true
+        },
+        {
+          "name": "id",
+          "pattern": "^feat_arc_sta__[0-9a-z_]+$",
+          "required": true,
+          "inherited": false
         },
         {
           "name": "safety",
@@ -1775,6 +1877,12 @@
           "name": "hash",
           "pattern": "^.*$",
           "required": false,
+          "inherited": false
+        },
+        {
+          "name": "id",
+          "pattern": "^feat_req__[0-9a-z_]+$",
+          "required": true,
           "inherited": false
         },
         {
@@ -1906,6 +2014,12 @@
           "inherited": false
         },
         {
+          "name": "id",
+          "pattern": "^feat_saf_dfa__[0-9a-z_]+$",
+          "required": true,
+          "inherited": false
+        },
+        {
           "name": "mitigation_issue",
           "pattern": "^https://github\\.com/[^/]+/[^/]+/issues/\\d+$",
           "required": false,
@@ -2015,6 +2129,12 @@
           "inherited": false
         },
         {
+          "name": "id",
+          "pattern": "^feat_saf_fmea__[0-9a-z_]+$",
+          "required": true,
+          "inherited": false
+        },
+        {
           "name": "mitigation_issue",
           "pattern": "^https://github\\.com/[^/]+/[^/]+/issues/\\d+$",
           "required": false,
@@ -2103,6 +2223,12 @@
         {
           "name": "content",
           "pattern": "^[\\s\\S]+$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "id",
+          "pattern": "^feat_sec_ana__[0-9a-z_]+$",
           "required": true,
           "inherited": false
         },
@@ -2196,6 +2322,12 @@
           "inherited": false
         },
         {
+          "name": "id",
+          "pattern": "^feat_sec_threat__[0-9a-z_]+$",
+          "required": true,
+          "inherited": false
+        },
+        {
           "name": "source_code_link",
           "pattern": "^https://github.com/.*",
           "required": false,
@@ -2246,6 +2378,12 @@
           "pattern": "^.*$",
           "required": false,
           "inherited": true
+        },
+        {
+          "name": "id",
+          "pattern": "^gd_chklst__[0-9a-z_]+$",
+          "required": true,
+          "inherited": false
         },
         {
           "name": "source_code_link",
@@ -2303,6 +2441,12 @@
           "inherited": true
         },
         {
+          "name": "id",
+          "pattern": "^gd_guidl__[0-9a-z_]+$",
+          "required": true,
+          "inherited": false
+        },
+        {
           "name": "source_code_link",
           "pattern": "^https://github.com/.*",
           "required": false,
@@ -2356,6 +2500,12 @@
           "pattern": "^.*$",
           "required": false,
           "inherited": true
+        },
+        {
+          "name": "id",
+          "pattern": "^gd_meth__[0-9a-z_]+$",
+          "required": true,
+          "inherited": false
         },
         {
           "name": "source_code_link",
@@ -2421,6 +2571,12 @@
           "inherited": false
         },
         {
+          "name": "id",
+          "pattern": "^gd_req__[0-9a-z_]+$",
+          "required": true,
+          "inherited": false
+        },
+        {
           "name": "source_code_link",
           "pattern": "^https://github.com/.*",
           "required": false,
@@ -2476,6 +2632,12 @@
           "pattern": "^.*$",
           "required": false,
           "inherited": true
+        },
+        {
+          "name": "id",
+          "pattern": "^gd_temp__[0-9a-z_]+$",
+          "required": true,
+          "inherited": false
         },
         {
           "name": "source_code_link",
@@ -2534,6 +2696,12 @@
           "pattern": "^.*$",
           "required": false,
           "inherited": true
+        },
+        {
+          "name": "id",
+          "pattern": "^logic_arc_int__[0-9a-z_]+$",
+          "required": true,
+          "inherited": false
         },
         {
           "name": "safety",
@@ -2613,6 +2781,12 @@
           "inherited": true
         },
         {
+          "name": "id",
+          "pattern": "^logic_arc_int_op__[0-9a-z_]+$",
+          "required": true,
+          "inherited": false
+        },
+        {
           "name": "safety",
           "pattern": "^(QM|ASIL_B)$",
           "required": true,
@@ -2680,6 +2854,12 @@
           "pattern": "^.*$",
           "required": false,
           "inherited": true
+        },
+        {
+          "name": "id",
+          "pattern": "^mod__[0-9a-z_]+$",
+          "required": true,
+          "inherited": false
         },
         {
           "name": "maturity",
@@ -2766,6 +2946,12 @@
           "name": "branch_coverage_percent",
           "pattern": "^(100|[1-9]?[0-9])$",
           "required": false,
+          "inherited": false
+        },
+        {
+          "name": "id",
+          "pattern": "^mod_vrep__[0-9a-z_]+$",
+          "required": true,
           "inherited": false
         },
         {
@@ -2880,6 +3066,12 @@
           "inherited": true
         },
         {
+          "name": "id",
+          "pattern": "^mod_view_dyn__[0-9a-z_]+$",
+          "required": true,
+          "inherited": false
+        },
+        {
           "name": "source_code_link",
           "pattern": "^https://github.com/.*",
           "required": false,
@@ -2929,6 +3121,12 @@
           "pattern": "^.*$",
           "required": false,
           "inherited": true
+        },
+        {
+          "name": "id",
+          "pattern": "^mod_view_sta__[0-9a-z_]+$",
+          "required": true,
+          "inherited": false
         },
         {
           "name": "source_code_link",
@@ -3002,6 +3200,12 @@
         {
           "name": "failure_id",
           "pattern": "^.+$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "id",
+          "pattern": "^plat_saf_dfa__[0-9a-z_]+$",
           "required": true,
           "inherited": false
         },
@@ -3097,6 +3301,12 @@
           "inherited": false
         },
         {
+          "name": "id",
+          "pattern": "^plat_sec_ana__[0-9a-z_]+$",
+          "required": true,
+          "inherited": false
+        },
+        {
           "name": "mitigation_issue",
           "pattern": "^https://github\\.com/[^/]+/[^/]+/issues/\\d+$",
           "required": false,
@@ -3186,6 +3396,12 @@
           "inherited": false
         },
         {
+          "name": "id",
+          "pattern": "^plat_sec_threat__[0-9a-z_]+$",
+          "required": true,
+          "inherited": false
+        },
+        {
           "name": "source_code_link",
           "pattern": "^https://github.com/.*",
           "required": false,
@@ -3241,6 +3457,12 @@
           "name": "detection_sufficient",
           "pattern": "^(YES|NO)$",
           "required": false,
+          "inherited": false
+        },
+        {
+          "name": "id",
+          "pattern": "^potential_tool_malfunction__[0-9a-z_]+$",
+          "required": true,
           "inherited": false
         },
         {
@@ -3316,6 +3538,12 @@
           "inherited": true
         },
         {
+          "name": "id",
+          "pattern": "^real_arc_int__[0-9a-z_]+$",
+          "required": true,
+          "inherited": false
+        },
+        {
           "name": "language",
           "pattern": "^(cpp|rust)$",
           "required": true,
@@ -3389,6 +3617,12 @@
           "pattern": "^.*$",
           "required": false,
           "inherited": true
+        },
+        {
+          "name": "id",
+          "pattern": "^real_arc_int_op__[0-9a-z_]+$",
+          "required": true,
+          "inherited": false
         },
         {
           "name": "safety",
@@ -3478,6 +3712,12 @@
           "inherited": false
         },
         {
+          "name": "id",
+          "pattern": "^review_header__[0-9a-z_]+$",
+          "required": true,
+          "inherited": false
+        },
+        {
           "name": "reviewers",
           "pattern": "^.+$",
           "required": true,
@@ -3528,6 +3768,12 @@
           "pattern": "^.*$",
           "required": false,
           "inherited": true
+        },
+        {
+          "name": "id",
+          "pattern": "^rl__[0-9a-z_]+$",
+          "required": true,
+          "inherited": false
         },
         {
           "name": "source_code_link",
@@ -3699,6 +3945,12 @@
           "inherited": false
         },
         {
+          "name": "id",
+          "pattern": "^stkh_req__[0-9a-z_]+$",
+          "required": true,
+          "inherited": false
+        },
+        {
           "name": "rationale",
           "pattern": "^.+$",
           "required": true,
@@ -3858,6 +4110,12 @@
           "inherited": false
         },
         {
+          "name": "id",
+          "pattern": "^testcase__[0-9a-z_]+$",
+          "required": true,
+          "inherited": false
+        },
+        {
           "name": "line",
           "pattern": "^.*$",
           "required": false,
@@ -3956,6 +4214,12 @@
           "inherited": false
         },
         {
+          "name": "id",
+          "pattern": "^tool_req__[0-9a-z_]+$",
+          "required": true,
+          "inherited": false
+        },
+        {
           "name": "implemented",
           "pattern": "^(YES|PARTIAL|NO)$",
           "required": false,
@@ -4048,6 +4312,12 @@
           "pattern": "^.*$",
           "required": false,
           "inherited": true
+        },
+        {
+          "name": "id",
+          "pattern": "^tool_usecase__[0-9a-z_]+$",
+          "required": true,
+          "inherited": false
         },
         {
           "name": "source_code_link",
@@ -4158,6 +4428,12 @@
           "inherited": true
         },
         {
+          "name": "id",
+          "pattern": "^wf__[0-9a-z_]+$",
+          "required": true,
+          "inherited": false
+        },
+        {
           "name": "source_code_link",
           "pattern": "^https://github.com/.*",
           "required": false,
@@ -4266,6 +4542,12 @@
           "inherited": true
         },
         {
+          "name": "id",
+          "pattern": "^wp__[0-9a-z_]+$",
+          "required": true,
+          "inherited": false
+        },
+        {
           "name": "source_code_link",
           "pattern": "^https://github.com/.*",
           "required": false,
@@ -4315,7 +4597,10 @@
         "real_arc_int_op"
       ],
       "condition_raw": "safety == QM",
-      "check_raw": null,
+      "check_type": "check_all",
+      "check_raw": {
+        "fulfils": "safety != QM"
+      },
       "explanation": "An QM architecture element cannot implement ASIL requirements."
     },
     {
@@ -4330,7 +4615,10 @@
         "real_arc_int"
       ],
       "condition_raw": "safety != QM",
-      "check_raw": null,
+      "check_type": "check_one",
+      "check_raw": {
+        "fulfils": "safety == self.safety"
+      },
       "explanation": "A safety relevant architecture element must be linked to at least one requirement with the exact same safety value via fulfils."
     },
     {
@@ -4344,7 +4632,10 @@
         "real_arc_int_op"
       ],
       "condition_raw": "security == YES",
-      "check_raw": null,
+      "check_type": "check_all",
+      "check_raw": {
+        "implements": "security == YES"
+      },
       "explanation": "An security architecture element can only link other security architecture elements."
     },
     {
@@ -4358,7 +4649,10 @@
         "tool_req"
       ],
       "condition_raw": "safety == QM",
-      "check_raw": null,
+      "check_type": "check_all",
+      "check_raw": {
+        "derived_from": "safety == QM"
+      },
       "explanation": "QM requirements cannot be derived from ASIL requirements."
     },
     {
@@ -4384,7 +4678,20 @@
           }
         ]
       },
-      "check_raw": null,
+      "check_type": "check_all",
+      "check_raw": {
+        "implements": {
+          "and": [
+            "safety != QM",
+            {
+              "or": [
+                "status == valid",
+                "status == valid_inspected"
+              ]
+            }
+          ]
+        }
+      },
       "explanation": "An safety architecture element can only link other safety architecture elements."
     },
     {
@@ -4396,7 +4703,15 @@
         "comp_saf_fmea"
       ],
       "condition_raw": "status == valid",
-      "check_raw": null,
+      "check_type": "check_one",
+      "check_raw": {
+        "mitigated_by": {
+          "or": [
+            "safety == ASIL_B",
+            "type == aou_req"
+          ]
+        }
+      },
       "explanation": "Valid safety analyses should link to at least one same-level or higher-safety requirement, or an Assumption of Use requirement."
     },
     {
@@ -4405,7 +4720,15 @@
         "workproduct"
       ],
       "condition_raw": "complies != []",
-      "check_raw": null,
+      "check_type": "check_all",
+      "check_raw": {
+        "complies": {
+          "or": [
+            "id contains aspice_40__iic",
+            "id contains std_wp"
+          ]
+        }
+      },
       "explanation": "Workproducts may only link to ASPICE 40 IIC stakeholder requirements. Please ensure that the linked requirement is an ASPICE 40 IIC stakeholder requirement."
     }
   ]

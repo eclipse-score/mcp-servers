@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "metamodel_digest": "sha256:6d6cca74c544bef3b157c6147f922eb3691ae83a1c63ca8c086a7bbed79dd3d0",
+  "metamodel_digest": "sha256:7738493d64db1b23d7bf75a5ac79f40f0bf015c77d0eb9f948a3a553eb5ee47c",
   "base_options": {
     "mandatory": [],
     "optional": [
@@ -67,6 +67,12 @@
           "inherited": true
         },
         {
+          "name": "id",
+          "pattern": "^T1[0-9a-z_]+$",
+          "required": true,
+          "inherited": false
+        },
+        {
           "name": "opt1",
           "pattern": "value1",
           "required": true,
@@ -112,6 +118,7 @@
         "type1"
       ],
       "condition_raw": "opt1 == test",
+      "check_type": "check_all",
       "check_raw": {
         "link1": "opt1 == test"
       },

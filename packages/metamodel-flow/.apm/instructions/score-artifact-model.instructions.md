@@ -1,11 +1,11 @@
-<!-- SPDX-License-Identifier: Apache-2.0 -->
-<!-- Copyright (c) 2026 Contributors to the Eclipse Foundation -->
-
 ---
 name: score-artifact-model
 description: Normative S-CORE artifact model — need types, options, links and graph rules
 applyTo: "**/*.rst"
 ---
+
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+<!-- Copyright (c) 2026 Contributors to the Eclipse Foundation -->
 
 # S-CORE Artifact Model
 
@@ -29,6 +29,7 @@ Parts: `3`
 
 **Mandatory options**
 - `content` (mandatory): `^[\s\S]+$`
+- `id` (mandatory): `^aou_req__[0-9a-z_]+$`
 - `reqtype` (mandatory): `^(Functional|Interface|Process|Non-Functional)$`
 - `safety` (mandatory): `^(QM|ASIL_B)$`
 - `security` (mandatory): `^(YES|NO)$`
@@ -65,6 +66,7 @@ Tags: `architecture_element`
 Parts: `2`
 
 **Mandatory options**
+- `id` (mandatory): `^comp__[0-9a-z_]+$`
 - `safety` (mandatory): `^(QM|ASIL_B)$`
 - `security` (mandatory): `^(YES|NO)$`
 - `status` (mandatory): `^(valid|invalid|valid_inspected)$`
@@ -90,6 +92,7 @@ Tags: `architecture_view`
 Parts: `3`
 
 **Mandatory options**
+- `id` (mandatory): `^comp_arc_dyn__[0-9a-z_]+$`
 - `safety` (mandatory): `^(QM|ASIL_B)$`
 - `security` (mandatory): `^(YES|NO)$`
 - `status` (mandatory): `^(valid|invalid|valid_inspected)$`
@@ -112,6 +115,7 @@ Tags: `architecture_view`
 Parts: `3`
 
 **Mandatory options**
+- `id` (mandatory): `^comp_arc_sta__[0-9a-z_]+$`
 - `safety` (mandatory): `^(QM|ASIL_B)$`
 - `security` (mandatory): `^(YES|NO)$`
 - `status` (mandatory): `^(valid|invalid|valid_inspected)$`
@@ -136,6 +140,7 @@ Parts: `3`
 
 **Mandatory options**
 - `content` (mandatory): `^[\s\S]+$`
+- `id` (mandatory): `^comp_req__[0-9a-z_]+$`
 - `reqtype` (mandatory): `^(Functional|Interface|Process|Non-Functional)$`
 - `safety` (mandatory): `^(QM|ASIL_B)$`
 - `security` (mandatory): `^(YES|NO)$`
@@ -167,6 +172,7 @@ Parts: `3`
 - `content` (mandatory): `^[\s\S]+$`
 - `failure_effect` (mandatory): `^.+$`
 - `failure_id` (mandatory): `^.+$`
+- `id` (mandatory): `^comp_saf_dfa__[0-9a-z_]+$`
 - `status` (mandatory): `^(valid|invalid)$`
 - `sufficient` (mandatory): `^(yes|no)$`
 - `version` (mandatory): `^[0-9]+$`
@@ -193,6 +199,7 @@ Parts: `3`
 - `content` (mandatory): `^[\s\S]+$`
 - `failure_effect` (mandatory): `^.+$`
 - `fault_id` (mandatory): `^.+$`
+- `id` (mandatory): `^comp_saf_fmea__[0-9a-z_]+$`
 - `status` (mandatory): `^(valid|invalid)$`
 - `sufficient` (mandatory): `^(yes|no)$`
 - `version` (mandatory): `^[0-9]+$`
@@ -218,6 +225,7 @@ Parts: `3`
 
 **Mandatory options**
 - `content` (mandatory): `^[\s\S]+$`
+- `id` (mandatory): `^comp_sec_ana__[0-9a-z_]+$`
 - `status` (mandatory): `^(valid|invalid)$`
 - `sufficient` (mandatory): `^(yes|no)$`
 - `threat_effect` (mandatory): `^.+$`
@@ -240,6 +248,7 @@ Parts: `3`
 
 **Mandatory options**
 - `content` (mandatory): `^[\s\S]+$`
+- `id` (mandatory): `^comp_sec_threat__[0-9a-z_]+$`
 - `status` (mandatory): `^(valid|invalid)$`
 - `threat_id` (mandatory): `^(AU_01_0[1-3]|AZ_01_0[1-3]|CT_01_0[1-2]|DS_01_0[1-3]|EX_01_0[1-6]|LA_01_0[1-3]|MT_01_0[1-7])$`
 - `version` (mandatory): `^[0-9]+$`
@@ -255,6 +264,7 @@ Parts: `3`
 **Mandatory options**
 - `context` (mandatory): `^.+$`
 - `decision` (mandatory): `^.+$`
+- `id` (mandatory): `^dec_rec__[0-9a-z_]+$`
 - `status` (mandatory): `^(proposed|accepted|deprecated|rejected|superseded)$`
 - `version` (mandatory): `^[0-9]+$`
 
@@ -273,6 +283,7 @@ Parts: `3`
 Parts: `2`
 
 **Mandatory options**
+- `id` (mandatory): `^doc_concept__[0-9a-z_]+$`
 - `status` (mandatory): `^(valid|draft)$`
 - `version` (mandatory): `^[0-9]+$`
 
@@ -286,6 +297,7 @@ Parts: `2`
 Parts: `2`
 
 **Mandatory options**
+- `id` (mandatory): `^doc_getstrt__[0-9a-z_]+$`
 - `status` (mandatory): `^(valid|draft)$`
 - `version` (mandatory): `^[0-9]+$`
 
@@ -299,6 +311,7 @@ Parts: `2`
 Parts: `2`
 
 **Mandatory options**
+- `id` (mandatory): `^doc_tool__[0-9a-z_]+$`
 - `security_affected` (mandatory): `^(YES|NO)$`
 - `status` (mandatory): `^(draft|evaluated|qualified|released|rejected)$`
 - `version` (mandatory): `^[0-9]+$`
@@ -323,6 +336,7 @@ Prefix: `doc__`
 Parts: `2`
 
 **Mandatory options**
+- `id` (mandatory): `^doc__[0-9a-z_]+$`
 - `safety` (mandatory): `^(QM|ASIL_B)$`
 - `security` (mandatory): `^(YES|NO)$`
 - `status` (mandatory): `^(valid|draft|invalid)$`
@@ -346,6 +360,7 @@ Tags: `architecture_element`
 Parts: `2`
 
 **Mandatory options**
+- `id` (mandatory): `^feat__[0-9a-z_]+$`
 - `safety` (mandatory): `^(QM|ASIL_B)$`
 - `security` (mandatory): `^(YES|NO)$`
 - `status` (mandatory): `^(valid|invalid|valid_inspected)$`
@@ -367,6 +382,7 @@ Tags: `architecture_element`, `architecture_view`
 Parts: `3`
 
 **Mandatory options**
+- `id` (mandatory): `^feat_arc_dyn__[0-9a-z_]+$`
 - `safety` (mandatory): `^(QM|ASIL_B)$`
 - `security` (mandatory): `^(YES|NO)$`
 - `status` (mandatory): `^(valid|invalid|valid_inspected)$`
@@ -389,6 +405,7 @@ Tags: `architecture_element`, `architecture_view`
 Parts: `3`
 
 **Mandatory options**
+- `id` (mandatory): `^feat_arc_sta__[0-9a-z_]+$`
 - `safety` (mandatory): `^(QM|ASIL_B)$`
 - `security` (mandatory): `^(YES|NO)$`
 - `status` (mandatory): `^(valid|invalid|valid_inspected)$`
@@ -413,6 +430,7 @@ Parts: `3`
 
 **Mandatory options**
 - `content` (mandatory): `^[\s\S]+$`
+- `id` (mandatory): `^feat_req__[0-9a-z_]+$`
 - `reqtype` (mandatory): `^(Functional|Interface|Process|Non-Functional)$`
 - `safety` (mandatory): `^(QM|ASIL_B)$`
 - `security` (mandatory): `^(YES|NO)$`
@@ -444,6 +462,7 @@ Parts: `3`
 - `content` (mandatory): `^[\s\S]+$`
 - `failure_effect` (mandatory): `^.+$`
 - `failure_id` (mandatory): `^.+$`
+- `id` (mandatory): `^feat_saf_dfa__[0-9a-z_]+$`
 - `status` (mandatory): `^(valid|invalid)$`
 - `sufficient` (mandatory): `^(yes|no)$`
 - `version` (mandatory): `^[0-9]+$`
@@ -470,6 +489,7 @@ Parts: `3`
 - `content` (mandatory): `^[\s\S]+$`
 - `failure_effect` (mandatory): `^.+$`
 - `fault_id` (mandatory): `^.+$`
+- `id` (mandatory): `^feat_saf_fmea__[0-9a-z_]+$`
 - `status` (mandatory): `^(valid|invalid)$`
 - `sufficient` (mandatory): `^(yes|no)$`
 - `version` (mandatory): `^[0-9]+$`
@@ -495,6 +515,7 @@ Parts: `3`
 
 **Mandatory options**
 - `content` (mandatory): `^[\s\S]+$`
+- `id` (mandatory): `^feat_sec_ana__[0-9a-z_]+$`
 - `status` (mandatory): `^(valid|invalid)$`
 - `sufficient` (mandatory): `^(yes|no)$`
 - `threat_effect` (mandatory): `^.+$`
@@ -517,6 +538,7 @@ Parts: `3`
 
 **Mandatory options**
 - `content` (mandatory): `^[\s\S]+$`
+- `id` (mandatory): `^feat_sec_threat__[0-9a-z_]+$`
 - `status` (mandatory): `^(valid|invalid)$`
 - `threat_id` (mandatory): `^(AU_01_0[1-3]|AZ_01_0[1-3]|CT_01_0[1-2]|DS_01_0[1-3]|EX_01_0[1-6]|LA_01_0[1-3]|MT_01_0[1-7])$`
 - `version` (mandatory): `^[0-9]+$`
@@ -531,6 +553,7 @@ Parts: `3`
 Parts: `2`
 
 **Mandatory options**
+- `id` (mandatory): `^gd_chklst__[0-9a-z_]+$`
 - `status` (mandatory): `^(valid|draft)$`
 - `version` (mandatory): `^[0-9]+$`
 
@@ -547,6 +570,7 @@ Parts: `2`
 Parts: `2`
 
 **Mandatory options**
+- `id` (mandatory): `^gd_guidl__[0-9a-z_]+$`
 - `status` (mandatory): `^(valid|draft)$`
 - `version` (mandatory): `^[0-9]+$`
 
@@ -564,6 +588,7 @@ Prefix: `gd_meth__`
 Parts: `2`
 
 **Mandatory options**
+- `id` (mandatory): `^gd_meth__[0-9a-z_]+$`
 - `status` (mandatory): `^(valid|draft)$`
 - `version` (mandatory): `^[0-9]+$`
 
@@ -582,6 +607,7 @@ Parts: `2`
 
 **Mandatory options**
 - `content` (mandatory): `^[\s\S]+$`
+- `id` (mandatory): `^gd_req__[0-9a-z_]+$`
 - `version` (mandatory): `^[0-9]+$`
 
 **Optional options**
@@ -598,6 +624,7 @@ Parts: `2`
 Parts: `2`
 
 **Mandatory options**
+- `id` (mandatory): `^gd_temp__[0-9a-z_]+$`
 - `status` (mandatory): `^(valid|draft)$`
 - `version` (mandatory): `^[0-9]+$`
 
@@ -615,6 +642,7 @@ Tags: `architecture_element`, `architecture_view`
 Parts: `3`
 
 **Mandatory options**
+- `id` (mandatory): `^logic_arc_int__[0-9a-z_]+$`
 - `safety` (mandatory): `^(QM|ASIL_B)$`
 - `security` (mandatory): `^(YES|NO)$`
 - `status` (mandatory): `^(valid|invalid|valid_inspected)$`
@@ -635,6 +663,7 @@ Tags: `architecture_element`
 Parts: `3`
 
 **Mandatory options**
+- `id` (mandatory): `^logic_arc_int_op__[0-9a-z_]+$`
 - `safety` (mandatory): `^(QM|ASIL_B)$`
 - `security` (mandatory): `^(YES|NO)$`
 - `status` (mandatory): `^(valid|invalid|valid_inspected)$`
@@ -654,6 +683,7 @@ Tags: `architecture_element`
 Parts: `2`
 
 **Mandatory options**
+- `id` (mandatory): `^mod__[0-9a-z_]+$`
 - `version` (mandatory): `^[0-9]+$`
 
 **Mandatory links**
@@ -675,6 +705,7 @@ Prefix: `mod_vrep__`
 Parts: `3`
 
 **Mandatory options**
+- `id` (mandatory): `^mod_vrep__[0-9a-z_]+$`
 - `safety` (mandatory): `^(QM|ASIL_B)$`
 - `security` (mandatory): `^(YES|NO)$`
 - `status` (mandatory): `^(valid|invalid)$`
@@ -704,6 +735,7 @@ Parts: `3`
 Parts: `3`
 
 **Mandatory options**
+- `id` (mandatory): `^mod_view_dyn__[0-9a-z_]+$`
 - `version` (mandatory): `^[0-9]+$`
 
 **Optional options**
@@ -720,6 +752,7 @@ Tags: `architecture_view`
 Parts: `3`
 
 **Mandatory options**
+- `id` (mandatory): `^mod_view_sta__[0-9a-z_]+$`
 - `version` (mandatory): `^[0-9]+$`
 
 **Optional options**
@@ -739,6 +772,7 @@ Parts: `3`
 - `content` (mandatory): `^[\s\S]+$`
 - `failure_effect` (mandatory): `^.+$`
 - `failure_id` (mandatory): `^.+$`
+- `id` (mandatory): `^plat_saf_dfa__[0-9a-z_]+$`
 - `status` (mandatory): `^(valid|invalid)$`
 - `sufficient` (mandatory): `^(yes|no)$`
 - `version` (mandatory): `^[0-9]+$`
@@ -763,6 +797,7 @@ Parts: `3`
 
 **Mandatory options**
 - `content` (mandatory): `^[\s\S]+$`
+- `id` (mandatory): `^plat_sec_ana__[0-9a-z_]+$`
 - `status` (mandatory): `^(valid|invalid)$`
 - `sufficient` (mandatory): `^(yes|no)$`
 - `threat_effect` (mandatory): `^.+$`
@@ -785,6 +820,7 @@ Parts: `3`
 
 **Mandatory options**
 - `content` (mandatory): `^[\s\S]+$`
+- `id` (mandatory): `^plat_sec_threat__[0-9a-z_]+$`
 - `status` (mandatory): `^(valid|invalid)$`
 - `threat_id` (mandatory): `^(AU_01_0[1-3]|AZ_01_0[1-3]|CT_01_0[1-2]|DS_01_0[1-3]|EX_01_0[1-6]|LA_01_0[1-3]|MT_01_0[1-7])$`
 - `version` (mandatory): `^[0-9]+$`
@@ -799,6 +835,7 @@ Parts: `3`
 Parts: `3`
 
 **Mandatory options**
+- `id` (mandatory): `^potential_tool_malfunction__[0-9a-z_]+$`
 - `safety_affected` (mandatory): `^(YES|NO)$`
 - `version` (mandatory): `^[0-9]+$`
 
@@ -819,6 +856,7 @@ Tags: `architecture_element`, `architecture_view`
 Parts: `3`
 
 **Mandatory options**
+- `id` (mandatory): `^real_arc_int__[0-9a-z_]+$`
 - `language` (mandatory): `^(cpp|rust)$`
 - `safety` (mandatory): `^(QM|ASIL_B)$`
 - `security` (mandatory): `^(YES|NO)$`
@@ -839,6 +877,7 @@ Tags: `architecture_element`
 Parts: `3`
 
 **Mandatory options**
+- `id` (mandatory): `^real_arc_int_op__[0-9a-z_]+$`
 - `safety` (mandatory): `^(QM|ASIL_B)$`
 - `security` (mandatory): `^(YES|NO)$`
 - `status` (mandatory): `^(valid|invalid|valid_inspected)$`
@@ -862,6 +901,7 @@ Parts: `3`
 **Mandatory options**
 - `approvers` (mandatory): `^.+$`
 - `hash` (mandatory): `^.+$`
+- `id` (mandatory): `^review_header__[0-9a-z_]+$`
 - `reviewers` (mandatory): `^.+$`
 - `template` (mandatory): `^.+$`
 - `version` (mandatory): `^[0-9]+$`
@@ -877,6 +917,7 @@ Prefix: `rl__`
 Parts: `2`
 
 **Mandatory options**
+- `id` (mandatory): `^rl__[0-9a-z_]+$`
 - `version` (mandatory): `^[0-9]+$`
 
 **Optional options**
@@ -924,6 +965,7 @@ Tags: `requirement`, `requirement_excl_process`
 Parts: `3`
 
 **Mandatory options**
+- `id` (mandatory): `^stkh_req__[0-9a-z_]+$`
 - `rationale` (mandatory): `^.+$`
 - `reqtype` (mandatory): `^(Functional|Interface|Process|Non-Functional)$`
 - `safety` (mandatory): `^(QM|ASIL_B)$`
@@ -961,6 +1003,7 @@ Parts: `3`
 ### `testcase` — Testcase Needs parsed from test.xml files
 
 **Mandatory options**
+- `id` (mandatory): `^testcase__[0-9a-z_]+$`
 - `version` (mandatory): `^[0-9]+$`
 
 **Optional options**
@@ -986,6 +1029,7 @@ Parts: `2`
 
 **Mandatory options**
 - `content` (mandatory): `^[\s\S]+$`
+- `id` (mandatory): `^tool_req__[0-9a-z_]+$`
 - `version` (mandatory): `^[0-9]+$`
 
 **Mandatory links**
@@ -1009,6 +1053,7 @@ Parts: `2`
 Parts: `3`
 
 **Mandatory options**
+- `id` (mandatory): `^tool_usecase__[0-9a-z_]+$`
 - `version` (mandatory): `^[0-9]+$`
 
 **Mandatory links**
@@ -1042,6 +1087,7 @@ Prefix: `wf__`
 Parts: `2`
 
 **Mandatory options**
+- `id` (mandatory): `^wf__[0-9a-z_]+$`
 - `status` (mandatory): `^(valid|draft)$`
 - `version` (mandatory): `^[0-9]+$`
 
@@ -1067,6 +1113,7 @@ Prefix: `wp__`
 Parts: `2`
 
 **Mandatory options**
+- `id` (mandatory): `^wp__[0-9a-z_]+$`
 - `status` (mandatory): `^(valid|draft)$`
 - `version` (mandatory): `^[0-9]+$`
 
@@ -1122,9 +1169,11 @@ Condition:
 safety == QM
 ```
 
-Check:
+Check (`check_all`: every linked need must satisfy its condition):
 ```text
-null
+{
+  "fulfils": "safety != QM"
+}
 ```
 
 Explanation: An QM architecture element cannot implement ASIL requirements.
@@ -1137,9 +1186,11 @@ Condition:
 safety != QM
 ```
 
-Check:
+Check (`check_one`: at least one linked need must satisfy its condition):
 ```text
-null
+{
+  "fulfils": "safety == self.safety"
+}
 ```
 
 Explanation: A safety relevant architecture element must be linked to at least one requirement with the exact same safety value via fulfils.
@@ -1152,9 +1203,11 @@ Condition:
 security == YES
 ```
 
-Check:
+Check (`check_all`: every linked need must satisfy its condition):
 ```text
-null
+{
+  "implements": "security == YES"
+}
 ```
 
 Explanation: An security architecture element can only link other security architecture elements.
@@ -1167,9 +1220,11 @@ Condition:
 safety == QM
 ```
 
-Check:
+Check (`check_all`: every linked need must satisfy its condition):
 ```text
-null
+{
+  "derived_from": "safety == QM"
+}
 ```
 
 Explanation: QM requirements cannot be derived from ASIL requirements.
@@ -1192,9 +1247,21 @@ Condition:
 }
 ```
 
-Check:
+Check (`check_all`: every linked need must satisfy its condition):
 ```text
-null
+{
+  "implements": {
+    "and": [
+      "safety != QM",
+      {
+        "or": [
+          "status == valid",
+          "status == valid_inspected"
+        ]
+      }
+    ]
+  }
+}
 ```
 
 Explanation: An safety architecture element can only link other safety architecture elements.
@@ -1207,9 +1274,16 @@ Condition:
 status == valid
 ```
 
-Check:
+Check (`check_one`: at least one linked need must satisfy its condition):
 ```text
-null
+{
+  "mitigated_by": {
+    "or": [
+      "safety == ASIL_B",
+      "type == aou_req"
+    ]
+  }
+}
 ```
 
 Explanation: Valid safety analyses should link to at least one same-level or higher-safety requirement, or an Assumption of Use requirement.
@@ -1222,9 +1296,16 @@ Condition:
 complies != []
 ```
 
-Check:
+Check (`check_all`: every linked need must satisfy its condition):
 ```text
-null
+{
+  "complies": {
+    "or": [
+      "id contains aspice_40__iic",
+      "id contains std_wp"
+    ]
+  }
+}
 ```
 
 Explanation: Workproducts may only link to ASPICE 40 IIC stakeholder requirements. Please ensure that the linked requirement is an ASPICE 40 IIC stakeholder requirement.

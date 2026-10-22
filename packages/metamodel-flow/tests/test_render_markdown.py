@@ -37,9 +37,9 @@ def test_rendering_is_deterministic() -> None:
 def test_rendered_frontmatter_has_instruction_metadata() -> None:
     rendered = render_markdown(load_agent_context(MODEL_PATH))
     lines = rendered.splitlines()
-    start = lines.index("---")
-    end = lines.index("---", start + 1)
-    frontmatter = dict(line.split(": ", 1) for line in lines[start + 1 : end])
+    assert lines[0] == "---"
+    end = lines.index("---", 1)
+    frontmatter = dict(line.split(": ", 1) for line in lines[1:end])
 
     assert frontmatter == {
         "name": "score-artifact-model",
@@ -49,6 +49,11 @@ def test_rendered_frontmatter_has_instruction_metadata() -> None:
         ),
         "applyTo": '"**/*.rst"',
     }
+
+
+def test_instruction_files_start_with_frontmatter() -> None:
+    for path in sorted(INSTRUCTION_PATH.parent.glob("*.instructions.md")):
+        assert path.read_text(encoding="utf-8").startswith("---\n"), path
 
 
 def test_real_projection_is_structurally_rendered() -> None:
@@ -67,6 +72,7 @@ def test_real_projection_is_structurally_rendered() -> None:
             )
         )
         assert condition in rendered
+        assert f"Check (`{rule.check_type}`:" in rendered
     assert "`links` — undeclared built-in link type." in rendered
 
 

@@ -35,14 +35,16 @@ import ruamel.yaml
 
 
 def parse_metamodel_yaml(raw: bytes) -> Mapping[str, Any]:
-    """Parse metamodel YAML bytes, defaulting malformed roots to empty data."""
+    """Parse metamodel YAML bytes, rejecting non-mapping roots."""
     yaml = ruamel.yaml.YAML(typ="safe", pure=True)
     loaded: Any = cast(Any, yaml).load(raw.decode("utf-8"))
-    return cast(Mapping[str, Any], loaded if isinstance(loaded, Mapping) else {})
+    if not isinstance(loaded, Mapping):
+        raise ValueError("metamodel YAML root must be a mapping")
+    return cast(Mapping[str, Any], loaded)
 
 
 def load_metamodel_yaml(path: Path) -> Mapping[str, Any]:
-    """Load a metamodel YAML file, defaulting malformed roots to empty data."""
+    """Load a metamodel YAML file, rejecting non-mapping roots."""
     return parse_metamodel_yaml(path.read_bytes())
 
 
@@ -146,6 +148,22 @@ def _type_options(
     return [options[name] for name in sorted(options)]
 
 
+def _with_default_id(
+    options: list[dict[str, Any]], prefix: str
+) -> list[dict[str, Any]]:
+    """Add the mandatory ``id`` pattern docs-as-code derives from the prefix."""
+    if any(option["name"] == "id" and option["required"] for option in options):
+        return options
+    default = {
+        "name": "id",
+        "pattern": f"^{prefix}[0-9a-z_]+$",
+        "required": True,
+        "inherited": False,
+    }
+    kept = [option for option in options if option["name"] != "id"]
+    return sorted([*kept, default], key=lambda option: option["name"])
+
+
 def _type_links(raw_type: Mapping[str, Any]) -> list[dict[str, Any]]:
     links: list[dict[str, Any]] = []
     for required, source_name in (
@@ -182,7 +200,10 @@ def _need_types(
                 "prefix": raw_type.get("prefix"),
                 "tags": _as_string_list(raw_type.get("tags")),
                 "parts": raw_type.get("parts"),
-                "options": _type_options(raw_type, base),
+                "options": _with_default_id(
+                    _type_options(raw_type, base),
+                    str(raw_type.get("prefix", f"{name}__")),
+                ),
                 "links": _type_links(raw_type),
             }
         )
@@ -241,17 +262,32 @@ def _link_types(data: Mapping[str, Any]) -> list[dict[str, str | bool | None]]:
     return sorted(result.values(), key=lambda item: item["name"] or "")
 
 
+CHECK_TYPES = ("check_all", "check_one")
+
+
+def _check_type(name: str, raw_rule: Mapping[str, Any]) -> str:
+    """Return the rule's check type, mirroring docs-as-code ``get_check``."""
+    present = [check_type for check_type in CHECK_TYPES if check_type in raw_rule]
+    if len(present) != 1:
+        raise ValueError(
+            f"graph check {name!r} must define exactly one of {', '.join(CHECK_TYPES)}"
+        )
+    return present[0]
+
+
 def _graph_rules(data: Mapping[str, Any]) -> list[dict[str, Any]]:
     result: list[dict[str, Any]] = []
     for name, raw_value in _as_mapping(data.get("graph_checks")).items():
         raw_rule = _as_mapping(raw_value)
         raw_needs = _as_mapping(raw_rule.get("needs"))
+        check_type = _check_type(str(name), raw_rule)
         result.append(
             {
                 "name": str(name),
                 "applies_to": _split_targets(raw_needs.get("include", ""))[0],
                 "condition_raw": _to_plain(raw_needs.get("condition")),
-                "check_raw": _to_plain(raw_rule.get("check")),
+                "check_type": check_type,
+                "check_raw": _to_plain(raw_rule.get(check_type)),
                 "explanation": raw_rule.get("explanation"),
             }
         )
