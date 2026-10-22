@@ -1,13 +1,15 @@
-# *******************************************************************************
-# Copyright (c) 2026 Contributors to the Eclipse Foundation
-#
-# SPDX-License-Identifier: Apache-2.0
-# *******************************************************************************
-
 ---
 name: setup-agent-context
 description: Initialize local graph and working-memory state for APM packages
 ---
+
+<!--
+*******************************************************************************
+Copyright (c) 2026 Contributors to the Eclipse Foundation
+
+SPDX-License-Identifier: Apache-2.0
+*******************************************************************************
+-->
 
 # Setup Agent Context
 

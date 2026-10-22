@@ -1,10 +1,10 @@
-<!-- SPDX-License-Identifier: Apache-2.0 -->
-<!-- Copyright (c) 2026 Contributors to the Eclipse Foundation -->
-
 ---
 name: track-implementation-progress
 description: Record implementation evidence, assess task completion, and publish implementation progress reports while implementing a staged issue
 ---
+
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+<!-- Copyright (c) 2026 Contributors to the Eclipse Foundation -->
 
 # Track Implementation Progress
 
