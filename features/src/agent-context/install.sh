@@ -17,6 +17,13 @@ SOURCE=git+https://github.com/eclipse-score/mcp-servers@4c562c1fafa337beacd9f076
 USER_NAME="${_REMOTE_USER:-vscode}"
 SHARE=/usr/local/share/agent-context
 
+# Check for required dependencies
+PYTHON3="$(command -v python3 || true)"
+if [ -z "${PYTHON3}" ]; then
+    echo "agent-context: python3 is required for the postCreate hook" >&2
+    exit 1
+fi
+
 UV="$(command -v uv || true)"
 if [ -z "${UV}" ]; then
     echo "agent-context: uv is required, see https://docs.astral.sh/uv/" >&2

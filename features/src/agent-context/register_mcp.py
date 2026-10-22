@@ -44,17 +44,30 @@ def update_json(path: Path, key: str, entry: dict[str, Any]) -> bool:
     path.parent.mkdir(parents=True, exist_ok=True)
     partial = path.with_name(path.name + ".agent-context")
     partial.write_text(json.dumps(config, indent=2) + "\n", encoding="utf-8")
-    partial.replace(path)
+    # Preserve original file permissions if file exists
+    if path.exists():
+        original_mode = path.stat().st_mode
+        partial.replace(path)
+        path.chmod(original_mode)
+    else:
+        partial.replace(path)
     return True
 
 
 def update_codex(path: Path, command: str) -> bool:
+    """Update or add the MCP server entry in Codex TOML config."""
+    import re
+
     text = path.read_text(encoding="utf-8") if path.exists() else ""
-    if f"[mcp_servers.{NAME}]" in text:
+
+    # Check for existing entry (including quoted forms)
+    pattern = rf'^\[mcp_servers\.["\']?{re.escape(NAME)}["\']?\]'
+    if re.search(pattern, text, re.MULTILINE):
         return True
+
     path.parent.mkdir(parents=True, exist_ok=True)
-    section = f"[mcp_servers.{NAME}]\ncommand = {json.dumps(command)}\n"
-    path.write_text(text + ("\n" if text else "") + section, encoding="utf-8")
+    section = f"\n[mcp_servers.{NAME}]\ncommand = {json.dumps(command)}\n"
+    path.write_text(text + section, encoding="utf-8")
     return True
 
 
@@ -92,8 +105,13 @@ def register(home: Path, which: Which = shutil.which) -> list[str]:
         present = which(agent) is not None or path.exists() or path.parent.is_dir()
         if path.parent == home:
             present = which(agent) is not None or path.exists()
-        if present and update(path):
-            registered.append(agent)
+        if present:
+            try:
+                if update(path):
+                    registered.append(agent)
+            except OSError as exc:
+                warn(f"could not register for {agent}: {exc}")
+                continue
     return registered
 
 
