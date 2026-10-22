@@ -250,12 +250,10 @@ def test_build_clears_graphify_out_env(
     assert not (repo / "wrong-output-dir").exists()
 
 
-def test_prepare_locking_prevents_race_condition(
-    repo: Path, tmp_path: Path
-) -> None:
+def test_prepare_locking_prevents_race_condition(repo: Path, tmp_path: Path) -> None:
     """prepare should lock during seeding to prevent race conditions."""
     # Simulate a race: first call starts, second call should skip seeding
-    seeded = []
+    seeded: list[str] = []
 
     def fake_fetch(module: str, tag: str, dest: Path) -> bool:
         seeded.append(f"{module}:{tag}")
@@ -267,12 +265,12 @@ def test_prepare_locking_prevents_race_condition(
         return True
 
     # First call should seed
-    graph1, thread1 = graph_cache.prepare(repo, fake_fetch, fake_builder)
+    _graph1, thread1 = graph_cache.prepare(repo, fake_fetch, fake_builder)
     thread1.join() if thread1 else None
 
     # Second call should find graph already exists (no re-seed)
     seeded.clear()
-    graph2, thread2 = graph_cache.prepare(repo, fake_fetch, fake_builder)
+    _graph2, thread2 = graph_cache.prepare(repo, fake_fetch, fake_builder)
     thread2.join() if thread2 else None
 
     # Second call should not have seeded (graph already exists)

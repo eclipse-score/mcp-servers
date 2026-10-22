@@ -313,12 +313,12 @@ class ContextDisciplineMCP:
                 Path.home() / ".local" / "share"
             )
             cache_root = Path(base) / "score-agent"
-            digest = hashlib.sha256(
-                str(self.repo_path.resolve()).encode()
-            ).hexdigest()[:12]
+            digest = hashlib.sha256(str(self.repo_path.resolve()).encode()).hexdigest()[
+                :12
+            ]
             cache = cache_root / f"{self.repo_path.name}-{digest}"
             graph_path = cache / "graph.json"
-        
+
         if graph_path.exists():
             return {"ok": True, "graph_path": str(graph_path)}
         return {

@@ -143,12 +143,10 @@ class MergedGraph:
                 Path.home() / ".local" / "share"
             )
             cache_root = Path(base) / "score-agent"
-            digest = hashlib.sha256(
-                str(repo.resolve()).encode()
-            ).hexdigest()[:12]
+            digest = hashlib.sha256(str(repo.resolve()).encode()).hexdigest()[:12]
             cache = cache_root / f"{repo.name}-{digest}"
             graph_path = cache / "graph.json"
-        
+
         if graph_path.exists():
             data = json.loads(graph_path.read_text(encoding="utf-8"))
             for raw in data.get("nodes", []):

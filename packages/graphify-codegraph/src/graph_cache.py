@@ -137,11 +137,11 @@ def _unpack(blob: bytes, dest: Path) -> None:
 
 def resolve_graph_path(cwd: Path) -> Path | None:
     """Resolve the graph path for a repository (shared with context-discipline).
-    
+
     Returns the path to the graph.json file, checking in order:
     1. Repository's graphify-out/graph.json
     2. User cache under ~/.local/share/score-agent
-    
+
     Returns None if:
     - SCORE_AGENT_GRAPH=off is set
     - Not in a git repository
@@ -227,7 +227,7 @@ def build(root: Path, cache: Path) -> bool:
     """Build a code-only graph into ``cache`` unless another build holds the lock."""
     head = git(root, "rev-parse", "HEAD") or ""
     cache.mkdir(parents=True, exist_ok=True)
-    
+
     # Platform-compatible file locking
     if fcntl is not None:
         lock_file = (cache / ".lock").open("w")
@@ -238,7 +238,7 @@ def build(root: Path, cache: Path) -> bool:
             return False
     else:
         lock_file = (cache / ".lock").open("w")
-    
+
     try:
         out = cache / "build"
         # Clear GRAPHIFY_OUT to prevent interference with --out flag
@@ -272,7 +272,7 @@ def build(root: Path, cache: Path) -> bool:
         if fcntl is not None:
             fcntl.flock(lock_file, fcntl.LOCK_UN)  # type: ignore[attr-defined]
         lock_file.close()
-    
+
     log("local graph build finished")
     return True
 
@@ -294,7 +294,7 @@ def prepare(
     cache = cache_dir(root)
     graph = cache / "graph.json"
     module = module_name(root)
-    
+
     # Seed from registry with locking to prevent race conditions
     if not graph.exists() and module and not os.environ.get("SCORE_AGENT_OFFLINE"):
         lock_file = _acquire_lock(cache)
@@ -307,7 +307,7 @@ def prepare(
                             break
             finally:
                 _release_lock(lock_file)
-    
+
     head_file = cache / "head"
     head = git(root, "rev-parse", "HEAD")
     current = head_file.exists() and head_file.read_text(encoding="utf-8") == head
