@@ -126,6 +126,17 @@ wm.query_graph("Find all database connections")
 
 You don't call the CLI repeatedly—that's the whole point of generating the graph once and querying it many times.
 
+**Programmatic access:** The `resolve_graph_path()` function provides the same lookup logic for other integrations:
+
+```python
+from graph_cache import resolve_graph_path
+
+# Find graph.json (in-repo or user cache)
+graph = resolve_graph_path(Path.cwd())
+if graph:
+    data = json.loads(graph.read_text())
+```
+
 ## Files in This Package
 
 - [README.md](README.md) — This file
@@ -175,3 +186,18 @@ Make sure you:
 
 This guidance package: Apache License 2.0  
 External graphify tool: [Graphify Labs License](https://github.com/Graphify-Labs/graphify/blob/main/LICENSE)
+
+## Where the graph comes from
+
+The server needs no setup in the repository and never writes into the worktree:
+
+1. An existing `graphify-out/graph.json` in the repository is used as is.
+2. Otherwise the graph lives in `~/.local/share/score-agent/<repo>-<hash>/`.
+   For eclipse-score repositories an empty cache is first seeded from
+   `ghcr.io/eclipse-score/mcp-servers/graphs/<repo>` (merge-base commit, then `main`);
+   the download is checked against its sha256 digest.
+3. Whenever HEAD moved, a code-only build runs in the background and replaces the
+   graph; the server reloads it automatically.
+
+Set `SCORE_AGENT_OFFLINE=1` to skip the download, `SCORE_AGENT_GRAPH=off` for the
+plain graphify behaviour.

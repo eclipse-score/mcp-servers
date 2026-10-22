@@ -148,7 +148,7 @@ def build_requirements(
     tuple[RequirementNode, ...], tuple[RequirementEdge, ...], AdapterReport, str
 ]:
     """Build a deterministic requirements projection from needs JSON."""
-    document, needs, digest = _load_input(needs_json_path)
+    _document, needs, digest = _load_input(needs_json_path)
 
     skipped_needs = 0
     ignored_types = 0
