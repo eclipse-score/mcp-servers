@@ -207,6 +207,14 @@ Releases are started by hand with **Actions → Release → Run workflow** on `m
 PR titles must follow [Conventional Commits](https://www.conventionalcommits.org/)
 (checked by the `PR title` workflow).
 
+Keep in mind:
+
+- `main` keeps the pins of the last release prepared on it, so `uvx` from `main` runs
+  that release, not the newest code. New packages added on `main` pin that same SHA
+  and get their own pin with the next release.
+- Commits with non-conventional titles do not count towards the version. If only such
+  commits landed since the last tag, set the `version` input by hand.
+
 ## More Information
 
 - **Setup MCP:** See [packages/apm-setup/README.md](packages/apm-setup/README.md)
