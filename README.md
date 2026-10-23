@@ -193,15 +193,19 @@ MCP sources are pinned to a commit SHA with the version as a comment:
 - git+https://github.com/eclipse-score/mcp-servers@<sha>#subdirectory=packages/apm-setup # v0.1.0
 ```
 
-1. On an up-to-date `main`, run `python3 scripts/prepare_release.py 0.2.0`.
-   It sets all package versions and pins the MCP sources to the current HEAD.
-2. Open a PR with only these changes and merge it.
-3. The `Release` workflow sees the new version, runs `scripts/check_pins.py --release`
-   (pinned commit may only differ in version metadata) and the tests, then creates
-   the tag `v0.2.0` and the GitHub release.
+Releases are started by hand with **Actions → Release → Run workflow** on `main`:
 
-If other changes land on `main` before the release PR, the release check fails;
-rerun step 1 on the new `main`.
+1. The version is taken from the `version` input, or derived by
+   `scripts/next_version.py` from the conventional-commit PR titles since the last tag
+   (`feat` minor, `fix`/`perf` patch, `!`/`BREAKING CHANGE:` major, minor on 0.x).
+2. `scripts/prepare_release.py` sets all versions and pins the MCP sources to `main` HEAD.
+3. After the tests, the pins are committed on a detached HEAD and tagged `vX.Y.Z`;
+   `scripts/check_pins.py --release` checks that commit only changes version metadata.
+   Only the tag is pushed, `main` keeps the pins of the last release prepared on it.
+4. The GitHub release is created and the devcontainer features are published from the tag.
+
+PR titles must follow [Conventional Commits](https://www.conventionalcommits.org/)
+(checked by the `PR title` workflow).
 
 ## More Information
 
