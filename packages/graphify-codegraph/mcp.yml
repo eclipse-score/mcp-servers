@@ -12,12 +12,12 @@
 # *******************************************************************************
 
 name: graphify-codegraph
-version: 0.1.0
+version: 0.2.0
 description: MCP server wrapping external graphify CLI for code graph queries
 command: uvx
 args:
   - --from
-  - git+https://github.com/eclipse-score/mcp-servers@4c562c1fafa337beacd9f076d739096aca998577#subdirectory=packages/graphify-codegraph # v0.1.0
+  - git+https://github.com/eclipse-score/mcp-servers@8d03dc1d61f648cf10113a0e5c6ac3fe52fc7fc3#subdirectory=packages/graphify-codegraph # v0.2.0
   - graphify-codegraph
 external_dependency:
   tool: graphify

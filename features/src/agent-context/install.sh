@@ -13,7 +13,7 @@
 # *******************************************************************************
 set -euo pipefail
 
-SOURCE=git+https://github.com/eclipse-score/mcp-servers@4c562c1fafa337beacd9f076d739096aca998577#subdirectory=packages/graphify-codegraph # v0.1.0
+SOURCE=git+https://github.com/eclipse-score/mcp-servers@8d03dc1d61f648cf10113a0e5c6ac3fe52fc7fc3#subdirectory=packages/graphify-codegraph # v0.2.0
 USER_NAME="${_REMOTE_USER:-vscode}"
 SHARE=/usr/local/share/agent-context
 

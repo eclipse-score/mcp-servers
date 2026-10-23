@@ -245,7 +245,7 @@ requires-dist = [{ name = "pydantic", specifier = ">=2" }]
 
 [[package]]
 name = "score-sdlc-harness"
-version = "0.1.0"
+version = "0.2.0"
 source = { editable = "packages/sdlc-harness" }
 
 [[package]]
