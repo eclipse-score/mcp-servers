@@ -1,0 +1,31 @@
+id: 02_logging_mechanism
+category: code_structure
+difficulty: medium
+question: |
+  How is logging implemented? Show the main logging functions and their call hierarchy.
+expected_answer: |
+  Logging is implemented in score/mw/log namespace.
+  
+  Main components:
+  - Log stream classes for message formatting
+  - Log types for severity levels
+  - Configuration for log output
+  
+  Typical call hierarchy:
+  - User code calls LOG_* macros
+  - Creates LogStream object
+  - Formats message
+  - Outputs to configured destination
+validation:
+  must_include:
+    - score/mw/log
+    - LogStream
+  should_include:
+    - LOG_INFO
+    - LOG_ERROR
+    - LOG_DEBUG
+  forbidden: []
+graph_expected_features:
+  - Class nodes for LogStream, LogTypes
+  - Function nodes for logging
+  - Call edges showing hierarchy

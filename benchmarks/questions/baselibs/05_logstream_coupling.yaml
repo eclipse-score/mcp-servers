@@ -1,0 +1,33 @@
+id: 05_logstream_coupling
+category: impact_analysis
+difficulty: hard
+question: |
+  What are ALL the components that depend on LogStream? 
+  If we refactor LogStream, what else needs to change?
+expected_answer: |
+  List of dependents:
+  - Direct users (imports LogStream)
+  - Indirect users (calls functions that use LogStream)
+  - Test files that mock LogStream
+  - Configuration that references LogStream
+  
+  Should show impact radius and coupling strength.
+validation:
+  must_include:
+    - direct_dependencies
+    - usage_locations
+  should_include:
+    - indirect_dependencies
+    - test_files
+  forbidden: []
+graph_expected_features:
+  - Incoming edges to LogStream
+  - Dependency depth
+  - Community/namespace membership
+notes: |
+  grep can find "LogStream" mentions but can't show:
+  - Indirect dependencies
+  - Impact radius
+  - Coupling metrics
+  
+  You'd need to grep, then manually trace each usage.

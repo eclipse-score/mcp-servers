@@ -1,0 +1,30 @@
+id: 02_lola_binding
+category: code_structure
+difficulty: medium
+question: |
+  How does the LoLa binding work? Show the main classes and their interactions.
+expected_answer: |
+  LoLa is a local communication binding.
+  
+  Main components:
+  - Service discovery and registration
+  - Shared memory communication
+  - Proxy/skeleton pattern for service interfaces
+  
+  Key classes likely in:
+  - score/mw/com/bindings/lola/
+  - Service proxy and skeleton classes
+  - Shared memory management
+validation:
+  must_include:
+    - lola
+    - binding
+  should_include:
+    - proxy
+    - skeleton
+    - shared_memory
+  forbidden: []
+graph_expected_features:
+  - Class nodes for proxy/skeleton
+  - File structure in lola directory
+  - Dependencies on shared memory utilities

@@ -1,0 +1,28 @@
+id: 03_error_handling
+category: code_structure
+difficulty: medium
+question: |
+  What error handling patterns are used? Show the main error classes and how they're structured.
+expected_answer: |
+  Error handling in baselibs uses C++ exceptions and error codes.
+  
+  Patterns:
+  - Exception classes for different error types
+  - Result types for expected errors
+  - Error logging integration
+  
+  Key components likely in:
+  - score/language/safecpp for safe error handling
+  - Custom exception types in relevant namespaces
+validation:
+  must_include:
+    - exception
+    - error
+  should_include:
+    - Result
+    - SafeCpp
+  forbidden: []
+graph_expected_features:
+  - Class nodes for exception types
+  - Inheritance edges for exception hierarchy
+  - Usage in try/catch blocks

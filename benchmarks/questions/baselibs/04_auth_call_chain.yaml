@@ -1,0 +1,31 @@
+id: 04_auth_call_chain
+category: code_understanding
+difficulty: hard
+question: |
+  Trace the call chain: When a user calls authenticate(), what functions are called?
+  Show the execution flow from authenticate() down to the lowest level functions.
+expected_answer: |
+  Call chain showing:
+  - authenticate() entry point
+  - Validation functions called
+  - Token verification steps
+  - Database/filesystem access
+  - Error handling paths
+  
+  Graph should show complete call tree depth 3-5 levels.
+validation:
+  must_include:
+    - function_names
+    - call_depth
+  should_include:
+    - parameters
+    - error_paths
+  forbidden: []
+graph_expected_features:
+  - Call edges from authenticate()
+  - Transitive closure of calls
+  - Function nodes with parameters
+notes: |
+  This CANNOT be answered with grep alone. You'd need to manually trace
+  through multiple files, following function calls. Graphify answers in
+  one query.

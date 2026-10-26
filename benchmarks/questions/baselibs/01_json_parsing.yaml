@@ -1,0 +1,27 @@
+id: 01_json_parsing
+category: code_structure
+difficulty: easy
+question: |
+  Where is JSON parsing implemented in baselibs? List the main components.
+expected_answer: |
+  JSON parsing is implemented in:
+  - score/json namespace - main JSON functionality
+  - Uses nlohmann/json as the underlying library
+  - Key files likely in score/json/ directory
+  
+  Components:
+  - Parser implementation
+  - JSON validation
+  - Serialization/deserialization
+validation:
+  must_include:
+    - score/json
+    - nlohmann
+  should_include:
+    - parser
+    - serialize
+  forbidden: []
+graph_expected_features:
+  - Files/nodes in score/json path
+  - Dependencies on nlohmann library
+  - Function nodes for parsing/serialization

@@ -1,0 +1,30 @@
+id: 01_mw_com_structure
+category: code_structure
+difficulty: easy
+question: |
+  What is the main structure of the communication middleware? What are the key namespaces?
+expected_answer: |
+  Communication middleware is in score/mw/com namespace.
+  
+  Structure:
+  - impl/ - Implementation details
+  - bindings/ - Communication binding implementations (e.g., LoLa)
+  - Configuration management
+  - Tracing support
+  
+  Key namespaces:
+  - score::mw::com - Main namespace
+  - score::mw::com::impl - Implementation
+  - score::mw::com::bindings - Bindings
+validation:
+  must_include:
+    - score/mw/com
+    - impl
+  should_include:
+    - bindings
+    - configuration
+  forbidden: []
+graph_expected_features:
+  - Namespace structure in code graph
+  - Directory/file organization
+  - Module boundaries

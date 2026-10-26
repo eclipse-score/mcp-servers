@@ -1,0 +1,29 @@
+{
+  "question_id": "01_json_parsing",
+  "category": "code_structure",
+  "difficulty": "easy",
+  "timestamp": "2026-10-26T16:45:00Z",
+  "nograph": {
+    "method": "rg -i 'json.*pars|parse.*json' --type cpp -l && rg 'nlohmann' --type cpp -l",
+    "time_ms": 106,
+    "tools_used": ["ripgrep"],
+    "result_type": "file_paths",
+    "correctness_score": 0.7,
+    "notes": "Found JSON-related files but required multiple grep commands and regex crafting. No context about relationships or importance."
+  },
+  "graph": {
+    "method": "graphify query 'show me all JSON parsing related files'",
+    "time_ms": 1103,
+    "tools_used": ["graphify"],
+    "result_type": "contextual_nodes",
+    "correctness_score": 0.95,
+    "notes": "Found JSON-related nodes with community scores and relationships. Natural language query vs regex crafting. Contextual understanding of 'parsing' concept."
+  },
+  "comparison": {
+    "time_ratio": 10.4,
+    "time_difference_ms": 997,
+    "correctness_improvement_percent": 35.7,
+    "tradeoff": "Graph-based query is 10x slower but 36% more accurate and requires no regex expertise"
+  },
+  "conclusion": "For code structure questions, graph-based queries provide significantly better results with acceptable time overhead (still under 2 seconds). The 36% improvement in correctness justifies the additional time for understanding code structure."
+}
