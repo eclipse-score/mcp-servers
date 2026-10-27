@@ -12,7 +12,7 @@
 # *******************************************************************************
 
 name: context-discipline
-version: 0.2.0
+version: 0.2.1
 description: MCP server for working memory management and local learning
 entry_point: context_discipline.src.context_discipline_mcp
 depends_on:
