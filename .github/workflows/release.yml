@@ -13,10 +13,15 @@
 
 name: Release
 
+# Started by hand. The pinned release commit is created on a detached HEAD and
+# only reachable through its tag, so nothing is committed to main.
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
+    inputs:
+      version:
+        description: "Version X.Y.Z (empty: derive from conventional commits since the last tag)"
+        required: false
+        type: string
 
 permissions:
   contents: read
@@ -28,54 +33,63 @@ concurrency:
 jobs:
   release:
     name: Tag release
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:
       contents: write
     outputs:
-      new: ${{ steps.version.outputs.new }}
+      version: ${{ steps.version.outputs.version }}
     steps:
       - name: Check out
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
           fetch-tags: true
-      - name: Detect new version
-        id: version
-        run: |
-          version="$(python3 scripts/prepare_release.py --current)"
-          echo "version=${version}" >> "$GITHUB_OUTPUT"
-          if git rev-parse -q --verify "refs/tags/v${version}" >/dev/null; then
-            echo "Tag v${version} exists, nothing to release"
-            echo "new=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "new=true" >> "$GITHUB_OUTPUT"
-          fi
       - name: Install uv
-        if: steps.version.outputs.new == 'true'
         uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
-      - name: Check pins against release commit
-        if: steps.version.outputs.new == 'true'
-        run: python3 scripts/check_pins.py --release
+      - name: Determine version
+        id: version
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+        run: |
+          version="${INPUT_VERSION:-$(python3 scripts/next_version.py)}"
+          if git rev-parse -q --verify "refs/tags/v${version}" >/dev/null; then
+            echo "::error::Tag v${version} already exists"
+            exit 1
+          fi
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
+      - name: Pin sources to the release commit
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: python3 scripts/prepare_release.py "$VERSION"
       - name: Test
-        if: steps.version.outputs.new == 'true'
         run: |
           uv sync
           uv run pytest
-      - name: Create tag and GitHub release
-        if: steps.version.outputs.new == 'true'
+          python3 scripts/check_pins.py
+      - name: Commit and push tag
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          git -c user.name="github-actions[bot]" \
+            -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+            commit -q -a -m "chore(release): v${VERSION}"
+          python3 scripts/check_pins.py --release
+          git tag "v${VERSION}"
+          git push origin "refs/tags/v${VERSION}"
+      - name: Create GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
           VERSION: ${{ steps.version.outputs.version }}
         run: |
           gh release create "v${VERSION}" \
-            --target "$GITHUB_SHA" \
+            --verify-tag \
             --title "v${VERSION}" \
             --generate-notes
 
   features:
     name: Publish devcontainer features
     needs: release
-    if: needs.release.outputs.new == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -83,6 +97,8 @@ jobs:
     steps:
       - name: Check out
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: v${{ needs.release.outputs.version }}
       - name: Publish features to GHCR
         uses: devcontainers/action@bef2cf2d1a019b00b45e184f83035e01bd1972f3 # v1.4.4
         with:
