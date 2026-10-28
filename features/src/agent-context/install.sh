@@ -13,7 +13,7 @@
 # *******************************************************************************
 set -euo pipefail
 
-SOURCE=git+https://github.com/eclipse-score/mcp-servers@7fd809eb9d97d4a6afbdfbc18398387b6c0fad4f#subdirectory=packages/graphify-codegraph # v0.2.1
+SOURCE=git+https://github.com/eclipse-score/mcp-servers@ff680231d1fbdd3f0011263d8836c135f4d5c57b#subdirectory=packages/graphify-codegraph # v0.2.2
 USER_NAME="${_REMOTE_USER:-vscode}"
 SHARE=/usr/local/share/agent-context
 
@@ -30,11 +30,10 @@ fi
 UV="$(command -v uv || true)"
 if [ -z "${UV}" ]; then
     echo "agent-context: installing uv..." >&2
-    curl -LsSf https://astral.sh/uv/install.sh | sh
-    # Add uv to PATH for this script
-    export PATH="$HOME/.local/bin:$PATH"
-    UV="$(command -v uv || true)"
-    if [ -z "${UV}" ]; then
+    # Install uv to a system-wide location that persists in the final image
+    curl -LsSf https://astral.sh/uv/install.sh | UV_INSTALL_DIR=/usr/local/bin sh
+    UV="/usr/local/bin/uv"
+    if [ ! -x "${UV}" ]; then
         echo "agent-context: failed to install uv" >&2
         exit 1
     fi
@@ -42,4 +41,4 @@ fi
 
 install -d -m 0755 "${SHARE}"
 install -m 0644 "$(dirname "$0")/register_mcp.py" "${SHARE}/register_mcp.py"
-su - "${USER_NAME}" -c "'${UV}' tool install --force '${SOURCE}'"
+"${UV}" tool install --force "${SOURCE}"
