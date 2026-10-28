@@ -1,0 +1,30 @@
+name: Cleanup Old Package Versions
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Run weekly to clean up old versions
+    - cron: '0 2 * * 0'
+
+permissions:
+  packages: write
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Delete old agent-context versions
+        uses: actions/delete-package-versions@v5
+        with:
+          package-name: 'agent-context'
+          package-type: 'container'
+          min-versions-to-keep: 3
+          delete-only-pre-release-versions: false
+          
+      - name: Delete old mcp-servers/agent-context versions
+        uses: actions/delete-package-versions@v5
+        with:
+          package-name: 'mcp-servers/agent-context'
+          package-type: 'container'
+          min-versions-to-keep: 3
+          delete-only-pre-release-versions: false
