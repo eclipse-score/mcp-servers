@@ -150,7 +150,7 @@ if graph:
 
 **Q: Command not found: graphify**
 ```bash
-uv tool install 'graphifyy[mcp]==0.9.70'
+uv tool install 'graphifyy[mcp]==0.9.53'
 # Verify: which graphify
 ```
 

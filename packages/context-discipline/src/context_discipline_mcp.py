@@ -304,26 +304,26 @@ class ContextDisciplineMCP:
 
     def _graph_setup_status(self) -> dict[str, Any]:
         # Check in-repo graph first, then user cache
-        in_repo_path = self.repo_path / "graphify-out" / "graph.json"
-        if in_repo_path.exists():
-            return {"ok": True, "graph_path": str(in_repo_path)}
+        graph_path = self.repo_path / "graphify-out" / "graph.json"
+        if not graph_path.exists():
+            # Fallback to user cache (same logic as graphify-codegraph)
+            import hashlib
 
-        # Check user cache (same logic as graphify-codegraph)
-        import hashlib
+            base = os.environ.get("XDG_DATA_HOME") or str(
+                Path.home() / ".local" / "share"
+            )
+            cache_root = Path(base) / "score-agent"
+            digest = hashlib.sha256(str(self.repo_path.resolve()).encode()).hexdigest()[
+                :12
+            ]
+            cache = cache_root / f"{self.repo_path.name}-{digest}"
+            graph_path = cache / "graph.json"
 
-        base = os.environ.get("XDG_DATA_HOME") or str(Path.home() / ".local" / "share")
-        cache_root = Path(base) / "score-agent"
-        digest = hashlib.sha256(str(self.repo_path.resolve()).encode()).hexdigest()[:12]
-        cache = cache_root / f"{self.repo_path.name}-{digest}"
-        cache_path = cache / "graph.json"
-
-        if cache_path.exists():
-            return {"ok": True, "graph_path": str(cache_path)}
-
-        # No graph found - report in-repo path as the expected location
+        if graph_path.exists():
+            return {"ok": True, "graph_path": str(graph_path)}
         return {
             "ok": False,
-            "graph_path": str(in_repo_path),
+            "graph_path": str(graph_path),
             "next": "Call setup_graphify with install_graphify=true.",
         }
 

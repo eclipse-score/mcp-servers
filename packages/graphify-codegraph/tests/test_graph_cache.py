@@ -265,12 +265,12 @@ def test_prepare_locking_prevents_race_condition(repo: Path, tmp_path: Path) -> 
         return True
 
     # First call should seed
-    _graph1, thread1 = graph_cache.prepare(repo, fake_fetch, fake_builder)
+    _, thread1 = graph_cache.prepare(repo, fake_fetch, fake_builder)
     thread1.join() if thread1 else None
 
     # Second call should find graph already exists (no re-seed)
     seeded.clear()
-    _graph2, thread2 = graph_cache.prepare(repo, fake_fetch, fake_builder)
+    _, thread2 = graph_cache.prepare(repo, fake_fetch, fake_builder)
     thread2.join() if thread2 else None
 
     # Second call should not have seeded (graph already exists)
