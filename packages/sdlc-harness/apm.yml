@@ -33,5 +33,5 @@ dependencies:
       command: uvx
       args:
         - --from
-        - git+https://github.com/eclipse-score/mcp-servers@ffdc412bf296922b776613e043f8a1896020ddc5#subdirectory=packages/sdlc-harness # v0.2.3
+        - git+https://github.com/eclipse-score/mcp-servers@9c88f0201277adecec8979505c28e9baf688b4a4#subdirectory=packages/sdlc-harness # v0.2.3
         - sdlc-harness
