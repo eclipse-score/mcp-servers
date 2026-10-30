@@ -81,8 +81,10 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           VERSION: ${{ steps.version.outputs.version }}
         run: |
+          # Get the commit we just created (or the current HEAD if no commit was needed)
+          RELEASE_SHA=$(git rev-parse HEAD)
           gh release create "v${VERSION}" \
-            --target "$GITHUB_SHA" \
+            --target "$RELEASE_SHA" \
             --title "v${VERSION}" \
             --generate-notes
 
