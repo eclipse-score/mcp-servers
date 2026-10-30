@@ -19,7 +19,8 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
+  pull-requests: write
 
 concurrency:
   group: release
@@ -53,6 +54,11 @@ jobs:
       - name: Install uv
         if: steps.version.outputs.new == 'true'
         uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
+      - name: Update pins to release commit
+        if: steps.version.outputs.new == 'true'
+        run: |
+          # Automatically update pins to point to the merge commit
+          python3 scripts/prepare_release.py "${{ steps.version.outputs.version }}"
       - name: Check pins against release commit
         if: steps.version.outputs.new == 'true'
         run: python3 scripts/check_pins.py --release
@@ -61,6 +67,14 @@ jobs:
         run: |
           uv sync
           uv run pytest
+      - name: Commit pin updates back to main
+        if: steps.version.outputs.new == 'true'
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add -A
+          git commit -m "chore: update pins for release ${{ steps.version.outputs.version }}" || echo "No changes to commit"
+          git push
       - name: Create tag and GitHub release
         if: steps.version.outputs.new == 'true'
         env:
