@@ -30,7 +30,7 @@ def main() -> None:
     except (FileNotFoundError, subprocess.CalledProcessError):
         print(
             "Error: graphify not found. Install with: uv tool install "
-            "'graphifyy[mcp]==0.9.70'"
+            "'graphifyy[mcp]==0.9.97'"
         )
         sys.exit(1)
     except KeyboardInterrupt:

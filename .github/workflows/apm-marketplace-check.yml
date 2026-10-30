@@ -83,5 +83,5 @@ jobs:
                   )
           config_path.write_text(json.dumps(config, indent=2) + "\n", encoding="utf-8")
           PY
-          uv tool install 'graphifyy[mcp]==0.9.70'
+          uv tool install 'graphifyy[mcp]==0.9.97'
           python "$GITHUB_WORKSPACE/scripts/check_remote_mcp.py"
