@@ -33,5 +33,5 @@ dependencies:
       command: uvx
       args:
         - --from
-        - git+https://github.com/eclipse-score/mcp-servers@7000e31c460bbd7a826bb74f47b9ec1a599e71a6#subdirectory=packages/context-discipline # v0.2.3
+        - git+https://github.com/eclipse-score/mcp-servers@ffdc412bf296922b776613e043f8a1896020ddc5#subdirectory=packages/context-discipline # v0.2.3
         - context-discipline
