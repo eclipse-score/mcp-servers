@@ -311,13 +311,9 @@ class ContextDisciplineMCP:
         # Check user cache (same logic as graphify-codegraph)
         import hashlib
 
-        base = os.environ.get("XDG_DATA_HOME") or str(
-            Path.home() / ".local" / "share"
-        )
+        base = os.environ.get("XDG_DATA_HOME") or str(Path.home() / ".local" / "share")
         cache_root = Path(base) / "score-agent"
-        digest = hashlib.sha256(str(self.repo_path.resolve()).encode()).hexdigest()[
-            :12
-        ]
+        digest = hashlib.sha256(str(self.repo_path.resolve()).encode()).hexdigest()[:12]
         cache = cache_root / f"{self.repo_path.name}-{digest}"
         cache_graph_path = cache / "graph.json"
 
