@@ -17,7 +17,7 @@ description: MCP server wrapping external graphify CLI for code graph queries
 command: uvx
 args:
   - --from
-  - git+https://github.com/eclipse-score/mcp-servers@a6d8bf4448bfeff84a9d78c85bfdf4f32eb02509#subdirectory=packages/graphify-codegraph # v0.2.3
+  - git+https://github.com/eclipse-score/mcp-servers@cd80b53ced4035ae77105e1939ee4c9dec3c8d5e#subdirectory=packages/graphify-codegraph # v0.2.3
   - graphify-codegraph
 external_dependency:
   tool: graphify
