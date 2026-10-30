@@ -138,6 +138,29 @@ def check_release(root: Path = ROOT) -> list[str]:
     if len(commits) != 1:
         return [f"MCP sources must pin one common commit, found {sorted(commits)}"]
     commit = commits.pop()
+    
+    # Check if pinned commit exists in local history
+    result = subprocess.run(
+        ["git", "-C", str(root), "rev-parse", "--verify", f"{commit}^{{commit}}"],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if result.returncode != 0:
+        current_head = subprocess.run(
+            ["git", "-C", str(root), "rev-parse", "HEAD"],
+            capture_output=True,
+            text=True,
+            check=True,
+        ).stdout.strip()[:12]
+        return [
+            f"pinned commit {commit[:12]} is not in the local history.",
+            f"  Current HEAD: {current_head}",
+            f"  The pinned commit is behind HEAD.",
+            f"  Fix: Run 'python scripts/prepare_release.py <version>' to update the pin.",
+        ]
+    
+    # Check what's changed since the pinned commit
     result = subprocess.run(
         ["git", "-C", str(root), "diff", "--name-only", commit, "HEAD"],
         capture_output=True,
@@ -146,12 +169,20 @@ def check_release(root: Path = ROOT) -> list[str]:
     )
     if result.returncode != 0:
         return [f"pinned commit {commit} is not in the local history"]
-    return [
-        f"{name}: changed since pinned commit {commit[:12]}, "
-        "only release metadata may differ"
-        for name in result.stdout.splitlines()
+    
+    changed_files = [
+        name for name in result.stdout.splitlines()
         if not RELEASE_FILE_RE.fullmatch(name)
     ]
+    
+    if changed_files:
+        return [
+            f"{name}: changed since pinned commit {commit[:12]}, "
+            "only release metadata may differ"
+            for name in changed_files
+        ]
+    
+    return []
 
 
 def scanned_files(root: Path = ROOT) -> list[Path]:
