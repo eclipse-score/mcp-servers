@@ -40,6 +40,8 @@ jobs:
     steps:
       - name: Check out
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - name: Select modules
         id: select
         env:
@@ -78,7 +80,7 @@ jobs:
         run: |
           export COMMIT="$(git -C src rev-parse HEAD)"
           echo "COMMIT=${COMMIT}" >> "$GITHUB_ENV"
-          uv tool install 'graphifyy[mcp]==0.9.70'
+          uv tool install 'graphifyy[mcp]==0.9.97'
           (cd src && graphify extract . --code-only)
           mkdir out
           cp src/graphify-out/graph.json src/graphify-out/manifest.json out/
@@ -100,7 +102,7 @@ jobs:
               "repository": f"eclipse-score/{os.environ['NAME']}",
               "commit": os.environ["COMMIT"],
               "channel": os.environ["CHANNEL"],
-              "graphify": "0.9.70",
+              "graphify": "0.9.97",
               "needs_source": sys.argv[1] or None,
               "built_at": datetime.now(UTC).isoformat(timespec="seconds"),
           }

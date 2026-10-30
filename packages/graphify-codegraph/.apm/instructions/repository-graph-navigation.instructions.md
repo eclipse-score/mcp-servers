@@ -48,7 +48,7 @@ the setup command automatically.
 As a manual fallback, install and run the external tool directly:
 
 ```bash
-uv tool install 'graphifyy[mcp]==0.9.70'
+uv tool install 'graphifyy[mcp]==0.9.97'
 cd /path/to/repo
 graphify .
 ```

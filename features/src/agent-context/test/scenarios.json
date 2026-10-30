@@ -1,0 +1,26 @@
+{
+  "agent_context_with_python": {
+    "image": "mcr.microsoft.com/devcontainers/python:3",
+    "features": {
+      "./features/src/agent-context": {}
+    },
+    "postCreateCommand": "python3 /usr/local/share/agent-context/register_mcp.py --help || true"
+  },
+  "agent_context_without_python": {
+    "image": "ubuntu:jammy",
+    "features": {
+      "./features/src/agent-context": {}
+    },
+    "postCreateCommand": "python3 /usr/local/share/agent-context/register_mcp.py --help || true"
+  },
+  "agent_context_with_existing_uv": {
+    "image": "mcr.microsoft.com/devcontainers/javascript-node:4-24",
+    "features": {
+      "ghcr.io/devcontainers/features/python:1": {
+        "version": "3.12"
+      },
+      "./features/src/agent-context": {}
+    },
+    "postCreateCommand": "uv --version && python3 /usr/local/share/agent-context/register_mcp.py --help || true"
+  }
+}

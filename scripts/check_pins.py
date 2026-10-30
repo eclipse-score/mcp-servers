@@ -186,6 +186,34 @@ def check_graphify_installs(pin: str, root: Path = ROOT) -> list[str]:
     return errors
 
 
+def fix_graphify_pins(pin: str, root: Path = ROOT) -> list[str]:
+    """Update all graphifyy install specs to use the canonical pin."""
+    fixed = []
+    for path in scanned_files(root):
+        try:
+            text = path.read_text(encoding="utf-8")
+        except UnicodeDecodeError:
+            continue
+
+        new_text = text
+        for match in GRAPHIFY_RE.finditer(text):
+            if is_install_spec(text, match) and match.group(2) != f"=={pin}":
+                # Replace the version in this install spec
+                start, end = (
+                    match.span(2) if match.group(2) else (match.end(), match.end())
+                )
+                new_text = (
+                    new_text[: match.start()]
+                    + f"graphifyy{match.group(1) or ''}=={pin}"
+                    + new_text[end:]
+                )
+
+        if new_text != text:
+            path.write_text(new_text, encoding="utf-8")
+            fixed.append(str(path.relative_to(root)))
+    return fixed
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
@@ -193,7 +221,24 @@ def main() -> int:
         action="store_true",
         help="also check that the pinned commit matches HEAD apart from metadata",
     )
+    parser.add_argument(
+        "--fix",
+        action="store_true",
+        help="automatically fix graphify version pins to match the canonical pin",
+    )
     args = parser.parse_args()
+
+    if args.fix:
+        pin = graphify_pin()
+        fixed = fix_graphify_pins(pin)
+        if fixed:
+            print(f"Fixed {len(fixed)} file(s) to use graphifyy=={pin}:")
+            for path in fixed:
+                print(f"  {path}")
+        else:
+            print(f"All graphify pins already match =={pin}")
+        return 0
+
     errors = (
         check_mcp_sources() + check_versions() + check_graphify_installs(graphify_pin())
     )

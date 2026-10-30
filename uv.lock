@@ -1,5 +1,5 @@
 version = 1
-revision = 2
+revision = 3
 requires-python = ">=3.12"
 
 [manifest]
@@ -245,7 +245,7 @@ requires-dist = [{ name = "pydantic", specifier = ">=2" }]
 
 [[package]]
 name = "score-sdlc-harness"
-version = "0.2.0"
+version = "0.2.2"
 source = { editable = "packages/sdlc-harness" }
 
 [[package]]
