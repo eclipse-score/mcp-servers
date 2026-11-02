@@ -264,3 +264,13 @@ def test_release_workflow_uses_one_verified_revision() -> None:
         "${{ needs.release.outputs.sha }}"
     )
     assert jobs["publish"]["needs"] == ["release", "features"]
+
+
+@pytest.mark.parametrize(
+    "path", sorted((SCRIPTS.parent / ".github/workflows").glob("*.y*ml"))
+)
+def test_workflow_yaml_is_valid(path: Path) -> None:
+    workflow = YAML(typ="safe").load(path.read_text())
+    assert isinstance(workflow["jobs"], dict)
+    for job in workflow["jobs"].values():
+        assert isinstance(job, dict)

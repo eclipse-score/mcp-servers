@@ -1,0 +1,20 @@
+{
+  "agent_context_with_python": {
+    "image": "mcr.microsoft.com/devcontainers/python:3",
+    "features": {
+      "agent-context": {}
+    }
+  },
+  "agent_context_without_python": {
+    "image": "ubuntu:jammy",
+    "features": {
+      "agent-context": {}
+    }
+  },
+  "agent_context_with_existing_uv": {
+    "image": "ghcr.io/astral-sh/uv:python3.12-bookworm-slim",
+    "features": {
+      "agent-context": {}
+    }
+  }
+}
