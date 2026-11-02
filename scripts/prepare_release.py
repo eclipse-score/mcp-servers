@@ -3,11 +3,12 @@
 # Copyright (c) 2026 Contributors to the Eclipse Foundation
 """Set the release version and pin all MCP sources to a commit.
 
-Run on an up-to-date main. The pins point at the current HEAD, the release
-commit itself only changes version metadata (checked by check_pins --release).
+The release workflow pins the merged source commit and creates a tag-only
+metadata commit. No follow-up PR or push to main is needed.
 """
 
 import argparse
+import json
 import re
 import subprocess
 import sys
@@ -31,6 +32,38 @@ def current_version(root: Path = ROOT) -> str:
     if match is None:
         raise SystemExit("apm.yml: no version")
     return match.group(0).split(":", 1)[1].strip().strip("'\"")
+
+
+def git(root: Path, *args: str) -> str:
+    return subprocess.run(
+        ["git", "-C", str(root), *args],
+        capture_output=True,
+        text=True,
+        check=True,
+    ).stdout.strip()
+
+
+def release_plan(commit: str, root: Path = ROOT) -> dict[str, str]:
+    version = current_version(root)
+    if not SEMVER_RE.fullmatch(version):
+        raise SystemExit(f"version must be MAJOR.MINOR.PATCH, got {version!r}")
+    versions: list[tuple[int, ...]] = []
+    for tag in git(root, "tag", "--list", "v*").splitlines():
+        if not SEMVER_RE.fullmatch(tag[1:]):
+            continue
+        versions.append(tuple(map(int, tag[1:].split("."))))
+        parents = git(root, "show", "-s", "--format=%P", f"{tag}^{{commit}}")
+        message = git(root, "show", "-s", "--format=%B", f"{tag}^{{commit}}")
+        if parents == commit and f"Release-Source: {commit}" in message.splitlines():
+            return {
+                "version": tag[1:],
+                "sha": git(root, "rev-parse", f"{tag}^{{commit}}"),
+            }
+    requested = tuple(map(int, version.split(".")))
+    if versions and requested <= max(versions):
+        major, minor, patch = max(versions)
+        version = f"{major}.{minor}.{patch + 1}"
+    return {"version": version, "sha": ""}
 
 
 def package_dirs(root: Path) -> list[Path]:
@@ -83,13 +116,16 @@ def main() -> int:
     parser.add_argument("version", nargs="?", help="release version, e.g. 0.2.0")
     parser.add_argument("--ref", default="HEAD", help="commit to pin (default HEAD)")
     parser.add_argument(
+        "--plan", action="store_true", help="print the next or retry release as JSON"
+    )
+    parser.add_argument(
         "--current", action="store_true", help="print the current version and exit"
     )
     args = parser.parse_args()
     if args.current:
         print(current_version())
         return 0
-    if args.version is None:
+    if args.version is None and not args.plan:
         parser.error("version is required")
     commit = subprocess.run(
         ["git", "-C", str(ROOT), "rev-parse", "--verify", f"{args.ref}^{{commit}}"],
@@ -97,6 +133,9 @@ def main() -> int:
         text=True,
         check=True,
     ).stdout.strip()
+    if args.plan:
+        print(json.dumps(release_plan(commit)))
+        return 0
     for path in prepare(args.version, commit):
         print(path.relative_to(ROOT))
     return 0

@@ -17,6 +17,7 @@ from pathlib import Path
 from types import ModuleType
 
 import pytest
+from ruamel.yaml import YAML
 
 SCRIPTS = Path(__file__).resolve().parent.parent / "scripts"
 
@@ -163,3 +164,103 @@ def test_graphify_installs(tmp_path: Path) -> None:
     )
     errors = check_pins.check_graphify_installs("0.9.53", tmp_path)
     assert [error.split(":")[1] for error in errors] == ["2", "3", "4"]
+
+
+def test_release_plan_first_release(tmp_path: Path) -> None:
+    git(tmp_path, "init", "-q")
+    write_repo(tmp_path, "0.2.3", "@v0.2.1")
+    source = commit_all(tmp_path, "merged code and docs")
+    assert prepare_release.release_plan(source, tmp_path) == {
+        "version": "0.2.3",
+        "sha": "",
+    }
+
+
+def test_release_plan_retry_and_next_merge(tmp_path: Path) -> None:
+    git(tmp_path, "init", "-q")
+    write_repo(tmp_path, "0.2.3", "@v0.2.1")
+    source = commit_all(tmp_path, "merged code and docs")
+    prepare_release.prepare("0.2.3", source, tmp_path)
+    release = commit_all(tmp_path, f"release\n\nRelease-Source: {source}")
+    git(tmp_path, "tag", "--no-sign", "v0.2.3")
+    assert prepare_release.release_plan(source, tmp_path) == {
+        "version": "0.2.3",
+        "sha": release,
+    }
+    git(tmp_path, "switch", "--detach", source)
+    (tmp_path / "needs.json").write_text('{"changed": true}\n', encoding="utf-8")
+    next_source = commit_all(tmp_path, "new docs-as-code graph")
+    assert prepare_release.release_plan(next_source, tmp_path) == {
+        "version": "0.2.4",
+        "sha": "",
+    }
+    prepare_release.prepare("0.2.4", next_source, tmp_path)
+    commit_all(tmp_path, f"release\n\nRelease-Source: {next_source}")
+    assert check_pins.check_release(tmp_path) == []
+
+
+@pytest.mark.parametrize(
+    ("requested", "expected"), [("0.2.3", "0.2.11"), ("1.0.0", "1.0.0")]
+)
+def test_release_plan_uses_highest_numeric_tag(
+    tmp_path: Path, requested: str, expected: str
+) -> None:
+    git(tmp_path, "init", "-q")
+    write_repo(tmp_path, requested, "@v0.2.1")
+    source = commit_all(tmp_path, "source")
+    for tag in ("v0.2.9", "v0.2.10", "unrelated", "v1.0.0-rc.1"):
+        git(tmp_path, "tag", "--no-sign", tag)
+    assert prepare_release.release_plan(source, tmp_path) == {
+        "version": expected,
+        "sha": "",
+    }
+
+
+def test_tag_only_release_preserves_remote_main(tmp_path: Path) -> None:
+    source_repo = tmp_path / "source"
+    remote = tmp_path / "remote.git"
+    consumer = tmp_path / "consumer"
+    for directory in (source_repo, remote):
+        directory.mkdir()
+    git(remote, "init", "--bare", "-q")
+    git(source_repo, "init", "-q")
+    write_repo(source_repo, "0.2.3", "@v0.2.1")
+    (source_repo / "needs.json").write_text('{"changed": true}\n', encoding="utf-8")
+    source = commit_all(source_repo, "merged docs-as-code graph")
+    git(source_repo, "remote", "add", "origin", str(remote))
+    git(source_repo, "push", "origin", "HEAD:refs/heads/main")
+    prepare_release.prepare("0.2.3", source, source_repo)
+    release = commit_all(source_repo, f"release\n\nRelease-Source: {source}")
+    git(source_repo, "tag", "--no-sign", "v0.2.3")
+    git(source_repo, "push", "origin", "refs/tags/v0.2.3")
+    assert git(remote, "rev-parse", "refs/heads/main") == source
+    git(tmp_path, "clone", "--branch", "v0.2.3", str(remote), str(consumer))
+    assert git(consumer, "rev-parse", "HEAD") == release
+    assert check_pins.pinned_commits(consumer) == {source}
+    assert check_pins.check_release(consumer) == []
+    assert check_pins.check_versions(consumer) == []
+    assert (consumer / "needs.json").read_text() == '{"changed": true}\n'
+    assert prepare_release.release_plan(source, consumer)["sha"] == release
+
+
+def test_release_workflow_uses_one_verified_revision() -> None:
+    workflow = YAML(typ="safe").load(
+        (SCRIPTS.parent / ".github/workflows/release.yml").read_text()
+    )
+    jobs = workflow["jobs"]
+    steps = jobs["release"]["steps"]
+    commands = "\n".join(step.get("run", "") for step in steps)
+    assert 'git push origin "refs/tags/v${VERSION}"' in commands
+    assert "git push\n" not in commands
+    assert "--plan" in commands
+    assert "new" not in jobs["release"]["outputs"]
+    smoke = next(
+        step for step in steps if step["name"] == "Smoke-test shipped MCP pins"
+    )
+    assert '--ref "v${VERSION}"' in smoke["run"]
+    assert "check_remote_mcp.py" in smoke["run"]
+    assert "re.sub" not in smoke["run"]
+    assert jobs["features"]["steps"][0]["with"]["ref"] == (
+        "${{ needs.release.outputs.sha }}"
+    )
+    assert jobs["publish"]["needs"] == ["release", "features"]
