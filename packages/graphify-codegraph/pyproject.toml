@@ -10,14 +10,19 @@ build-backend = "hatchling.build"
 
 [project]
 name = "score-graphify-codegraph"
-version = "0.1.0"
+version = "0.2.3"
 description = "MCP launcher for the Graphify code graph server"
 requires-python = ">=3.11"
-dependencies = ["graphifyy[mcp]==0.9.53"]
+dependencies = ["graphifyy[mcp]==0.9.97"]
 
 [project.scripts]
 graphify-codegraph = "serve:main"
 
 [tool.hatch.build.targets.wheel]
-only-include = ["src/serve.py"]
+only-include = ["src/serve.py", "src/graph_cache.py"]
 sources = ["src"]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+]

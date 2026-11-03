@@ -25,8 +25,9 @@ Provides an MCP server with these tools:
 | Tool | Purpose |
 |------|----------|
 | `initialize_session` | Start with goal, subgoals, assumptions |
-| `set_task_class` | Record a user-selected process workflow or continue without one |
+| `set_task_class` | Record a user-selected workflow after ambiguous or unknown detection |
 | `query_graph` | Ask the merged code, domain, and collaboration graph |
+| `resolve_requirements` | Check requirement IDs against the local projected requirements graph |
 | `record_decision` | Track a decision + reasoning |
 | `record_outcome` | Record pass/fail + coverage for learning |
 | `get_working_memory` | View all session entries |
@@ -43,50 +44,8 @@ apm init --yes --target copilot
 apm install <path>/packages/context-discipline \
   --target copilot \
   --trust-transitive-mcp
-apm compile -t copilot --force-instructions
-apm approve --pending
+apm compile -t copilot
 ```
-
-Use `--force-instructions` so APM writes an always-on `AGENTS.md`; without it,
-the guidance remains in individual instruction files and is loaded only at the
-agent's discretion.
-
-Approval is optional: it enables executable hooks for Copilot, Claude, Cursor,
-Gemini, Codex, Windsurf, and Kiro; unsupported targets such as opencode and
-grok-build skip hooks silently. The core package works fully without approval.
-These observations come from APM 0.26: `apm approve --pending` prints the
-exact key to approve, and that key is what you pass to `apm approve`. However,
-APM 0.26 does not discover nested virtual marketplace packages such as
-`apm_modules/<owner>/<repo>/packages/<pkg>` in the `apm approve` scanner at
-all; the observed installed path was
-`apm_modules/eclipse-score/mcp-servers/packages/context-discipline`. For that
-install form, `--pending`, `--list`, `--all`, and every package-specific
-invocation report the package as absent, so approval through `apm approve` is
-not available. Use an explicit project `executables.allow` entry with the
-verified dependency key instead:
-
-```yaml
-executables:
-  allow:
-    github.com/eclipse-score/mcp-servers/packages/context-discipline#metamodel_flow:
-      hooks: true
-      mcp: true
-```
-
-After that entry is added, the next install deploys the hooks
-(`exec_status: deployed`). We also measured APM 0.30.0 in a fresh pinned
-marketplace consumer: its `--pending` scanner found the nested packages and
-printed version keys, but approving those printed keys and reinstalling still
-left the executable packages gated, so that output is not documented as a
-working deployment flow here. The identity mismatch is that APM 0.30's
-approval scanner emits `#<version>` identities while its install-time gate
-expects `#<ref>`. `apm approve --recommended` only acts on recommendations
-from an active org policy.
-
-The hooks inject the session-start protocol and ask for confirmation on tool
-use before a session exists. The verbatim announcement wording still depends
-on the model: only `UserPromptSubmit` carries prompt text, and APM does not
-normalize that event name across Copilot and Claude.
 
 ### Testing a branch
 
@@ -108,39 +67,28 @@ The `--trust-transitive-mcp` flag is required for the dependent
 `apm-setup` and `graphify-codegraph` MCP servers to be registered. Without it,
 `apm install` still exits successfully but registers only `context-discipline`.
 
-After installation, call the `apm-setup` MCP tool once:
+After installation, call the `apm-setup` MCP tool when graph setup is needed:
 
 ```text
 setup_graphify(repo_path="<your-repository>", install_graphify=true)
 ```
 
-This installs the `graphify` CLI and writes
-`graphify-out/graph.json` in the target repository. The
-`setup_context_discipline` tool is optional for writes because `.score-local/`
-is created lazily; its remaining purpose is adding `.score-local/` to
-`.gitignore`.
+This installs the `graphify` CLI when requested and generates the graph in repository-keyed user cache outside the target checkout.
+The `setup_context_discipline` tool prepares repository-keyed user state matching the runtime default.
+Both workflows remain available without modifying the consumer's `.gitignore`; use the storage paths returned by the setup tools.
 
 ### Use from Your Agent
 
-#### Mandatory session start
-
-Call `initialize_session` as the first tool call of every coding session,
-before reading files, searching, or answering. This requirement applies to
-small, familiar, and low-risk tasks as well. If it was missed, call it before
-the next edit. When the result contains `announcement`, print that string
-verbatim to the user before any other output. If it contains a `question`, ask
-the user before continuing and record the answer with `set_task_class`.
-
 #### Input language and task class
+
+Initialization loads the versioned process model and detects a workflow when `task_class` is omitted.
+The response includes the workflow, responsible and approving roles, and required process inputs/outputs; print its announcement verbatim.
+Ambiguous or unknown detections include a question: ask the user and record the answer with `set_task_class`.
+The process graph is bundled in the runtime wheel; configured process graphs and APM-installed model copies remain supported.
 
 Free-text fields are recorded in English. The optional `task_class` argument
 to `initialize_session` accepts a process workflow identifier such as
 `wf__verification_unit_test`; leave it empty when unknown.
-
-When process data is available, initialization may return a deterministic task
-class detection. Print its `announcement` verbatim. If it includes a
-`question`, ask the user before continuing and record the answer with
-`set_task_class`; never silently classify a task.
 
 ```python
 # Agent initializes a session
@@ -149,8 +97,7 @@ wm.initialize_session(
     subgoals=["Understand current flow", "Identify dependencies"],
     assumptions={"Password hashing uses bcrypt": "high", "No 2FA": "low"},
 )
-# Print detection.announcement verbatim when detection is returned. Ask the
-# user when detection.question is present, then call set_task_class.
+# Returns {"session_id": "...", "setup": {"ok": ..., ...}}
 
 # Agent explores code
 auth_structure = wm.query_graph("Show me auth.py structure")
@@ -183,10 +130,37 @@ wm.record_outcome(
 is only weak evidence for a different task, so the default `outcome_reward = 0`
 avoids amplifying early accidents into apparent structure in a small corpus.
 
+### Resolve requirement IDs
+
+Use `resolve_requirements` before copying a Sphinx-Needs requirement ID into an
+artefact. The tool reports whether each ID is known and, when requested, returns
+typed incoming and outgoing links without inventing nodes or titles:
+
+```text
+resolve_requirements(
+  requirement_ids=["comp_req__x[version==1]", "comp_req__typo"],
+  include_links=True,
+)
+```
+
+The projector creates the local, git-ignored artefact used by this tool:
+
+```bash
+python -m requirements_projection \
+  --needs bazel-bin/needs.json \
+  --out .score-local/requirements_graph.json \
+  --repo . \
+  --source-ref <commit>
+```
+
+`.score-local/requirements_graph.json` is local build output and is intentionally
+not committed. If it is unavailable, the tool reports that the graph is
+unavailable rather than treating an ID as nonexistent.
+
 ### View Results
 
 **Working memory** is available through the `get_working_memory` MCP tool.
-Sessions are persisted in `.score-local/sessions.jsonl`. Durable domain nodes and
+Sessions are persisted in repository-keyed user state. Durable domain nodes and
 edges are persisted as individually reviewable shards in `score-context/`.
 
 The overlay layout is:
@@ -197,6 +171,36 @@ score-context/
 ├── meta.json
 ├── nodes/<node-id>.json
 └── edges/<sha256-prefix>.json
+```
+
+Each node and edge has its own file, so independent changes touch disjoint
+files and avoid a single Git merge-conflict hotspot. Node IDs used as
+filenames must match `[A-Za-z0-9][A-Za-z0-9._-]{0,127}`. Edge filenames are
+hashes because Graphify endpoint IDs may contain path separators.
+
+`policy.toml` is the versioned single source of attention, privacy, and
+overlay thresholds. Validate an overlay locally with:
+
+```bash
+uv run python scripts/validate_overlay.py
+```
+
+The `[attention]` policy uses `selection = "rank"` by default, selecting
+results above the provisional `noise_floor = 0.037` and within
+`rank_gap_ratio = 0.35` of the best scored candidate. The noise floor is the
+relevance criterion; the rank gap only truncates the tail. The floor is the
+geometric mean of the worst relevant score (0.0619) and best control score
+(0.0217). Rank scoring uses Unicode-aware tokenization and filters function
+words because unfiltered overlap caused a measured false positive. The
+`live_ratio_floor = 0.25` prevents records grounded only in non-graph files
+from being permanently excluded. `selection = "threshold"` replays the
+absolute `score_threshold` rule. These provisional values are calibrated from
+`attention` records; `rank_gap_ratio` is calibrated separately from the
+recorded score ordering.
+
+**Local session records** (append-only JSONL):
+```bash
+cat "${XDG_STATE_HOME:-$HOME/.local/state}/score-agent/<repo>-<path-hash>/sessions.jsonl" | jq
 ```
 
 Each node and edge has its own file, so independent changes touch disjoint
@@ -241,7 +245,7 @@ hatch when a consumer needs to override the packaged process graph.
 
 ```
 Session 1: Refactor auth
-  ↓ record_decision() → .score-local/sessions.jsonl
+  ↓ record_decision() → user-state/score-agent/<repo>-<path-hash>/sessions.jsonl
   {"record_type": "reasoning", "kind": "decision", ...}
 
 Session 2: Refactor payments
@@ -255,7 +259,13 @@ Session N: Pattern emerges
 
 ## Storage
 
-**Session records** stored in `.score-local/sessions.jsonl`:
+Sessions, observations, and agent salts default to `$XDG_STATE_HOME/score-agent/<repo>-<path-hash>/`, falling back to `~/.local/state/score-agent/<repo>-<path-hash>/`.
+The repository key hashes the resolved checkout path, keeping same-named checkouts separate.
+Relative `XDG_STATE_HOME` values are ignored in favor of the home-directory fallback.
+Pass `local_store=".score-local"` or an absolute directory to `ContextDisciplineMCP` or `SessionLog` to explicitly override storage.
+Existing repository-local records are not automatically migrated or merged; use the override to continue accessing them.
+
+**Session records** are stored in `sessions.jsonl` within the selected state directory:
 
 ```json
 {
@@ -270,7 +280,7 @@ Session N: Pattern emerges
 }
 ```
 
-**Add to `.gitignore`:**
+**Only for explicitly selected repository-local storage, add to `.gitignore`:**
 ```
 .score-local/            # Local session records (ephemeral)
 ```
@@ -329,11 +339,10 @@ because the tested 25% graph cap dropped `score/os` and lost the measured signal
 `add_overlay_node` writes a provenance-bearing S-CORE node and relation to
 the sharded `score-context/nodes/` and `score-context/edges/` files. The
 generated Graphify code graph remains read-only; the merged view combines
-code, domain, process, and collaboration layers. Domain-layer nodes and edges carry
+code, domain, and collaboration layers. Domain-layer nodes and edges carry
 their adapter provenance through the merge, keeping derived upstream facts
 distinguishable from hand-authored local ones; code and collaboration entries
-carry none. Process-layer entries are read-only and carry provenance from the
-committed process projection.
+carry none.
 The versioned `score-context/policy.toml` is the single source of attention,
 privacy, and overlay thresholds. Validate it and the overlay locally with:
 

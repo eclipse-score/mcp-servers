@@ -20,7 +20,6 @@
 | reasoning | Deduce | id, session_id, task_id, text, kind, grounded_nodes, timestamp |
 | retrieval | Distribute | id, session_id, task_id, query, returned_nodes, timestamp |
 | outcome | — | id, session_id, task_id, verdict, rationale, coverage, timestamp |
-| task_class | — | id, session_id, task_id, task_class, source, timestamp |
 """
 
 from __future__ import annotations
@@ -46,6 +45,19 @@ def _record_id(kind: str) -> str:
 
 def _empty_nodes() -> list[str]:
     return []
+
+
+def resolve_local_store(repo_path: str | Path, local_store: str | None = None) -> Path:
+    """Resolve explicit storage or repository-keyed user state without creating it."""
+    repo = Path(repo_path).expanduser().resolve()
+    if local_store is not None:
+        store = Path(local_store).expanduser()
+        return store if store.is_absolute() else repo / store
+    base = Path(os.environ.get("XDG_STATE_HOME") or Path.home() / ".local" / "state")
+    if not base.is_absolute():
+        base = Path.home() / ".local" / "state"
+    digest = hashlib.sha256(str(repo).encode("utf-8")).hexdigest()[:16]
+    return base / "score-agent" / f"{repo.name}-{digest}"
 
 
 def agent_salt(local_store_dir: Path) -> str:
@@ -185,7 +197,7 @@ def _record_dict(record: Record) -> dict[str, Any]:
     return data
 
 
-def _record_from_dict(data: dict[str, Any]) -> Record | None:
+def _record_from_dict(data: dict[str, Any]) -> Record:
     record_type = cast(str | None, data.get("record_type"))
     values = dict(data)
     values.pop("record_type", None)
@@ -211,7 +223,7 @@ def _record_from_dict(data: dict[str, Any]) -> Record | None:
         raise ValueError("missing session record type")
     constructor = constructors.get(record_type)
     if constructor is None:
-        return None
+        raise ValueError(f"unknown session record kind: {record_type!r}")
     values.pop("kind", None)
     return constructor(**values)
 
@@ -219,11 +231,8 @@ def _record_from_dict(data: dict[str, Any]) -> Record | None:
 class SessionLog:
     """Append-only JSONL collaboration record log."""
 
-    def __init__(self, repo_path: str | Path, local_store: str = ".score-local"):
-        repo = Path(repo_path).expanduser().resolve()
-        store = Path(local_store).expanduser()
-        root = store if store.is_absolute() else repo / store
-        self.path = root / "sessions.jsonl"
+    def __init__(self, repo_path: str | Path, local_store: str | None = None):
+        self.path = resolve_local_store(repo_path, local_store) / "sessions.jsonl"
 
     def append(self, record: Record) -> None:
         self.path.parent.mkdir(parents=True, exist_ok=True)
@@ -270,9 +279,7 @@ class SessionLog:
                 if not isinstance(raw_data, dict):
                     raise TypeError("record must be an object")
                 data = cast(dict[str, Any], raw_data)
-                record = _record_from_dict(data)
-                if record is not None:
-                    records.append(record)
+                records.append(_record_from_dict(data))
             except (json.JSONDecodeError, KeyError, TypeError, ValueError) as exc:
                 raise ValueError(
                     f"malformed session record on line {line_number}: {exc}"

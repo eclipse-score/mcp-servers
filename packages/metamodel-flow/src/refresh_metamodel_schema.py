@@ -13,10 +13,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
-import json
-from datetime import UTC, datetime
 from pathlib import Path
-from typing import cast
 
 # Source repository information
 _SOURCE_REPO_URL = "https://github.com/eclipse-score/docs-as-code.git"
@@ -33,7 +30,8 @@ def _source_text(source_commit: str) -> str:
         + "\n"
         + f"source_repo_url={_SOURCE_REPO_URL}\n"
         + f"source_commit={source_commit}\n"
-        + "generator_command=bazel run //src/extensions/score_metamodel/schema_export:generate_all_bin\n"
+        + "generator_command=bazel run "
+        "//src/extensions/score_metamodel/schema_export:generate_all_bin\n"
     )
 
 
@@ -45,26 +43,29 @@ def refresh(
     data_file: str = "metamodel-data.json",
 ) -> None:
     """Refresh the metamodel schema and data from docs-as-code.
-    
+
     In a CI environment, these files would be downloaded from the docs-as-code
     artifacts. For local development, they can be generated using the generate_all.py
     script from docs-as-code.
     """
     model_dir = repo_root / "packages" / "metamodel-flow" / "model"
     model_dir.mkdir(parents=True, exist_ok=True)
-    
+
     # For now, we assume the files are generated locally or downloaded
     # In CI, this would fetch from docs-as-code artifacts
-    
-    print(f"Metamodel schema and data should be generated from docs-as-code")
+
+    print("Metamodel schema and data should be generated from docs-as-code")
     print(f"Source commit: {source_commit}")
     print(f"Output directory: {model_dir}")
-    print(f"\nTo generate locally:")
-    print(f"  cd /workspaces/docs-as-code_agent")
-    print(f"  bazel run //src/extensions/score_metamodel/schema_export:generate_all_bin -- \\")
+    print("\nTo generate locally:")
+    print("  cd /workspaces/docs-as-code_agent")
+    print(
+        "  bazel run //src/extensions/score_metamodel/schema_export:"
+        "generate_all_bin -- \\"
+    )
     print(f"    --output-dir {model_dir} \\")
     print(f"    --source-commit {source_commit}")
-    
+
     # The actual files would be:
     # - model_dir / schema_file (metamodel-schema.json)
     # - model_dir / data_file (metamodel-data.json)
@@ -78,7 +79,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--schema-file", default="metamodel-schema.json")
     parser.add_argument("--data-file", default="metamodel-data.json")
     args = parser.parse_args(argv)
-    
+
     refresh(
         source_commit=args.source_commit,
         repo_root=args.repo_root,

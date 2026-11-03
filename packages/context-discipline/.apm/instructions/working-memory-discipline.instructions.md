@@ -1,36 +1,34 @@
-# *******************************************************************************
-# Copyright (c) 2026 Contributors to the Eclipse Foundation
-#
-# See the NOTICE file(s) distributed with this work for additional
-# information regarding copyright ownership.
-#
-# This program and the accompanying materials are made available under the
-# terms of the Apache License Version 2.0 which is available at
-# https://www.apache.org/licenses/LICENSE-2.0
-#
-# SPDX-License-Identifier: Apache-2.0
-# *******************************************************************************
-
 ---
 name: working-memory-discipline
 description: Track working memory, decisions, and intersession context
 applyTo: "**"
 ---
 
-## Mandatory session-start protocol
+<!--
+*******************************************************************************
+Copyright (c) 2026 Contributors to the Eclipse Foundation
 
-Call `initialize_session` as the first tool call of every coding session,
-before reading files, searching, or answering. This protocol has no exception
-for small, familiar, or low-risk tasks. If a session was started without
-calling it, call it as soon as the omission is noticed, before the next edit.
-When the result contains an announcement, print that string verbatim to the
-user before any other output. If a question is present, ask the user before
-continuing and record the answer with `set_task_class`. The reply begins with
-this line, quoted verbatim from `announcement`, before any plan or commentary:
+See the NOTICE file(s) distributed with this work for additional
+information regarding copyright ownership.
 
-`Repository baselibs | task class Create/Perform Unit Test (wf__verification_unit_test) | responsible rl__contributor | approval rl__committer`
+This program and the accompanying materials are made available under the
+terms of the Apache License Version 2.0 which is available at
+https://www.apache.org/licenses/LICENSE-2.0
+
+SPDX-License-Identifier: Apache-2.0
+*******************************************************************************
+-->
 
 # Working Memory Discipline
+
+## Mandatory Session Start
+
+Call `initialize_session` as the first tool call of every coding session, before reading files, searching, or editing.
+If it was missed, initialize before the next edit.
+Print the returned `announcement` verbatim; it reports the detected workflow and its responsible and approving roles from the process model.
+If `detection.question` is present, ask the user before continuing and record the selection with `set_task_class`.
+Do not silently choose an ambiguous workflow or treat a workflow's responsible role as proof of the user's personal role.
+These initialization and announcement requirements also apply to small or familiar tasks.
 
 When solving a coding task, maintain explicit working memory and track decisions. This guidance feeds the local session log and durable context overlay.
 
@@ -45,10 +43,10 @@ You track:
 
 ## Intersession Context
 
-Session records are appended to `.score-local/sessions.jsonl`:
+Session records are appended to repository-keyed user state by default:
 
 ```
-.score-local/
+${XDG_STATE_HOME:-~/.local/state}/score-agent/<repo>-<path-hash>/
 └── sessions.jsonl
 ```
 
@@ -63,11 +61,6 @@ than only symbol names. Structural attention follows graph locality, so
 symbol-only input can contribute no structural signal at the relevant graph
 granularity; `focus_size == 0` in the response means the structural axis was
 silent.
-
-When `initialize_session` returns `detection`, its announcement is also
-available as `detection.announcement`; print the announcement verbatim to the
-user. If `detection.question` is present, ask the user before continuing and
-record the answer with `set_task_class`.
 
 ## Pattern: Initialize → Navigate → Decide → Record
 
@@ -150,10 +143,6 @@ The detailed per-step bookkeeping in this pattern can be reduced for:
 - Well-known codebases
 - Low-risk changes (add one function)
 
-This exception applies only to verbose assumption, navigation, decision, and
-outcome tracking. The mandatory session-start protocol and the announcement
-rule above apply unconditionally.
-
 ## Durable Context Overlay
 
 Use `add_overlay_node` when a decision, requirement, contract, issue, or pull
@@ -163,9 +152,10 @@ provenance-bearing and stored as shards in `score-context/nodes/` and
 `score-context/policy.toml`; validate them locally with
 `uv run python scripts/validate_overlay.py`.
 
-## Local Artifacts (Gitignored)
+## Local Artifacts
 
-Don't commit working memory:
+Automatic working memory lives outside the consumer repository and does not require `.gitignore` changes.
+Only if repository-local storage is explicitly selected, verify this ignore entry without replacing existing rules:
 
 ```
 .gitignore:
@@ -173,6 +163,12 @@ Don't commit working memory:
 ```
 
 These are ephemeral scaffolding for your reasoning, not deliverables.
+Existing `.score-local/` records are not automatically moved or read by the new default; select that directory explicitly to continue using them.
+
+Before writing a requirement ID into any artefact, resolve it with the
+`resolve_requirements` tool. A result with `known: false` and
+`reason: "not_found"` means the ID does not exist and must not be used;
+`requirements_graph_unavailable` means the ID is unverified, not invalid.
 
 ## Key Principles
 
@@ -186,7 +182,7 @@ These are ephemeral scaffolding for your reasoning, not deliverables.
 ## See Also
 
 - [maintain-working-memory/SKILL.md](../skills/maintain-working-memory/SKILL.md) — Workflow guide
-- `.score-local/sessions.jsonl` — Append-only collaboration records
+- `${XDG_STATE_HOME:-~/.local/state}/score-agent/<repo>-<path-hash>/sessions.jsonl` — Append-only collaboration records
 - `score-context/meta.json` — Overlay version metadata
 - `score-context/policy.toml` — Versioned attention/privacy/overlay thresholds
 - `score-context/nodes/` — One provenance-bearing node per JSON shard

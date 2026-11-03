@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "metamodel_digest": "sha256:90caf4d5e869a5a767044b4400f4b691ed7687856cb2acedd65dd9fb3d06c1d1",
+  "metamodel_digest": "sha256:da3d4b180bbba2d80e54d9ee7ce7e773fdfd7c5799d664910f38df62d8622613",
   "base_options": {
     "mandatory": [
       {
@@ -9,6 +9,14 @@
       }
     ],
     "optional": [
+      {
+        "name": "bazel_target",
+        "pattern": "^.*$"
+      },
+      {
+        "name": "bazel_type",
+        "pattern": "^.*$"
+      },
       {
         "name": "source_code_link",
         "pattern": "^https://github.com/.*"
@@ -162,6 +170,12 @@
       "declared": true
     },
     {
+      "name": "parent_needs",
+      "outgoing": "contained by",
+      "incoming": "contains",
+      "declared": true
+    },
+    {
       "name": "partially_verifies",
       "outgoing": "partially_verifies",
       "incoming": "partially_verified_by",
@@ -171,6 +185,12 @@
       "name": "provides",
       "outgoing": "provides",
       "incoming": "provided by",
+      "declared": true
+    },
+    {
+      "name": "realized_by",
+      "outgoing": "realizes",
+      "incoming": "realized by",
       "declared": true
     },
     {
@@ -228,6 +248,18 @@
       "parts": 3,
       "options": [
         {
+          "name": "bazel_target",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "bazel_type",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": true
+        },
+        {
           "name": "content",
           "pattern": "^[\\s\\S]+$",
           "required": true,
@@ -237,6 +269,12 @@
           "name": "hash",
           "pattern": "^.*$",
           "required": false,
+          "inherited": false
+        },
+        {
+          "name": "id",
+          "pattern": "^aou_req__[0-9a-z_]+$",
+          "required": true,
           "inherited": false
         },
         {
@@ -265,7 +303,7 @@
         },
         {
           "name": "status",
-          "pattern": "^(valid|invalid)$",
+          "pattern": "^(valid|invalid|valid_inspected)$",
           "required": true,
           "inherited": false
         },
@@ -297,6 +335,18 @@
       "tags": [],
       "parts": 3,
       "options": [
+        {
+          "name": "bazel_target",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "bazel_type",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": true
+        },
         {
           "name": "id",
           "pattern": "^assertion__[0-9a-zA-Z_-]*$",
@@ -347,6 +397,24 @@
       "parts": 2,
       "options": [
         {
+          "name": "bazel_target",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "bazel_type",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "id",
+          "pattern": "^comp__[0-9a-z_]+$",
+          "required": true,
+          "inherited": false
+        },
+        {
           "name": "safety",
           "pattern": "^(QM|ASIL_B)$",
           "required": true,
@@ -366,7 +434,7 @@
         },
         {
           "name": "status",
-          "pattern": "^(valid|invalid)$",
+          "pattern": "^(valid|invalid|valid_inspected)$",
           "required": true,
           "inherited": false
         },
@@ -438,6 +506,24 @@
       "parts": 3,
       "options": [
         {
+          "name": "bazel_target",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "bazel_type",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "id",
+          "pattern": "^comp_arc_dyn__[0-9a-z_]+$",
+          "required": true,
+          "inherited": false
+        },
+        {
           "name": "safety",
           "pattern": "^(QM|ASIL_B)$",
           "required": true,
@@ -457,7 +543,7 @@
         },
         {
           "name": "status",
-          "pattern": "^(valid|invalid)$",
+          "pattern": "^(valid|invalid|valid_inspected)$",
           "required": true,
           "inherited": false
         },
@@ -503,6 +589,24 @@
       "parts": 3,
       "options": [
         {
+          "name": "bazel_target",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "bazel_type",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "id",
+          "pattern": "^comp_arc_sta__[0-9a-z_]+$",
+          "required": true,
+          "inherited": false
+        },
+        {
           "name": "safety",
           "pattern": "^(QM|ASIL_B)$",
           "required": true,
@@ -522,7 +626,7 @@
         },
         {
           "name": "status",
-          "pattern": "^(valid|invalid)$",
+          "pattern": "^(valid|invalid|valid_inspected)$",
           "required": true,
           "inherited": false
         },
@@ -578,6 +682,18 @@
       "parts": 3,
       "options": [
         {
+          "name": "bazel_target",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "bazel_type",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": true
+        },
+        {
           "name": "content",
           "pattern": "^[\\s\\S]+$",
           "required": true,
@@ -587,6 +703,12 @@
           "name": "hash",
           "pattern": "^.*$",
           "required": false,
+          "inherited": false
+        },
+        {
+          "name": "id",
+          "pattern": "^comp_req__[0-9a-z_]+$",
+          "required": true,
           "inherited": false
         },
         {
@@ -615,7 +737,7 @@
         },
         {
           "name": "status",
-          "pattern": "^(valid|invalid)$",
+          "pattern": "^(valid|invalid|valid_inspected)$",
           "required": true,
           "inherited": false
         },
@@ -630,6 +752,18 @@
           "pattern": "^https://github.com/.*",
           "required": false,
           "inherited": true
+        },
+        {
+          "name": "valid_from",
+          "pattern": "^v(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(\\.(0|[1-9]\\d*))?$",
+          "required": false,
+          "inherited": false
+        },
+        {
+          "name": "valid_until",
+          "pattern": "^v(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(\\.(0|[1-9]\\d*))?$",
+          "required": false,
+          "inherited": false
         },
         {
           "name": "version",
@@ -676,6 +810,18 @@
       "parts": 3,
       "options": [
         {
+          "name": "bazel_target",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "bazel_type",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": true
+        },
+        {
           "name": "content",
           "pattern": "^[\\s\\S]+$",
           "required": true,
@@ -690,6 +836,12 @@
         {
           "name": "failure_id",
           "pattern": "^.+$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "id",
+          "pattern": "^comp_saf_dfa__[0-9a-z_]+$",
           "required": true,
           "inherited": false
         },
@@ -767,6 +919,18 @@
       "parts": 3,
       "options": [
         {
+          "name": "bazel_target",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "bazel_type",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": true
+        },
+        {
           "name": "content",
           "pattern": "^[\\s\\S]+$",
           "required": true,
@@ -779,20 +943,26 @@
           "inherited": false
         },
         {
+          "name": "failure_root_cause",
+          "pattern": "^[\\s\\S]+$",
+          "required": false,
+          "inherited": false
+        },
+        {
           "name": "fault_id",
           "pattern": "^.+$",
           "required": true,
           "inherited": false
         },
         {
-          "name": "mitigation_issue",
-          "pattern": "^https://github\\.com/[^/]+/[^/]+/issues/\\d+$",
-          "required": false,
+          "name": "id",
+          "pattern": "^comp_saf_fmea__[0-9a-z_]+$",
+          "required": true,
           "inherited": false
         },
         {
-          "name": "root_cause",
-          "pattern": "^[\\s\\S]+$",
+          "name": "mitigation_issue",
+          "pattern": "^https://github\\.com/[^/]+/[^/]+/issues/\\d+$",
           "required": false,
           "inherited": false
         },
@@ -865,8 +1035,26 @@
       "parts": 3,
       "options": [
         {
+          "name": "bazel_target",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "bazel_type",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": true
+        },
+        {
           "name": "content",
           "pattern": "^[\\s\\S]+$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "id",
+          "pattern": "^comp_sec_ana__[0-9a-z_]+$",
           "required": true,
           "inherited": false
         },
@@ -942,8 +1130,26 @@
       "parts": 3,
       "options": [
         {
+          "name": "bazel_target",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "bazel_type",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": true
+        },
+        {
           "name": "content",
           "pattern": "^[\\s\\S]+$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "id",
+          "pattern": "^comp_sec_threat__[0-9a-z_]+$",
           "required": true,
           "inherited": false
         },
@@ -988,6 +1194,18 @@
       "parts": null,
       "options": [
         {
+          "name": "bazel_target",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "bazel_type",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": true
+        },
+        {
           "name": "consequences",
           "pattern": "^.*$",
           "required": false,
@@ -1002,6 +1220,12 @@
         {
           "name": "decision",
           "pattern": "^.+$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "id",
+          "pattern": "^dec_rec__[0-9a-z_]+$",
           "required": true,
           "inherited": false
         },
@@ -1053,6 +1277,24 @@
       "parts": 2,
       "options": [
         {
+          "name": "bazel_target",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "bazel_type",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "id",
+          "pattern": "^doc_concept__[0-9a-z_]+$",
+          "required": true,
+          "inherited": false
+        },
+        {
           "name": "source_code_link",
           "pattern": "^https://github.com/.*",
           "required": false,
@@ -1086,6 +1328,24 @@
       "tags": [],
       "parts": 2,
       "options": [
+        {
+          "name": "bazel_target",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "bazel_type",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "id",
+          "pattern": "^doc_getstrt__[0-9a-z_]+$",
+          "required": true,
+          "inherited": false
+        },
         {
           "name": "source_code_link",
           "pattern": "^https://github.com/.*",
@@ -1133,6 +1393,24 @@
           "inherited": false
         },
         {
+          "name": "bazel_target",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "bazel_type",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "id",
+          "pattern": "^doc_tool__[0-9a-z_]+$",
+          "required": true,
+          "inherited": false
+        },
+        {
           "name": "reviewer",
           "pattern": "^.*$",
           "required": false,
@@ -1141,7 +1419,7 @@
         {
           "name": "safety_affected",
           "pattern": "^(YES|NO)$",
-          "required": true,
+          "required": false,
           "inherited": false
         },
         {
@@ -1165,7 +1443,7 @@
         {
           "name": "tcl",
           "pattern": "^(LOW|HIGH)$",
-          "required": true,
+          "required": false,
           "inherited": false
         },
         {
@@ -1214,6 +1492,30 @@
         {
           "name": "author",
           "pattern": "^.*$",
+          "required": false,
+          "inherited": false
+        },
+        {
+          "name": "bazel_target",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "bazel_type",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "id",
+          "pattern": "^doc__[0-9a-z_]+$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "report_version",
+          "pattern": "^v(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(\\.(0|[1-9]\\d*))?$",
           "required": false,
           "inherited": false
         },
@@ -1281,6 +1583,24 @@
       "parts": 2,
       "options": [
         {
+          "name": "bazel_target",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "bazel_type",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "id",
+          "pattern": "^feat__[0-9a-z_]+$",
+          "required": true,
+          "inherited": false
+        },
+        {
           "name": "safety",
           "pattern": "^(QM|ASIL_B)$",
           "required": true,
@@ -1300,7 +1620,7 @@
         },
         {
           "name": "status",
-          "pattern": "^(valid|invalid)$",
+          "pattern": "^(valid|invalid|valid_inspected)$",
           "required": true,
           "inherited": false
         },
@@ -1358,6 +1678,24 @@
       "parts": 3,
       "options": [
         {
+          "name": "bazel_target",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "bazel_type",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "id",
+          "pattern": "^feat_arc_dyn__[0-9a-z_]+$",
+          "required": true,
+          "inherited": false
+        },
+        {
           "name": "safety",
           "pattern": "^(QM|ASIL_B)$",
           "required": true,
@@ -1377,7 +1715,7 @@
         },
         {
           "name": "status",
-          "pattern": "^(valid|invalid)$",
+          "pattern": "^(valid|invalid|valid_inspected)$",
           "required": true,
           "inherited": false
         },
@@ -1424,6 +1762,24 @@
       "parts": 3,
       "options": [
         {
+          "name": "bazel_target",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "bazel_type",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "id",
+          "pattern": "^feat_arc_sta__[0-9a-z_]+$",
+          "required": true,
+          "inherited": false
+        },
+        {
           "name": "safety",
           "pattern": "^(QM|ASIL_B)$",
           "required": true,
@@ -1443,7 +1799,7 @@
         },
         {
           "name": "status",
-          "pattern": "^(valid|invalid)$",
+          "pattern": "^(valid|invalid|valid_inspected)$",
           "required": true,
           "inherited": false
         },
@@ -1500,6 +1856,18 @@
       "parts": 3,
       "options": [
         {
+          "name": "bazel_target",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "bazel_type",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": true
+        },
+        {
           "name": "content",
           "pattern": "^[\\s\\S]+$",
           "required": true,
@@ -1509,6 +1877,12 @@
           "name": "hash",
           "pattern": "^.*$",
           "required": false,
+          "inherited": false
+        },
+        {
+          "name": "id",
+          "pattern": "^feat_req__[0-9a-z_]+$",
+          "required": true,
           "inherited": false
         },
         {
@@ -1537,7 +1911,7 @@
         },
         {
           "name": "status",
-          "pattern": "^(valid|invalid)$",
+          "pattern": "^(valid|invalid|valid_inspected)$",
           "required": true,
           "inherited": false
         },
@@ -1610,6 +1984,18 @@
       "parts": 3,
       "options": [
         {
+          "name": "bazel_target",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "bazel_type",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": true
+        },
+        {
           "name": "content",
           "pattern": "^[\\s\\S]+$",
           "required": true,
@@ -1624,6 +2010,12 @@
         {
           "name": "failure_id",
           "pattern": "^.+$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "id",
+          "pattern": "^feat_saf_dfa__[0-9a-z_]+$",
           "required": true,
           "inherited": false
         },
@@ -1701,6 +2093,18 @@
       "parts": 3,
       "options": [
         {
+          "name": "bazel_target",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "bazel_type",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": true
+        },
+        {
           "name": "content",
           "pattern": "^[\\s\\S]+$",
           "required": true,
@@ -1713,20 +2117,26 @@
           "inherited": false
         },
         {
+          "name": "failure_root_cause",
+          "pattern": "^[\\s\\S]+$",
+          "required": false,
+          "inherited": false
+        },
+        {
           "name": "fault_id",
           "pattern": "^.+$",
           "required": true,
           "inherited": false
         },
         {
-          "name": "mitigation_issue",
-          "pattern": "^https://github\\.com/[^/]+/[^/]+/issues/\\d+$",
-          "required": false,
+          "name": "id",
+          "pattern": "^feat_saf_fmea__[0-9a-z_]+$",
+          "required": true,
           "inherited": false
         },
         {
-          "name": "root_cause",
-          "pattern": "^[\\s\\S]+$",
+          "name": "mitigation_issue",
+          "pattern": "^https://github\\.com/[^/]+/[^/]+/issues/\\d+$",
           "required": false,
           "inherited": false
         },
@@ -1799,8 +2209,26 @@
       "parts": 3,
       "options": [
         {
+          "name": "bazel_target",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "bazel_type",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": true
+        },
+        {
           "name": "content",
           "pattern": "^[\\s\\S]+$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "id",
+          "pattern": "^feat_sec_ana__[0-9a-z_]+$",
           "required": true,
           "inherited": false
         },
@@ -1876,8 +2304,26 @@
       "parts": 3,
       "options": [
         {
+          "name": "bazel_target",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "bazel_type",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": true
+        },
+        {
           "name": "content",
           "pattern": "^[\\s\\S]+$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "id",
+          "pattern": "^feat_sec_threat__[0-9a-z_]+$",
           "required": true,
           "inherited": false
         },
@@ -1922,6 +2368,24 @@
       "parts": 2,
       "options": [
         {
+          "name": "bazel_target",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "bazel_type",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "id",
+          "pattern": "^gd_chklst__[0-9a-z_]+$",
+          "required": true,
+          "inherited": false
+        },
+        {
           "name": "source_code_link",
           "pattern": "^https://github.com/.*",
           "required": false,
@@ -1965,6 +2429,24 @@
       "parts": 2,
       "options": [
         {
+          "name": "bazel_target",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "bazel_type",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "id",
+          "pattern": "^gd_guidl__[0-9a-z_]+$",
+          "required": true,
+          "inherited": false
+        },
+        {
           "name": "source_code_link",
           "pattern": "^https://github.com/.*",
           "required": false,
@@ -2007,6 +2489,24 @@
       "tags": [],
       "parts": 2,
       "options": [
+        {
+          "name": "bazel_target",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "bazel_type",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "id",
+          "pattern": "^gd_meth__[0-9a-z_]+$",
+          "required": true,
+          "inherited": false
+        },
         {
           "name": "source_code_link",
           "pattern": "^https://github.com/.*",
@@ -2053,8 +2553,26 @@
       "parts": 2,
       "options": [
         {
+          "name": "bazel_target",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "bazel_type",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": true
+        },
+        {
           "name": "content",
           "pattern": "^[\\s\\S]+$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "id",
+          "pattern": "^gd_req__[0-9a-z_]+$",
           "required": true,
           "inherited": false
         },
@@ -2104,6 +2622,24 @@
       "parts": 2,
       "options": [
         {
+          "name": "bazel_target",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "bazel_type",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "id",
+          "pattern": "^gd_temp__[0-9a-z_]+$",
+          "required": true,
+          "inherited": false
+        },
+        {
           "name": "source_code_link",
           "pattern": "^https://github.com/.*",
           "required": false,
@@ -2150,6 +2686,24 @@
       "parts": 3,
       "options": [
         {
+          "name": "bazel_target",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "bazel_type",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "id",
+          "pattern": "^logic_arc_int__[0-9a-z_]+$",
+          "required": true,
+          "inherited": false
+        },
+        {
           "name": "safety",
           "pattern": "^(QM|ASIL_B)$",
           "required": true,
@@ -2169,7 +2723,7 @@
         },
         {
           "name": "status",
-          "pattern": "^(valid|invalid)$",
+          "pattern": "^(valid|invalid|valid_inspected)$",
           "required": true,
           "inherited": false
         },
@@ -2215,6 +2769,24 @@
       "parts": 3,
       "options": [
         {
+          "name": "bazel_target",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "bazel_type",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "id",
+          "pattern": "^logic_arc_int_op__[0-9a-z_]+$",
+          "required": true,
+          "inherited": false
+        },
+        {
           "name": "safety",
           "pattern": "^(QM|ASIL_B)$",
           "required": true,
@@ -2234,7 +2806,7 @@
         },
         {
           "name": "status",
-          "pattern": "^(valid|invalid)$",
+          "pattern": "^(valid|invalid|valid_inspected)$",
           "required": true,
           "inherited": false
         },
@@ -2272,6 +2844,30 @@
       "parts": 2,
       "options": [
         {
+          "name": "bazel_target",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "bazel_type",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "id",
+          "pattern": "^mod__[0-9a-z_]+$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "maturity",
+          "pattern": "^(preview|experimental|release)$",
+          "required": false,
+          "inherited": false
+        },
+        {
           "name": "safety",
           "pattern": "^(QM|ASIL_B)$",
           "required": false,
@@ -2291,7 +2887,7 @@
         },
         {
           "name": "status",
-          "pattern": "^(valid|invalid)$",
+          "pattern": "^(valid|invalid|valid_inspected)$",
           "required": false,
           "inherited": false
         },
@@ -2335,9 +2931,27 @@
           "inherited": false
         },
         {
+          "name": "bazel_target",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "bazel_type",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": true
+        },
+        {
           "name": "branch_coverage_percent",
           "pattern": "^(100|[1-9]?[0-9])$",
           "required": false,
+          "inherited": false
+        },
+        {
+          "name": "id",
+          "pattern": "^mod_vrep__[0-9a-z_]+$",
+          "required": true,
           "inherited": false
         },
         {
@@ -2440,6 +3054,24 @@
       "parts": 3,
       "options": [
         {
+          "name": "bazel_target",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "bazel_type",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "id",
+          "pattern": "^mod_view_dyn__[0-9a-z_]+$",
+          "required": true,
+          "inherited": false
+        },
+        {
           "name": "source_code_link",
           "pattern": "^https://github.com/.*",
           "required": false,
@@ -2478,6 +3110,24 @@
       ],
       "parts": 3,
       "options": [
+        {
+          "name": "bazel_target",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "bazel_type",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "id",
+          "pattern": "^mod_view_sta__[0-9a-z_]+$",
+          "required": true,
+          "inherited": false
+        },
         {
           "name": "source_code_link",
           "pattern": "^https://github.com/.*",
@@ -2524,6 +3174,18 @@
       "parts": 3,
       "options": [
         {
+          "name": "bazel_target",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "bazel_type",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": true
+        },
+        {
           "name": "content",
           "pattern": "^[\\s\\S]+$",
           "required": true,
@@ -2538,6 +3200,12 @@
         {
           "name": "failure_id",
           "pattern": "^.+$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "id",
+          "pattern": "^plat_saf_dfa__[0-9a-z_]+$",
           "required": true,
           "inherited": false
         },
@@ -2615,8 +3283,26 @@
       "parts": 3,
       "options": [
         {
+          "name": "bazel_target",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "bazel_type",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": true
+        },
+        {
           "name": "content",
           "pattern": "^[\\s\\S]+$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "id",
+          "pattern": "^plat_sec_ana__[0-9a-z_]+$",
           "required": true,
           "inherited": false
         },
@@ -2692,8 +3378,26 @@
       "parts": 3,
       "options": [
         {
+          "name": "bazel_target",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "bazel_type",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": true
+        },
+        {
           "name": "content",
           "pattern": "^[\\s\\S]+$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "id",
+          "pattern": "^plat_sec_threat__[0-9a-z_]+$",
           "required": true,
           "inherited": false
         },
@@ -2731,6 +3435,87 @@
       "links": []
     },
     {
+      "name": "potential_tool_malfunction",
+      "title": "Potential Tool Malfunction",
+      "prefix": null,
+      "tags": [],
+      "parts": 3,
+      "options": [
+        {
+          "name": "bazel_target",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "bazel_type",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "detection_sufficient",
+          "pattern": "^(YES|NO)$",
+          "required": false,
+          "inherited": false
+        },
+        {
+          "name": "id",
+          "pattern": "^potential_tool_malfunction__[0-9a-z_]+$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "safety_affected",
+          "pattern": "^(YES|NO)$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "safety_measures",
+          "pattern": "^.+$",
+          "required": false,
+          "inherited": false
+        },
+        {
+          "name": "source_code_link",
+          "pattern": "^https://github.com/.*",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "testlink",
+          "pattern": "^https://github.com/.*",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "version",
+          "pattern": "^[0-9]+$",
+          "required": true,
+          "inherited": true
+        }
+      ],
+      "links": [
+        {
+          "name": "parent_needs",
+          "targets": [
+            "tool_usecase"
+          ],
+          "any_target": false,
+          "required": true
+        },
+        {
+          "name": "violates",
+          "targets": [
+            "tool_req"
+          ],
+          "any_target": false,
+          "required": true
+        }
+      ]
+    },
+    {
       "name": "real_arc_int",
       "title": "Interface & Component Interface",
       "prefix": null,
@@ -2740,6 +3525,24 @@
       ],
       "parts": 3,
       "options": [
+        {
+          "name": "bazel_target",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "bazel_type",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "id",
+          "pattern": "^real_arc_int__[0-9a-z_]+$",
+          "required": true,
+          "inherited": false
+        },
         {
           "name": "language",
           "pattern": "^(cpp|rust)$",
@@ -2766,7 +3569,7 @@
         },
         {
           "name": "status",
-          "pattern": "^(valid|invalid)$",
+          "pattern": "^(valid|invalid|valid_inspected)$",
           "required": true,
           "inherited": false
         },
@@ -2804,6 +3607,24 @@
       "parts": 3,
       "options": [
         {
+          "name": "bazel_target",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "bazel_type",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "id",
+          "pattern": "^real_arc_int_op__[0-9a-z_]+$",
+          "required": true,
+          "inherited": false
+        },
+        {
           "name": "safety",
           "pattern": "^(QM|ASIL_B)$",
           "required": true,
@@ -2823,7 +3644,7 @@
         },
         {
           "name": "status",
-          "pattern": "^(valid|invalid)$",
+          "pattern": "^(valid|invalid|valid_inspected)$",
           "required": true,
           "inherited": false
         },
@@ -2873,8 +3694,26 @@
           "inherited": false
         },
         {
+          "name": "bazel_target",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "bazel_type",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": true
+        },
+        {
           "name": "hash",
           "pattern": "^.+$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "id",
+          "pattern": "^review_header__[0-9a-z_]+$",
           "required": true,
           "inherited": false
         },
@@ -2919,6 +3758,24 @@
       "parts": 2,
       "options": [
         {
+          "name": "bazel_target",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "bazel_type",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "id",
+          "pattern": "^rl__[0-9a-z_]+$",
+          "required": true,
+          "inherited": false
+        },
+        {
           "name": "source_code_link",
           "pattern": "^https://github.com/.*",
           "required": false,
@@ -2955,6 +3812,18 @@
       "tags": [],
       "parts": 3,
       "options": [
+        {
+          "name": "bazel_target",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "bazel_type",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": true
+        },
         {
           "name": "id",
           "pattern": "^std_req__(iso26262|isosae21434|isopas8926|aspice_40)__[0-9a-zA-Z_-]*$",
@@ -3003,6 +3872,18 @@
       "parts": 3,
       "options": [
         {
+          "name": "bazel_target",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "bazel_type",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": true
+        },
+        {
           "name": "id",
           "pattern": "^std_wp__(iso26262|isosae21434|isopas8926|aspice_40)__[0-9a-z_]*$",
           "required": true,
@@ -3046,9 +3927,27 @@
       "parts": 3,
       "options": [
         {
+          "name": "bazel_target",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "bazel_type",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": true
+        },
+        {
           "name": "hash",
           "pattern": "^.*$",
           "required": false,
+          "inherited": false
+        },
+        {
+          "name": "id",
+          "pattern": "^stkh_req__[0-9a-z_]+$",
+          "required": true,
           "inherited": false
         },
         {
@@ -3083,7 +3982,7 @@
         },
         {
           "name": "status",
-          "pattern": "^(valid|invalid)$",
+          "pattern": "^(valid|invalid|valid_inspected)$",
           "required": true,
           "inherited": false
         },
@@ -3127,6 +4026,18 @@
       "tags": [],
       "parts": 3,
       "options": [
+        {
+          "name": "bazel_target",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "bazel_type",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": true
+        },
         {
           "name": "id",
           "pattern": "^tenet__[0-9a-zA-Z_-]*$",
@@ -3175,6 +4086,18 @@
       "parts": null,
       "options": [
         {
+          "name": "bazel_target",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "bazel_type",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": true
+        },
+        {
           "name": "derivation_technique",
           "pattern": "^.*$",
           "required": false,
@@ -3184,6 +4107,12 @@
           "name": "file",
           "pattern": "^.*$",
           "required": false,
+          "inherited": false
+        },
+        {
+          "name": "id",
+          "pattern": "^testcase__[0-9a-z_]+$",
+          "required": true,
           "inherited": false
         },
         {
@@ -3261,6 +4190,18 @@
       "parts": 2,
       "options": [
         {
+          "name": "bazel_target",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "bazel_type",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": true
+        },
+        {
           "name": "content",
           "pattern": "^[\\s\\S]+$",
           "required": true,
@@ -3270,6 +4211,12 @@
           "name": "hash",
           "pattern": "^.*$",
           "required": false,
+          "inherited": false
+        },
+        {
+          "name": "id",
+          "pattern": "^tool_req__[0-9a-z_]+$",
+          "required": true,
           "inherited": false
         },
         {
@@ -3343,7 +4290,62 @@
             "comp_req"
           ],
           "any_target": false,
-          "required": false
+          "required": true
+        }
+      ]
+    },
+    {
+      "name": "tool_usecase",
+      "title": "Tool Use Case",
+      "prefix": null,
+      "tags": [],
+      "parts": 3,
+      "options": [
+        {
+          "name": "bazel_target",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "bazel_type",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "id",
+          "pattern": "^tool_usecase__[0-9a-z_]+$",
+          "required": true,
+          "inherited": false
+        },
+        {
+          "name": "source_code_link",
+          "pattern": "^https://github.com/.*",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "testlink",
+          "pattern": "^https://github.com/.*",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "version",
+          "pattern": "^[0-9]+$",
+          "required": true,
+          "inherited": true
+        }
+      ],
+      "links": [
+        {
+          "name": "belongs_to",
+          "targets": [
+            "doc_tool"
+          ],
+          "any_target": false,
+          "required": true
         }
       ]
     },
@@ -3354,6 +4356,18 @@
       "tags": [],
       "parts": 3,
       "options": [
+        {
+          "name": "bazel_target",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "bazel_type",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": true
+        },
         {
           "name": "id",
           "pattern": "^tsf__[0-9a-zA-Z_-]*$",
@@ -3401,6 +4415,24 @@
       "tags": [],
       "parts": 2,
       "options": [
+        {
+          "name": "bazel_target",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "bazel_type",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "id",
+          "pattern": "^wf__[0-9a-z_]+$",
+          "required": true,
+          "inherited": false
+        },
         {
           "name": "source_code_link",
           "pattern": "^https://github.com/.*",
@@ -3498,6 +4530,24 @@
       "parts": 2,
       "options": [
         {
+          "name": "bazel_target",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "bazel_type",
+          "pattern": "^.*$",
+          "required": false,
+          "inherited": true
+        },
+        {
+          "name": "id",
+          "pattern": "^wp__[0-9a-z_]+$",
+          "required": true,
+          "inherited": false
+        },
+        {
           "name": "source_code_link",
           "pattern": "^https://github.com/.*",
           "required": false,
@@ -3547,10 +4597,29 @@
         "real_arc_int_op"
       ],
       "condition_raw": "safety == QM",
+      "check_type": "check_all",
       "check_raw": {
         "fulfils": "safety != QM"
       },
       "explanation": "An QM architecture element cannot implement ASIL requirements."
+    },
+    {
+      "name": "tool_req__docs_arch_link_safety_to_req",
+      "applies_to": [
+        "feat_arc_sta",
+        "feat_arc_dyn",
+        "logic_arc_int",
+        "comp",
+        "comp_arc_sta",
+        "comp_arc_dyn",
+        "real_arc_int"
+      ],
+      "condition_raw": "safety != QM",
+      "check_type": "check_one",
+      "check_raw": {
+        "fulfils": "safety == self.safety"
+      },
+      "explanation": "A safety relevant architecture element must be linked to at least one requirement with the exact same safety value via fulfils."
     },
     {
       "name": "tool_req__docs_arch_link_security",
@@ -3563,6 +4632,7 @@
         "real_arc_int_op"
       ],
       "condition_raw": "security == YES",
+      "check_type": "check_all",
       "check_raw": {
         "implements": "security == YES"
       },
@@ -3579,6 +4649,7 @@
         "tool_req"
       ],
       "condition_raw": "safety == QM",
+      "check_type": "check_all",
       "check_raw": {
         "derived_from": "safety == QM"
       },
@@ -3592,23 +4663,56 @@
         "logic_arc_int_op",
         "comp_arc_sta",
         "real_arc_int",
-        "real_arc_int_op"
+        "real_arc_int_op",
+        "comp",
+        "feat"
       ],
       "condition_raw": {
         "and": [
           "safety != QM",
-          "status == valid"
+          {
+            "or": [
+              "status == valid",
+              "status == valid_inspected"
+            ]
+          }
         ]
       },
+      "check_type": "check_all",
       "check_raw": {
         "implements": {
           "and": [
             "safety != QM",
-            "status == valid"
+            {
+              "or": [
+                "status == valid",
+                "status == valid_inspected"
+              ]
+            }
           ]
         }
       },
       "explanation": "An safety architecture element can only link other safety architecture elements."
+    },
+    {
+      "name": "tool_req__docs_saf_attrs_mitigated_by",
+      "applies_to": [
+        "feat_saf_dfa",
+        "comp_saf_dfa",
+        "feat_saf_fmea",
+        "comp_saf_fmea"
+      ],
+      "condition_raw": "status == valid",
+      "check_type": "check_one",
+      "check_raw": {
+        "mitigated_by": {
+          "or": [
+            "safety == ASIL_B",
+            "type == aou_req"
+          ]
+        }
+      },
+      "explanation": "Valid safety analyses should link to at least one same-level or higher-safety requirement, or an Assumption of Use requirement."
     },
     {
       "name": "workproduct_aspice_40",
@@ -3616,6 +4720,7 @@
         "workproduct"
       ],
       "condition_raw": "complies != []",
+      "check_type": "check_all",
       "check_raw": {
         "complies": {
           "or": [

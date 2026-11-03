@@ -130,6 +130,17 @@ wm.query_graph("Find all database connections")
 
 You don't call the CLI repeatedly—that's the whole point of generating the graph once and querying it many times.
 
+**Programmatic access:** The `resolve_graph_path()` function provides the same lookup logic for other integrations:
+
+```python
+from graph_cache import resolve_graph_path
+
+# Find graph.json (in-repo or user cache)
+graph = resolve_graph_path(Path.cwd())
+if graph:
+    data = json.loads(graph.read_text())
+```
+
 ## Files in This Package
 
 - [README.md](README.md) — This file
@@ -143,7 +154,7 @@ You don't call the CLI repeatedly—that's the whole point of generating the gra
 
 **Q: Command not found: graphify**
 ```bash
-uv tool install 'graphifyy[mcp]'
+uv tool install 'graphifyy[mcp]==0.9.97'
 # Verify: which graphify
 ```
 
@@ -179,3 +190,23 @@ Make sure you:
 
 This guidance package: Apache License 2.0  
 External graphify tool: [Graphify Labs License](https://github.com/Graphify-Labs/graphify/blob/main/LICENSE)
+
+## Where the graph comes from
+
+The server needs no setup in the repository and never writes into the worktree:
+
+1. The graph lives in `~/.local/share/score-agent/<repo>-<hash>/`.
+    For eclipse-score repositories the cache preferentially loads from
+   `ghcr.io/eclipse-score/mcp-servers/graphs/<repo>` (merge-base commit, then `main`);
+   the download is checked against its sha256 digest.
+2. A downloaded graph is served directly, even if the nightly commit differs from checkout HEAD.
+    Its artifact metadata and `registry.json` retain source revision, tag, and digest provenance.
+    The registry is rechecked after 24 hours on a subsequent launch; download failure keeps a usable cached graph.
+3. If downloading fails, a cached graph is reused, followed by an existing checkout-local graph.
+    A code-only background build runs only when no graph is available.
+
+Use `graphify-codegraph --prepare-only --repo-path <repo>` to wait for graph preparation and print its path, source, and provenance as JSON without starting MCP.
+Add `--force-local` to explicitly rebuild from the current checkout; successful local builds clear published provenance rather than claiming to remain a prebuilt artifact.
+
+Set `SCORE_AGENT_OFFLINE=1` to skip the download, `SCORE_AGENT_GRAPH=off` for the
+plain graphify behaviour.

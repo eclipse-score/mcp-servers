@@ -22,7 +22,37 @@ from context_sessions import (
     TaskRecord,
     agent_salt,
     pseudonymize_agent,
+    resolve_local_store,
 )
+
+
+def test_default_store_separates_same_named_repositories(tmp_path: Path) -> None:
+    first = resolve_local_store(tmp_path / "first" / "repo")
+    second = resolve_local_store(tmp_path / "second" / "repo")
+
+    assert first != second
+    assert first.parent == second.parent == tmp_path / "user-state" / "score-agent"
+
+
+@pytest.mark.parametrize("state_home", [None, "relative-state", ""])
+def test_default_store_falls_back_to_home(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, state_home: str | None
+) -> None:
+    monkeypatch.setenv("HOME", str(tmp_path / "home"))
+    if state_home is None:
+        monkeypatch.delenv("XDG_STATE_HOME")
+    else:
+        monkeypatch.setenv("XDG_STATE_HOME", state_home)
+
+    store = resolve_local_store(tmp_path / "repo")
+
+    assert store.parent == tmp_path / "home" / ".local" / "state" / "score-agent"
+    assert not store.exists()
+
+
+def test_absolute_store_override(tmp_path: Path) -> None:
+    store = tmp_path / "custom-state"
+    assert resolve_local_store(tmp_path / "repo", str(store)) == store
 
 
 def test_session_log_round_trip_and_filtering(tmp_path: Path) -> None:
@@ -88,7 +118,7 @@ def test_session_log_reports_malformed_line_number(tmp_path: Path) -> None:
         log.read_all()
 
 
-def test_session_log_skips_unknown_record_type(tmp_path: Path) -> None:
+def test_session_log_rejects_unknown_record_type(tmp_path: Path) -> None:
     log = SessionLog(tmp_path)
     log.path.parent.mkdir(parents=True)
     log.path.write_text(
@@ -96,7 +126,8 @@ def test_session_log_skips_unknown_record_type(tmp_path: Path) -> None:
         encoding="utf-8",
     )
 
-    assert log.read_all() == ()
+    with pytest.raises(ValueError, match="unknown session record kind"):
+        log.read_all()
 
 
 def test_agent_pseudonym_is_deterministic_and_salt_is_private(tmp_path: Path) -> None:

@@ -12,13 +12,14 @@
 # *******************************************************************************
 
 [tool.uv.workspace]
-members = ["libs/score-context"]
+members = ["libs/score-context", "packages/sdlc-harness"]
 
 [dependency-groups]
 dev = [
-  "pyright>=1.1.411",
+  "pyright>=1.1.414",
   "pytest>=9.1.1",
-  "ruff>=0.16.5",
+  "ruamel-yaml==0.19.1",
+  "ruff>=0.17.1",
 ]
 
 [tool.ruff]
@@ -37,11 +38,15 @@ include = [
   "packages/context-discipline/src/context_overlay.py",
   "packages/context-discipline/src/context_policy.py",
   "packages/context-discipline/src/context_sessions.py",
-  "packages/context-discipline/src/requirements_projection.py",
+  "packages/context-discipline/src/context_discipline_mcp.py",
   "packages/context-discipline/tests",
-  "packages/metamodel-flow/src/refresh_process_graph.py",
+  "packages/graphify-codegraph/src",
+  "packages/graphify-codegraph/tests",
+  "packages/metamodel-flow/src/generate_agent_context.py",
+  "packages/metamodel-flow/src/refresh_model.py",
+  "packages/metamodel-flow/tests/test_refresh_model.py",
 ]
 pythonVersion = "3.12"
 typeCheckingMode = "strict"
 reportMissingTypeStubs = false
-extraPaths = ["packages/context-discipline/src"]
+extraPaths = ["packages/context-discipline/src", "packages/graphify-codegraph/src", "packages/metamodel-flow/src"]

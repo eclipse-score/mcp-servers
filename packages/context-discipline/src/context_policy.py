@@ -182,6 +182,8 @@ class Policy:
 
 
 _SECTION_FIELDS: dict[str, dict[str, type]] = {
+    "process": {"enabled": bool, "path": str, "gap_min": float},
+    "requirements": {"enabled": bool, "path": str},
     "attention": {
         "w_semantic": float,
         "w_structural": float,
@@ -213,15 +215,6 @@ _SECTION_FIELDS: dict[str, dict[str, type]] = {
         "max_attributes": int,
         "max_added_nodes_per_change": int,
         "max_added_edges_per_change": int,
-    },
-    "process": {
-        "enabled": bool,
-        "path": str,
-        "gap_min": float,
-    },
-    "requirements": {
-        "enabled": bool,
-        "path": str,
     },
 }
 

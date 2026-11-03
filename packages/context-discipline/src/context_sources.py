@@ -15,6 +15,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import posixpath
@@ -134,12 +135,20 @@ def _session_edges(records: tuple[Record, ...]) -> tuple[MergedEdge, ...]:
     return tuple(edges)
 
 
+def code_graph_path(repo: Path) -> Path:
+    base = os.environ.get("XDG_DATA_HOME") or str(Path.home() / ".local" / "share")
+    digest = hashlib.sha256(str(repo.resolve()).encode()).hexdigest()[:12]
+    cached = Path(base) / "score-agent" / f"{repo.name}-{digest}" / "graph.json"
+    local = repo / "graphify-out" / "graph.json"
+    return cached if cached.exists() or not local.exists() else local
+
+
 class CodeGraphSource:
     layer = "code"
     read_only = True
 
     def load(self, repo: Path, policy: Policy) -> SourceGraph:
-        path = repo / "graphify-out" / "graph.json"
+        path = code_graph_path(repo)
         if not path.exists():
             return SourceGraph(self.layer, (), (), self.read_only, False)
         data = json.loads(path.read_text(encoding="utf-8"))
@@ -256,7 +265,7 @@ class SessionSource:
             tuple(nodes),
             _session_edges(records),
             self.read_only,
-            (repo / ".score-local" / "sessions.jsonl").exists(),
+            log.path.exists(),
         )
 
 
@@ -283,6 +292,9 @@ class ProcessSource:
         )
         if consumer_copies:
             return consumer_copies[0]
+        bundled = Path(__file__).with_name("process_graph.json")
+        if bundled.exists():
+            return bundled
         installed = (
             Path(__file__).resolve().parents[2]
             / "metamodel-flow"

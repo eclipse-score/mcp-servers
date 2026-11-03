@@ -20,7 +20,12 @@ def main() -> int:
     servers = config.get("servers", config.get("mcpServers", {}))
     if not servers:
         raise RuntimeError(f"No MCP servers found in {config_path}")
-    expected_servers = {"apm-setup", "graphify-codegraph", "context-discipline"}
+    expected_servers = {
+        "apm-setup",
+        "graphify-codegraph",
+        "context-discipline",
+        "sdlc-harness",
+    }
     missing_servers = expected_servers - servers.keys()
     if missing_servers:
         raise RuntimeError(

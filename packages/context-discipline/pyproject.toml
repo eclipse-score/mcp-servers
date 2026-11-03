@@ -10,7 +10,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "score-context-discipline"
-version = "0.1.0"
+version = "0.2.3"
 description = "Working memory and local learning MCP server"
 requires-python = ">=3.12"
 
@@ -25,9 +25,13 @@ only-include = [
   "src/context_merge.py",
   "src/context_overlay.py",
   "src/context_policy.py",
-  "src/requirements_projection.py",
   "src/context_sessions.py",
   "src/context_sources.py",
   "src/context_taskclass.py",
+  "src/requirements_lookup.py",
+  "src/requirements_projection.py",
 ]
 sources = ["src"]
+
+[tool.hatch.build.targets.wheel.force-include]
+"../metamodel-flow/model/process_graph.json" = "process_graph.json"

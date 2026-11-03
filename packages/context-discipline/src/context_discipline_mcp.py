@@ -24,7 +24,7 @@ from contextlib import suppress
 from dataclasses import asdict, dataclass
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 from uuid import uuid4
 
 from context_attention import (
@@ -48,9 +48,11 @@ from context_sessions import (
     TaskRecord,
     agent_salt,
     pseudonymize_agent,
+    resolve_local_store,
 )
-from context_sources import load_process_graph
+from context_sources import code_graph_path, load_process_graph
 from context_taskclass import Detection, detect_task_class, process_facts
+from requirements_lookup import RequirementsIndex, resolve_requirements
 
 
 @dataclass
@@ -60,7 +62,7 @@ class WorkingMemoryEntry:
     timestamp: str
     type: str  # "goal", "assumption", "finding", "decision", "outcome"
     content: str
-    metadata: dict = None
+    metadata: dict[str, Any] | None = None
 
     def __post_init__(self):
         if self.metadata is None:
@@ -78,7 +80,7 @@ class LocalObservation:
     path_length: int
     surfaced_nodes: list[str]
     missing_nodes: list[str]
-    timestamp: str = None
+    timestamp: str | None = None
 
     def __post_init__(self):
         if self.timestamp is None:
@@ -273,20 +275,17 @@ class ContextDisciplineMCP:
     - graphify-codegraph (MCP) which wraps external graphify CLI for code queries
     """
 
-    def __init__(self, repo_path: str = ".", local_store: str = ".score-local"):
+    def __init__(self, repo_path: str = ".", local_store: str | None = None):
         self.repo_path = Path(repo_path).expanduser().resolve()
         self.policy = load_policy(self.repo_path)
-        store_path = Path(local_store).expanduser()
-        self.local_store = (
-            store_path if store_path.is_absolute() else self.repo_path / store_path
-        )
+        self.local_store = resolve_local_store(self.repo_path, local_store)
         self.local_store.mkdir(parents=True, exist_ok=True)
         self._agent_salt = agent_salt(self.local_store)
 
         self.session_id = f"session__{uuid4().hex[:8]}"
-        self.working_memory = []
+        self.working_memory: list[WorkingMemoryEntry] = []
         self.observations_path = self.local_store / "observations.jsonl"
-        self.session_log = SessionLog(self.repo_path, local_store)
+        self.session_log = SessionLog(self.repo_path, str(self.local_store))
         self.overlay_store = OverlayStore(self.repo_path)
         self.overlay_store.load()
         self.goal_task_id: str | None = None
@@ -378,7 +377,7 @@ class ContextDisciplineMCP:
                             metadata={"confidence": "unknown"},
                         )
                     )
-            elif isinstance(assumptions, dict):
+            else:
                 # Handle dict of assumption -> confidence
                 for assumption, confidence in assumptions.items():
                     self.working_memory.append(
@@ -439,7 +438,7 @@ class ContextDisciplineMCP:
         }
 
     def _graph_setup_status(self) -> dict[str, Any]:
-        graph_path = self.repo_path / "graphify-out" / "graph.json"
+        graph_path = code_graph_path(self.repo_path)
         if graph_path.exists():
             return {"ok": True, "graph_path": str(graph_path)}
         return {
@@ -503,6 +502,12 @@ class ContextDisciplineMCP:
             )
         )
         return result
+
+    def resolve_requirements(
+        self, requirement_ids: list[str], include_links: bool = True
+    ) -> dict[str, Any]:
+        index = RequirementsIndex.load(self.repo_path)
+        return resolve_requirements(index, requirement_ids, include_links)
 
     def record_decision(
         self,
@@ -611,7 +616,8 @@ class ContextDisciplineMCP:
         assumptions = [
             entry.content
             for entry in self.working_memory
-            if entry.type == "assumption" and entry.metadata.get("confidence") != "high"
+            if entry.type == "assumption"
+            and (entry.metadata or {}).get("confidence") != "high"
         ]
         return assumptions
 
@@ -697,7 +703,7 @@ class ContextDisciplineMCP:
         return {"node": asdict(node), "edge": asdict(edge)}
 
 
-TOOLS = [
+TOOLS: list[dict[str, Any]] = [
     {
         "name": "initialize_session",
         "description": "Initialize working memory for a coding session.",
@@ -844,6 +850,21 @@ TOOLS = [
         "inputSchema": {"type": "object", "properties": {}},
     },
     {
+        "name": "resolve_requirements",
+        "description": (
+            "Resolve requirement IDs and typed links from the "
+            "projected requirements graph."
+        ),
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "requirement_ids": {"type": "array", "items": {"type": "string"}},
+                "include_links": {"type": "boolean", "default": True},
+            },
+            "required": ["requirement_ids"],
+        },
+    },
+    {
         "name": "get_unverified_assumptions",
         "description": "Get assumptions that are not verified.",
         "inputSchema": {"type": "object", "properties": {}},
@@ -960,6 +981,8 @@ def call_tool(
         return manager.query_graph(**arguments)
     if name == "set_task_class":
         return manager.set_task_class(**arguments)
+    if name == "resolve_requirements":
+        return manager.resolve_requirements(**arguments)
     if name == "record_decision":
         return manager.record_decision(**arguments)
     if name == "record_outcome":
@@ -988,12 +1011,14 @@ def handle(manager: ContextDisciplineMCP, request: dict[str, Any]) -> str | None
     request_id = request.get("id")
     method = request.get("method")
     if method == "initialize":
-        result = {
+        initialization_result: dict[str, Any] = {
             "protocolVersion": "2024-11-05",
             "capabilities": {"tools": {}},
             "serverInfo": {"name": "context-discipline", "version": "0.1.0"},
         }
-        return json.dumps({"jsonrpc": "2.0", "id": request_id, "result": result})
+        return json.dumps(
+            {"jsonrpc": "2.0", "id": request_id, "result": initialization_result}
+        )
     if method == "tools/list":
         return json.dumps(
             {"jsonrpc": "2.0", "id": request_id, "result": {"tools": TOOLS}}
@@ -1003,9 +1028,14 @@ def handle(manager: ContextDisciplineMCP, request: dict[str, Any]) -> str | None
             params = request.get("params", {})
             result = call_tool(manager, params["name"], params.get("arguments", {}))
             json_content = {"type": "text", "text": json.dumps(result)}
-            if isinstance(result, dict) and result.get("announcement"):
+            if isinstance(result, dict) and cast(dict[str, Any], result).get(
+                "announcement"
+            ):
                 content = [
-                    {"type": "text", "text": result["announcement"]},
+                    {
+                        "type": "text",
+                        "text": cast(dict[str, Any], result)["announcement"],
+                    },
                     json_content,
                 ]
             else:

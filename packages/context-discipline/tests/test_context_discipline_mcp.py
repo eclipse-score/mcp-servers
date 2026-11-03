@@ -11,10 +11,10 @@
 # SPDX-License-Identifier: Apache-2.0
 # *******************************************************************************
 
+import hashlib
 import json
 from pathlib import Path
 
-import pytest
 from context_discipline_mcp import (
     AttentionRecord,
     ContextDisciplineMCP,
@@ -30,9 +30,16 @@ from context_merge import MergedGraph
 from context_overlay import OverlayNode, OverlayStore, Provenance
 from context_policy import Policy
 
-PROCESS_GRAPH = (
-    Path(__file__).parents[2] / "metamodel-flow" / "model" / "process_graph.json"
-)
+
+def _cached_graph_path(tmp_path: Path) -> Path:
+    digest = hashlib.sha256(str(tmp_path.resolve()).encode()).hexdigest()[:12]
+    return (
+        tmp_path
+        / "user-data"
+        / "score-agent"
+        / f"{tmp_path.name}-{digest}"
+        / "graph.json"
+    )
 
 
 def _write_graph(tmp_path: Path) -> Path:
@@ -73,6 +80,26 @@ def _write_graph(tmp_path: Path) -> Path:
         encoding="utf-8",
     )
     return graph_path
+
+
+def test_default_session_state_does_not_modify_consumer(tmp_path: Path) -> None:
+    repo = tmp_path / "consumer"
+    repo.mkdir()
+    manager = ContextDisciplineMCP(str(repo))
+    manager.initialize_session("Goal", [])
+
+    assert list(repo.iterdir()) == []
+    assert manager.local_store.is_relative_to(tmp_path / "user-state")
+    assert manager.session_log.path.parent == manager.local_store
+    assert ContextDisciplineMCP(str(repo)).local_store == manager.local_store
+
+
+def test_explicit_repository_local_state_is_preserved(tmp_path: Path) -> None:
+    manager = ContextDisciplineMCP(str(tmp_path), local_store=".score-local")
+    manager.initialize_session("Goal", [])
+
+    assert manager.local_store == tmp_path / ".score-local"
+    assert manager.session_log.path.exists()
 
 
 def test_initialize_session_writes_one_session_record(tmp_path: Path) -> None:
@@ -252,99 +279,55 @@ def test_graph_source_file_index_picks_shortest_id(tmp_path: Path) -> None:
     assert graph.source_file_index["src/source.py"] == "a"
 
 
-def test_initialize_session_reports_missing_graph_setup(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    monkeypatch.setenv("SCORE_PROCESS_GRAPH", str(tmp_path / "missing-process.json"))
+def test_initialize_session_reports_missing_graph_setup(tmp_path: Path) -> None:
     manager = ContextDisciplineMCP(str(tmp_path))
 
     result = manager.initialize_session("Goal", [])
 
-    assert set(result) == {"session_id", "task_class", "setup"}
-    assert "announcement" not in result
-    assert "agent_instruction" not in result
     assert result["setup"] == {
         "ok": False,
-        "graph_path": str(tmp_path / "graphify-out" / "graph.json"),
+        "graph_path": str(_cached_graph_path(tmp_path)),
         "next": "Call setup_graphify with install_graphify=true.",
     }
 
 
-def test_initialize_session_exposes_announcement_first(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+def test_resolve_requirements_is_listed_and_dispatches(
+    tmp_path: Path,
 ) -> None:
-    monkeypatch.setenv("SCORE_PROCESS_GRAPH", str(PROCESS_GRAPH))
+    requirements_path = tmp_path / ".score-local" / "requirements_graph.json"
+    requirements_path.parent.mkdir()
+    requirements_path.write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "source": {"repo": "example", "commit": "abc"},
+                "nodes": [
+                    {
+                        "id": "comp_req__x",
+                        "type": "comp_req",
+                        "title": "Requirement X",
+                        "attributes": {},
+                    }
+                ],
+                "edges": [],
+            }
+        ),
+        encoding="utf-8",
+    )
     manager = ContextDisciplineMCP(str(tmp_path))
 
-    result = manager.initialize_session(
-        "Build unit tests for the mw/log error domain",
-        [],
-    )
-
-    assert list(result)[:2] == ["agent_instruction", "announcement"]
-    assert result["announcement"] == result["detection"]["announcement"]
-    assert result["agent_instruction"] == (
-        "Print the announcement string verbatim as the first line of the reply "
-        "to the user, before any other text, without paraphrasing or "
-        "summarising."
-    )
-
-
-def test_handle_emits_announcement_before_json_result(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    monkeypatch.setenv("SCORE_PROCESS_GRAPH", str(PROCESS_GRAPH))
-    manager = ContextDisciplineMCP(str(tmp_path))
-
-    raw_response = handle(
+    listed = json.loads(handle(manager, {"id": 1, "method": "tools/list"}) or "")
+    listed_names = [tool["name"] for tool in listed["result"]["tools"]]
+    dispatched = call_tool(
         manager,
-        {
-            "jsonrpc": "2.0",
-            "id": 1,
-            "method": "tools/call",
-            "params": {
-                "name": "initialize_session",
-                "arguments": {
-                    "goal": "Build unit tests for the mw/log error domain",
-                    "subgoals": [],
-                },
-            },
-        },
+        "resolve_requirements",
+        {"requirement_ids": ["comp_req__x"]},
     )
-    assert raw_response is not None
-    response = json.loads(raw_response)
-    content = response["result"]["content"]
-    result = json.loads(content[1]["text"])
 
-    assert len(content) == 2
-    assert content[0] == {"type": "text", "text": result["announcement"]}
-    assert content[1] == {"type": "text", "text": json.dumps(result)}
-
-
-def test_handle_keeps_single_json_block_without_announcement(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    monkeypatch.setenv("SCORE_PROCESS_GRAPH", str(tmp_path / "missing.json"))
-    manager = ContextDisciplineMCP(str(tmp_path))
-
-    raw_response = handle(
-        manager,
-        {
-            "jsonrpc": "2.0",
-            "id": 1,
-            "method": "tools/call",
-            "params": {
-                "name": "initialize_session",
-                "arguments": {"goal": "Goal", "subgoals": []},
-            },
-        },
-    )
-    assert raw_response is not None
-    response = json.loads(raw_response)
-    content = response["result"]["content"]
-
-    assert len(content) == 1
-    assert "announcement" not in json.loads(content[0]["text"])
+    assert "resolve_requirements" in listed_names
+    assert dispatched["loaded"] is True
+    assert dispatched["results"][0]["known"] is True
+    assert dispatched["results"][0]["id"] == "comp_req__x"
 
 
 def test_initialize_session_reports_existing_graph_setup(tmp_path: Path) -> None:
@@ -371,16 +354,13 @@ def test_query_graph_reports_missing_graph_setup(tmp_path: Path) -> None:
         "matches": [],
         "setup": {
             "ok": False,
-            "graph_path": str(tmp_path / "graphify-out" / "graph.json"),
+            "graph_path": str(_cached_graph_path(tmp_path)),
             "next": "Call setup_graphify with install_graphify=true.",
         },
     }
 
 
-def test_query_graph_keeps_provenance_out_of_term_matching(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    monkeypatch.setenv("SCORE_PROCESS_GRAPH", str(tmp_path / "missing-process.json"))
+def test_query_graph_keeps_provenance_out_of_term_matching(tmp_path: Path) -> None:
     _write_graph(tmp_path)
     overlay = OverlayStore(tmp_path)
     overlay.upsert_node(
@@ -390,7 +370,7 @@ def test_query_graph_keeps_provenance_out_of_term_matching(
             "Projected decision",
             Provenance(
                 tmp_path.name,
-                "process_description",
+                "provenance_only_marker_9a",
                 0.9,
                 "2026-01-01T00:00:00Z",
             ),
@@ -400,10 +380,10 @@ def test_query_graph_keeps_provenance_out_of_term_matching(
 
     manager = ContextDisciplineMCP(str(tmp_path))
 
-    assert manager.query_graph("process_description")["matches"] == []
+    assert manager.query_graph("provenance_only_marker_9a")["matches"] == []
     matches = manager.query_graph("Projected decision")["matches"]
     assert [node["id"] for node in matches] == ["decision__projected"]
-    assert matches[0]["provenance"]["adapter"] == "process_description"
+    assert matches[0]["provenance"]["adapter"] == "provenance_only_marker_9a"
 
 
 def test_get_prior_context_returns_items_and_untrusted_rendered_block(

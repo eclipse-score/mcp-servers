@@ -1,30 +1,23 @@
-# *******************************************************************************
-# Copyright (c) 2026 Contributors to the Eclipse Foundation
-#
-# See the NOTICE file(s) distributed with this work for additional
-# information regarding copyright ownership.
-#
-# This program and the accompanying materials are made available under the
-# terms of the Apache License Version 2.0 which is available at
-# https://www.apache.org/licenses/LICENSE-2.0
-#
-# SPDX-License-Identifier: Apache-2.0
-# *******************************************************************************
-
 ---
 name: context-compression
 description: Guidelines for compressing and summarizing information before returning to context
 applyTo: "**"
 ---
 
-## Mandatory session-start protocol
+<!--
+*******************************************************************************
+Copyright (c) 2026 Contributors to the Eclipse Foundation
 
-Call `initialize_session` as the first tool call of every session, before
-reading files, searching, or running shell commands. There is no exception for
-small, familiar, or low-risk tasks. Print `announcement` verbatim when
-present; ask the user and record the answer with `set_task_class` when a
-question is present. See the working-memory discipline instruction for the
-complete protocol.
+See the NOTICE file(s) distributed with this work for additional
+information regarding copyright ownership.
+
+This program and the accompanying materials are made available under the
+terms of the Apache License Version 2.0 which is available at
+https://www.apache.org/licenses/LICENSE-2.0
+
+SPDX-License-Identifier: Apache-2.0
+*******************************************************************************
+-->
 
 # Context Compression Guidelines
 

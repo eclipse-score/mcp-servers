@@ -1,0 +1,147 @@
+# *******************************************************************************
+# Copyright (c) 2026 Contributors to the Eclipse Foundation
+#
+# See the NOTICE file(s) distributed with this work for additional
+# information regarding copyright ownership.
+#
+# This program and the accompanying materials are made available under the
+# terms of the Apache License Version 2.0 which is available at
+# https://www.apache.org/licenses/LICENSE-2.0
+#
+# SPDX-License-Identifier: Apache-2.0
+# *******************************************************************************
+
+name: Release
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Prepare and verify release
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      sha: ${{ steps.tag.outputs.sha }}
+    steps:
+      - name: Check out
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+      - name: Plan release or retry
+        id: version
+        run: |
+          plan="$(python3 scripts/prepare_release.py --plan)"
+          echo "version=$(jq -r '.version' <<< "$plan")" >> "$GITHUB_OUTPUT"
+          echo "sha=$(jq -r '.sha' <<< "$plan")" >> "$GITHUB_OUTPUT"
+      - name: Install uv
+        uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
+      - name: Prepare release metadata
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          RELEASE_SHA: ${{ steps.version.outputs.sha }}
+        run: |
+          if [[ -n "$RELEASE_SHA" ]]; then
+            git checkout --detach "$RELEASE_SHA"
+          else
+            python3 scripts/prepare_release.py "$VERSION"
+          fi
+      - name: Test
+        run: |
+          uv lock
+          uv sync --locked
+          uv run --locked pytest
+      - name: Create tag-only metadata commit
+        if: steps.version.outputs.sha == ''
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add -u
+          git commit --allow-empty -m "chore(release): v${VERSION}" -m "Release-Source: ${GITHUB_SHA}"
+      - name: Check exact release pins
+        run: uv run python scripts/check_pins.py --release
+      - name: Push release tag only
+        id: tag
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          RELEASE_SHA: ${{ steps.version.outputs.sha }}
+        run: |
+          if [[ -z "$RELEASE_SHA" ]]; then
+            git tag "v${VERSION}"
+            git push origin "refs/tags/v${VERSION}"
+          fi
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+      - name: Install APM CLI
+        run: uv tool install apm-cli
+      - name: Smoke-test shipped MCP pins
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          smoke_dir="$(mktemp -d)"
+          cd "$smoke_dir"
+          apm marketplace add "https://github.com/${GITHUB_REPOSITORY}" \
+            --name eclipse-score-apm-marketplace --ref "v${VERSION}"
+          apm install context-discipline@eclipse-score-apm-marketplace \
+            --target vscode --trust-transitive-mcp
+          apm install sdlc-harness@eclipse-score-apm-marketplace \
+            --target vscode --trust-transitive-mcp
+          uv tool install 'graphifyy[mcp]==0.9.97'
+          python3 "$GITHUB_WORKSPACE/scripts/check_remote_mcp.py"
+
+  features:
+    name: Publish devcontainer features
+    needs: release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Check out
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ needs.release.outputs.sha }}
+      - name: Publish features to GHCR
+        uses: devcontainers/action@bef2cf2d1a019b00b45e184f83035e01bd1972f3 # v1.4.4
+        with:
+          publish-features: "true"
+          base-path-to-features: ./features/src
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  publish:
+    name: Publish GitHub release
+    needs: [release, features]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Check out verified release
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ needs.release.outputs.sha }}
+      - name: Publish or resume release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.release.outputs.version }}
+        run: |
+          if gh release view "v${VERSION}" >/dev/null 2>&1; then
+            echo "Release v${VERSION} already exists"
+          else
+            gh release create "v${VERSION}" --verify-tag \
+              --title "v${VERSION}" --generate-notes
+          fi

@@ -4,12 +4,13 @@ Local-only agent packages for code understanding, working memory...
 
 ## What You Get
 
-Two ready-to-use packages for your AI agent:
+Ready-to-use packages for your AI agent:
 
 | Package | What It Does |
 |---------|---|
 | **graphify-codegraph** | Query code structure (what classes/functions exist, how they're connected) |
 | **context-discipline** | Working memory + outcome recording (agent tracks decisions and learns from past work) |
+| **sdlc-harness** | Traceable SDLC lifecycle, task evidence, and loopback logging |
 
 **Local only:** Everything runs in your project. Observations stored in `.score-local/` (not committed).
 
@@ -170,6 +171,21 @@ Working memory system + local learning.
 
 See [packages/context-discipline/README.md](packages/context-discipline/README.md) for details.
 
+### sdlc-harness
+
+Traceable SDLC lifecycle, task evidence, and loopback logging for AI agents.
+
+**MCP tools:**
+- `bootstrap_sdlc_issue()` - Initialize structured stage artifacts from a requirement
+- `write_stage_artifact()` - Write numbered requirement, specification, architecture, plan, or task
+- `assess_sdlc_issue()` - Assess stage artifacts for completeness and evidence
+- `check_stage_completeness()` - Verify prerequisite artifacts for a stage
+- `record_implementation_evidence()` - Record task test outcomes and status
+- `assess_implementation_progress()` - Report task completion and evidence summary
+- `record_loopback()` - Record discovered gaps and mark affected artifacts for review
+
+See [packages/sdlc-harness/README.md](packages/sdlc-harness/README.md) for details.
+
 ---
 
 ## How It Works
@@ -207,6 +223,31 @@ Result: Fewer tokens, faster time-to-solution (all local)
 ```
 
 ---
+
+## Releasing
+
+MCP sources are pinned to a commit SHA with the version as a comment:
+
+```yaml
+- git+https://github.com/eclipse-score/mcp-servers@<sha>#subdirectory=packages/apm-setup # v0.1.0
+```
+
+1. Open and merge one PR with your code, documentation, or generated graph changes.
+   No separate release PR or manual pin update is required.
+2. The `Release` workflow pins MCP sources to that merged commit and prepares the
+   next patch version automatically. To request a higher minor or major version,
+   update the package versions in the same PR.
+3. The workflow tests the release, creates a metadata commit reachable only from
+   its version tag, and pushes that tag. It never pushes changes to `main` and
+   does not need a branch-protection bypass or an Otterdog policy change.
+4. It smoke-tests the exact shipped MCP pins, publishes devcontainer features
+   from the same release commit, and then publishes the GitHub release.
+
+Use the version tag when installing the released marketplace. Versions and pins
+on `main` are development metadata; release metadata lives on the tags.
+Rerunning a workflow for the same merged commit reuses its tag and retries
+publication rather than allocating another version or skipping failed features.
+`python3 scripts/prepare_release.py --plan` prints the planned version as JSON.
 
 ## More Information
 

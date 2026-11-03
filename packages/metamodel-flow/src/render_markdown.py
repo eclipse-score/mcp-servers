@@ -83,6 +83,12 @@ def _raw_text(value: object) -> str:
     return json.dumps(value, ensure_ascii=False, indent=2, sort_keys=True)
 
 
+CHECK_SEMANTICS = {
+    "check_all": "every linked need must satisfy its condition",
+    "check_one": "at least one linked need must satisfy its condition",
+}
+
+
 def _render_graph_rule(rule: GraphRule) -> list[str]:
     applies_to = ", ".join(f"`{name}`" for name in sorted(rule.applies_to))
     return [
@@ -94,7 +100,7 @@ def _render_graph_rule(rule: GraphRule) -> list[str]:
         _raw_text(rule.condition_raw),
         "```",
         "",
-        "Check:",
+        f"Check (`{rule.check_type}`: {CHECK_SEMANTICS[rule.check_type]}):",
         "```text",
         _raw_text(rule.check_raw),
         "```",
@@ -116,15 +122,15 @@ def _render_link_type(link_type: LinkType) -> str:
 def render_markdown(context: AgentContext) -> str:
     """Render ``context`` into deterministic APM instruction Markdown."""
     lines = [
-        f"<!-- SPDX-{'License-Identifier'}: Apache-2.0 -->",
-        "<!-- Copyright (c) 2026 Contributors to the Eclipse Foundation -->",
-        "",
         "---",
         "name: score-artifact-model",
         "description: Normative S-CORE artifact model — need types, options, "
         "links and graph rules",
         'applyTo: "**/*.rst"',
         "---",
+        "",
+        f"<!-- SPDX-{'License-Identifier'}: Apache-2.0 -->",
+        "<!-- Copyright (c) 2026 Contributors to the Eclipse Foundation -->",
         "",
         "# S-CORE Artifact Model",
         "",

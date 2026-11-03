@@ -1,30 +1,22 @@
-# *******************************************************************************
-# Copyright (c) 2026 Contributors to the Eclipse Foundation
-#
-# See the NOTICE file(s) distributed with this work for additional
-# information regarding copyright ownership.
-#
-# This program and the accompanying materials are made available under the
-# terms of the Apache License Version 2.0 which is available at
-# https://www.apache.org/licenses/LICENSE-2.0
-#
-# SPDX-License-Identifier: Apache-2.0
-# *******************************************************************************
-
 ---
 name: maintain-working-memory
 description: Use context-discipline MCP tools to track goals, assumptions, and decisions during agentic sessions
 ---
 
-## Mandatory session-start protocol
+<!--
+*******************************************************************************
+Copyright (c) 2026 Contributors to the Eclipse Foundation
 
-Call `initialize_session` as the first tool call of every coding session,
-before reading files, searching, or answering. This is mandatory even for
-small, familiar, or low-risk tasks. If the session-start call was omitted,
-make it as soon as the omission is noticed, before the next edit. When the
-result contains `announcement`, print it verbatim to the user before any
-other output. If it contains a question, ask the user before continuing and
-record the answer with `set_task_class`.
+See the NOTICE file(s) distributed with this work for additional
+information regarding copyright ownership.
+
+This program and the accompanying materials are made available under the
+terms of the Apache License Version 2.0 which is available at
+https://www.apache.org/licenses/LICENSE-2.0
+
+SPDX-License-Identifier: Apache-2.0
+*******************************************************************************
+-->
 
 # Maintain Working Memory Skill
 
@@ -143,7 +135,7 @@ if unverified:
 The six MCP tools are the complete current API: `initialize_session`,
 `query_graph`, `record_decision`, `record_outcome`, `get_working_memory`, and
 `get_unverified_assumptions`. Working memory is held for the running server
-session; collaboration records are persisted to `.score-local/sessions.jsonl`.
+session; collaboration records are persisted to repository-keyed user state under `$XDG_STATE_HOME/score-agent/` or `~/.local/state/score-agent/` by default, without changing the consumer repository.
 
 ## Automatic Benefits
 
