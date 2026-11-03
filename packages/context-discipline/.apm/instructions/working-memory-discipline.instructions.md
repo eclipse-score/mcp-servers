@@ -34,10 +34,10 @@ You track:
 
 ## Intersession Context
 
-Session records are appended to `.score-local/sessions.jsonl`:
+Session records are appended to repository-keyed user state by default:
 
 ```
-.score-local/
+${XDG_STATE_HOME:-~/.local/state}/score-agent/<repo>-<path-hash>/
 └── sessions.jsonl
 ```
 
@@ -141,9 +141,10 @@ provenance-bearing and stored as shards in `score-context/nodes/` and
 `score-context/policy.toml`; validate them locally with
 `uv run python scripts/validate_overlay.py`.
 
-## Local Artifacts (Gitignored)
+## Local Artifacts
 
-Don't commit working memory:
+Automatic working memory lives outside the consumer repository and does not require `.gitignore` changes.
+Only if repository-local storage is explicitly selected, verify this ignore entry without replacing existing rules:
 
 ```
 .gitignore:
@@ -151,6 +152,7 @@ Don't commit working memory:
 ```
 
 These are ephemeral scaffolding for your reasoning, not deliverables.
+Existing `.score-local/` records are not automatically moved or read by the new default; select that directory explicitly to continue using them.
 
 Before writing a requirement ID into any artefact, resolve it with the
 `resolve_requirements` tool. A result with `known: false` and
@@ -169,7 +171,7 @@ Before writing a requirement ID into any artefact, resolve it with the
 ## See Also
 
 - [maintain-working-memory/SKILL.md](../skills/maintain-working-memory/SKILL.md) — Workflow guide
-- `.score-local/sessions.jsonl` — Append-only collaboration records
+- `${XDG_STATE_HOME:-~/.local/state}/score-agent/<repo>-<path-hash>/sessions.jsonl` — Append-only collaboration records
 - `score-context/meta.json` — Overlay version metadata
 - `score-context/policy.toml` — Versioned attention/privacy/overlay thresholds
 - `score-context/nodes/` — One provenance-bearing node per JSON shard

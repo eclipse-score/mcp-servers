@@ -23,7 +23,9 @@ SPDX-License-Identifier: Apache-2.0
 
 ## Setup (One-Time)
 
-Before you can query a repository graph, it must be generated. Call the
+The agent-context feature prepares graphs automatically in a user cache outside the consumer repository.
+Absence of `graphify-out/graph.json` in the checkout does not mean a cached graph is unavailable; inspect the paths reported by `verify_setup`.
+When setup is needed, call the
 `apm-setup` MCP tools for the target repository:
 
 ```bash
@@ -40,8 +42,8 @@ verify_setup(repo_path)
 
 Call `setup_graphify(repo_path, install_graphify=true)` through the setup MCP.
 
-Run setup before the first graph query when `graphify-out/graph.json` is
-missing. Run it again after major refactoring or when the graph no longer
+Run setup when the reported graph is missing.
+Run it again after major refactoring or when the graph no longer
 reflects the repository. Installing or compiling the APM package does not run
 the setup command automatically.
 
@@ -50,17 +52,18 @@ As a manual fallback, install and run the external tool directly:
 ```bash
 uv tool install 'graphifyy[mcp]==0.9.97'
 cd /path/to/repo
-graphify .
+graphify extract /path/to/repo --code-only --out /absolute/user-cache/repo
 ```
 
-This creates `graphify-out/graph.json` — a machine-readable map of your codebase.
+Graphify's `--out DIR` creates `DIR/graphify-out/graph.json`; choose an external user-cache directory, not the consumer checkout.
+See the [Graphify CLI reference](https://docs.graphify.com/open-source/configuration/cli).
 
 **When to regenerate:**
 - After major code changes or refactoring
 - If you suspect the graph is stale
 - Regularly during active development
 
-Regeneration takes seconds; the graph is not included in git.
+Keep setup and regeneration enabled; place generated output in the user cache rather than changing the consumer's `.gitignore`.
 
 ## Runtime (Agent Usage)
 

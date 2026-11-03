@@ -14,7 +14,9 @@
 
 """Small stdio MCP server for explicit local APM setup operations."""
 
+import hashlib
 import json
+import os
 import shutil
 import subprocess
 import sys
@@ -25,7 +27,8 @@ TOOLS = [
     {
         "name": "setup_graphify",
         "description": (
-            "Install graphify when requested and generate the repository graph."
+            "Install graphify when requested and generate the repository graph "
+            "in the user cache."
         ),
         "inputSchema": {
             "type": "object",
@@ -37,7 +40,7 @@ TOOLS = [
     },
     {
         "name": "setup_context_discipline",
-        "description": "Create local working-memory storage for a repository.",
+        "description": "Create repository-keyed working-memory storage in user state.",
         "inputSchema": {
             "type": "object",
             "properties": {"repo_path": {"type": "string"}},
@@ -58,13 +61,20 @@ def repo_from(arguments: dict[str, Any]) -> Path:
     return Path(arguments.get("repo_path", ".")).expanduser().resolve()
 
 
-def add_gitignore_entry(repo: Path, entry: str) -> None:
-    gitignore = repo / ".gitignore"
-    existing = gitignore.read_text() if gitignore.exists() else ""
-    lines = existing.splitlines()
-    if entry not in lines:
-        prefix = "" if not existing or existing.endswith("\n") else "\n"
-        gitignore.write_text(existing + prefix + entry + "\n")
+def graph_cache(repo: Path) -> Path:
+    """Match the graphify runtime's repository-keyed user cache."""
+    base = os.environ.get("XDG_DATA_HOME") or str(Path.home() / ".local" / "share")
+    digest = hashlib.sha256(str(repo).encode()).hexdigest()[:12]
+    return Path(base) / "score-agent" / f"{repo.name}-{digest}"
+
+
+def context_store(repo: Path) -> Path:
+    """Match the context runtime's repository-keyed user state."""
+    base = Path(os.environ.get("XDG_STATE_HOME") or Path.home() / ".local" / "state")
+    if not base.is_absolute():
+        base = Path.home() / ".local" / "state"
+    digest = hashlib.sha256(str(repo).encode("utf-8")).hexdigest()[:16]
+    return base / "score-agent" / f"{repo.name}-{digest}"
 
 
 def setup_graphify(arguments: dict[str, Any]) -> dict[str, Any]:
@@ -72,6 +82,7 @@ def setup_graphify(arguments: dict[str, Any]) -> dict[str, Any]:
     if not (repo / ".git").exists():
         raise ValueError(f"Not a git repository: {repo}")
 
+    cache = graph_cache(repo)
     graphify = shutil.which("graphify")
     installed = False
     if graphify is None and arguments.get("install_graphify", False):
@@ -83,18 +94,26 @@ def setup_graphify(arguments: dict[str, Any]) -> dict[str, Any]:
             "ok": False,
             "repo_path": str(repo),
             "graphify_installed": False,
-            "graph_path": str(repo / "graphify-out/graph.json"),
+            "graph_path": str(cache / "graph.json"),
             "next": "Call setup_graphify with install_graphify=true.",
         }
 
-    subprocess.run([graphify, "extract", str(repo), "--code-only"], check=True)
-    add_gitignore_entry(repo, "graphify-out/")
+    cache.mkdir(parents=True, exist_ok=True)
+    output = cache / "build"
+    env = os.environ.copy()
+    env.pop("GRAPHIFY_OUT", None)
+    subprocess.run(
+        [graphify, "extract", str(repo), "--code-only", "--out", str(output)],
+        check=True,
+        env=env,
+    )
+    (output / "graphify-out" / "graph.json").replace(cache / "graph.json")
     return {
         "ok": True,
         "repo_path": str(repo),
         "graphify_installed": True,
         "installed_now": installed,
-        "graph_path": str(repo / "graphify-out/graph.json"),
+        "graph_path": str(cache / "graph.json"),
     }
 
 
@@ -102,23 +121,30 @@ def setup_context_discipline(arguments: dict[str, Any]) -> dict[str, Any]:
     repo = repo_from(arguments)
     if not (repo / ".git").exists():
         raise ValueError(f"Not a git repository: {repo}")
-    (repo / ".score-local").mkdir(exist_ok=True)
-    add_gitignore_entry(repo, ".score-local/")
+    store = context_store(repo)
+    store.mkdir(parents=True, exist_ok=True)
+    store.chmod(0o700)
     return {
         "ok": True,
         "repo_path": str(repo),
-        "local_store": str(repo / ".score-local"),
+        "local_store": str(store),
     }
 
 
 def verify_setup(arguments: dict[str, Any]) -> dict[str, Any]:
     repo = repo_from(arguments)
+    graph = repo / "graphify-out" / "graph.json"
+    if not graph.exists():
+        graph = graph_cache(repo) / "graph.json"
+    store = context_store(repo)
     return {
         "ok": True,
         "repo_path": str(repo),
         "graphify_installed": shutil.which("graphify") is not None,
-        "graph_exists": (repo / "graphify-out/graph.json").exists(),
-        "context_store_exists": (repo / ".score-local").is_dir(),
+        "graph_exists": graph.exists(),
+        "graph_path": str(graph),
+        "context_store_exists": store.is_dir(),
+        "local_store": str(store),
     }
 
 

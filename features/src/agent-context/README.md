@@ -21,6 +21,21 @@ On Debian/Ubuntu images, the feature installs missing Python, Git, curl, and
 a shared system location so non-root remote users can run it. The feature is
 published by the `Release` workflow together with each release.
 
+## Consumer Repository Files
+
+Automatic graph preparation stores downloaded or built graphs under `~/.local/share/score-agent/` by default, outside the consumer repository.
+An existing repository-local `graphify-out/graph.json` takes precedence over that cache.
+Installing this feature alone does not deploy APM instructions, skills, hooks, or project manifests.
+
+APM installation and graph/context setup remain available; their generated outputs should be placed outside the consumer checkout rather than disabling these workflows.
+Context-discipline sessions, observations, and agent salts default to repository-keyed user state under `$XDG_STATE_HOME/score-agent/` or `~/.local/state/score-agent/`; `.score-local/` requires an explicit runtime storage override.
+The setup MCP generates graphs in the same user cache as the graph runtime and prepares the same user state as the context runtime without modifying consumer ignore rules.
+APM supports `install --root DIR` and `compile --root DIR` for redirected output, or `install --global` and `compile --global` for supported user-scoped harness deployment.
+Keep relocated instructions, skills, hooks, and MCP configuration discoverable through supported harness configuration; writing them into a cache alone does not register them.
+See [APM's installation destinations](https://microsoft.github.io/apm/consumer/install-packages/#where-files-land).
+This README is documentation, not an instruction automatically loaded by coding agents; reusable agent guidance is shipped through the APM packages.
+Existing consumer artifacts are not automatically deleted or migrated by this change.
+
 ## Testing
 
 From the repository root, with Docker running:
