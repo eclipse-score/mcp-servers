@@ -73,7 +73,9 @@ def update_codex(path: Path, command: str) -> bool:
 
 def register(home: Path, which: Which = shutil.which) -> list[str]:
     """Register the server for every agent that is installed or configured."""
-    command = str(home / ".local" / "bin" / "graphify-codegraph")
+    command = which("graphify-codegraph") or str(
+        home / ".local" / "bin" / "graphify-codegraph"
+    )
     targets: list[tuple[str, Path, Callable[[Path], bool]]] = [
         (
             "claude",
@@ -117,7 +119,10 @@ def register(home: Path, which: Which = shutil.which) -> list[str]:
 
 def main() -> int:
     home = Path.home()
-    if not (home / ".local" / "bin" / "graphify-codegraph").exists():
+    if not (
+        shutil.which("graphify-codegraph")
+        or (home / ".local" / "bin" / "graphify-codegraph").exists()
+    ):
         warn("graphify-codegraph is not installed, nothing to register")
         return 0
     try:

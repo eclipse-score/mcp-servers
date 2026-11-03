@@ -13,17 +13,14 @@
 # *******************************************************************************
 set -euo pipefail
 
-SOURCE=git+https://github.com/eclipse-score/mcp-servers@a6d8bf4448bfeff84a9d78c85bfdf4f32eb02509#subdirectory=packages/graphify-codegraph # v0.2.3
-USER_NAME="${_REMOTE_USER:-vscode}"
+SOURCE=git+https://github.com/eclipse-score/mcp-servers@a85a027acff417ef2718c07daf62491e98cdb4fd#subdirectory=packages/graphify-codegraph # v0.2.3
 SHARE=/usr/local/share/agent-context
 
-# Install python3 if not present
-PYTHON3="$(command -v python3 || true)"
-if [ -z "${PYTHON3}" ]; then
-    echo "agent-context: installing python3..." >&2
+if ! command -v python3 >/dev/null 2>&1 || \
+   ! command -v curl >/dev/null 2>&1 || \
+   ! command -v git >/dev/null 2>&1; then
     apt-get update
-    apt-get install -y python3 python3-pip python3-venv
-    PYTHON3="$(command -v python3)"
+    apt-get install -y --no-install-recommends ca-certificates curl git python3
 fi
 
 # Install uv if not present
@@ -41,4 +38,7 @@ fi
 
 install -d -m 0755 "${SHARE}"
 install -m 0644 "$(dirname "$0")/register_mcp.py" "${SHARE}/register_mcp.py"
-"${UV}" tool install --force "${SOURCE}"
+UV_TOOL_DIR="${SHARE}/tools" \
+UV_TOOL_BIN_DIR=/usr/local/bin \
+UV_PYTHON_INSTALL_DIR="${SHARE}/python" \
+    "${UV}" tool install --python 3.12 --force "${SOURCE}"
