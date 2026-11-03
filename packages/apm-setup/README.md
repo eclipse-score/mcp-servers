@@ -16,6 +16,11 @@ Graphs are generated in `$XDG_DATA_HOME/score-agent/<repo>-<path-hash>/`, fallin
 Context storage uses `$XDG_STATE_HOME/score-agent/<repo>-<path-hash>/`, falling back to `~/.local/state/score-agent/`.
 Both match their runtime storage paths, and neither setup operation edits consumer `.gitignore` files.
 Use the `graph_path` and `local_store` returned by `verify_setup` and setup tools instead of assuming checkout-local paths.
+Graph setup delegates to `graphify-codegraph --prepare-only --repo-path <repo>` using the runtime's prebuilt-first policy.
+It downloads the matching revision or nightly `main`, keeps the published provenance, and does not immediately overwrite a downloaded graph with local extraction.
+Published caches are rechecked daily; registry failures retain a usable cache, and local extraction is the last fallback when no graph exists.
+Pass `force_local=true` to `setup_graphify` for an explicit current-checkout rebuild, or use `graphify-codegraph --prepare-only --repo-path <repo> --force-local` directly.
+The launcher must support `--prepare-only`; update the pinned launcher release along with this setup package when deploying these changes.
 Installing or compiling an APM package does not execute setup commands automatically.
 
 ## APM installation

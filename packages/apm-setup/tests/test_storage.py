@@ -2,6 +2,8 @@
 # Copyright (c) 2026 Contributors to the Eclipse Foundation
 
 import importlib.util
+import json
+import subprocess
 import sys
 from pathlib import Path
 from types import ModuleType
@@ -37,20 +39,30 @@ def test_setup_preserves_consumer_and_reports_external_outputs(
     before = sorted(consumer.iterdir())
 
     def installed_graphify(executable: str) -> str:
-        return "/bin/graphify"
+        return "/bin/graphify-codegraph"
 
     monkeypatch.setattr(setup_module.shutil, "which", installed_graphify)
     monkeypatch.setenv("GRAPHIFY_OUT", str(consumer / "unwanted-output"))
 
-    def extract(command: list[str], **kwargs: Any) -> None:
-        assert command[1:4] == ["extract", str(consumer), "--code-only"]
+    def prepare(command: list[str], **kwargs: Any) -> subprocess.CompletedProcess[str]:
+        assert command[1:] == ["--prepare-only", "--repo-path", str(consumer)]
         assert kwargs["check"] is True
-        assert "GRAPHIFY_OUT" not in kwargs["env"]
-        output = Path(command[-1]) / "graphify-out"
+        output = setup_module.graph_cache(consumer)
         output.mkdir(parents=True)
         (output / "graph.json").write_text('{"nodes": [], "edges": []}')
+        return subprocess.CompletedProcess(
+            command,
+            0,
+            stdout=json.dumps(
+                {
+                    "ok": True,
+                    "graph_path": str(output / "graph.json"),
+                    "source": "prebuilt",
+                }
+            ),
+        )
 
-    monkeypatch.setattr(setup_module.subprocess, "run", extract)
+    monkeypatch.setattr(setup_module.subprocess, "run", prepare)
     graph = setup_module.setup_graphify({"repo_path": str(consumer)})
     context = setup_module.setup_context_discipline({"repo_path": str(consumer)})
     status = setup_module.verify_setup({"repo_path": str(consumer)})
@@ -64,6 +76,23 @@ def test_setup_preserves_consumer_and_reports_external_outputs(
     assert status["local_store"] == context["local_store"]
     assert sorted(consumer.iterdir()) == before
     assert (consumer / ".gitignore").read_text() == "existing-rule\n"
+
+
+def test_setup_delegates_explicit_local_refresh(
+    setup_module: ModuleType, consumer: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    def installed(executable: str) -> str:
+        return "/bin/graphify-codegraph"
+
+    def prepare(command: list[str], **kwargs: Any) -> subprocess.CompletedProcess[str]:
+        assert command[-1] == "--force-local"
+        return subprocess.CompletedProcess(command, 0, stdout='{"ok": true}')
+
+    monkeypatch.setattr(setup_module.shutil, "which", installed)
+    monkeypatch.setattr(setup_module.subprocess, "run", prepare)
+    assert setup_module.setup_graphify(
+        {"repo_path": str(consumer), "force_local": True}
+    )["ok"]
 
 
 def test_missing_graphify_does_not_create_outputs(

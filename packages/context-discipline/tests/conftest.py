@@ -24,3 +24,4 @@ if str(SRC) not in sys.path:
 @pytest.fixture(autouse=True)
 def isolated_user_state(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("XDG_STATE_HOME", str(tmp_path / "user-state"))
+    monkeypatch.setenv("XDG_DATA_HOME", str(tmp_path / "user-data"))

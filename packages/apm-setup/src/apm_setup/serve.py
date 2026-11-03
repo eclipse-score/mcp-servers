@@ -27,14 +27,15 @@ TOOLS = [
     {
         "name": "setup_graphify",
         "description": (
-            "Install graphify when requested and generate the repository graph "
-            "in the user cache."
+            "Prepare the repository graph from the published cache, falling back "
+            "to local extraction; force_local requests a local refresh."
         ),
         "inputSchema": {
             "type": "object",
             "properties": {
                 "repo_path": {"type": "string"},
                 "install_graphify": {"type": "boolean", "default": False},
+                "force_local": {"type": "boolean", "default": False},
             },
         },
     },
@@ -83,11 +84,19 @@ def setup_graphify(arguments: dict[str, Any]) -> dict[str, Any]:
         raise ValueError(f"Not a git repository: {repo}")
 
     cache = graph_cache(repo)
-    graphify = shutil.which("graphify")
+    graphify = shutil.which("graphify-codegraph")
     installed = False
     if graphify is None and arguments.get("install_graphify", False):
-        subprocess.run(["uv", "tool", "install", "graphifyy[mcp]==0.9.97"], check=True)
-        graphify = shutil.which("graphify")
+        source = (
+            "git+https://github.com/eclipse-score/mcp-servers@"
+            "a85a027acff417ef2718c07daf62491e98cdb4fd"
+            "#subdirectory=packages/graphify-codegraph"
+        )
+        subprocess.run(
+            ["uv", "tool", "install", "--with-executables-from", "graphifyy", source],
+            check=True,
+        )
+        graphify = shutil.which("graphify-codegraph")
         installed = True
     if graphify is None:
         return {
@@ -95,25 +104,28 @@ def setup_graphify(arguments: dict[str, Any]) -> dict[str, Any]:
             "repo_path": str(repo),
             "graphify_installed": False,
             "graph_path": str(cache / "graph.json"),
-            "next": "Call setup_graphify with install_graphify=true.",
+            "next": "Install graphify-codegraph or use install_graphify=true.",
         }
 
-    cache.mkdir(parents=True, exist_ok=True)
-    output = cache / "build"
-    env = os.environ.copy()
-    env.pop("GRAPHIFY_OUT", None)
-    subprocess.run(
-        [graphify, "extract", str(repo), "--code-only", "--out", str(output)],
+    command = [graphify, "--prepare-only", "--repo-path", str(repo)]
+    if arguments.get("force_local", False):
+        command.append("--force-local")
+    result = subprocess.run(
+        command,
         check=True,
-        env=env,
+        capture_output=True,
+        text=True,
+        stdin=subprocess.DEVNULL,
     )
-    (output / "graphify-out" / "graph.json").replace(cache / "graph.json")
+    try:
+        prepared = json.loads(result.stdout)
+    except json.JSONDecodeError as exc:
+        raise ValueError("graphify-codegraph must support --prepare-only") from exc
     return {
-        "ok": True,
+        **prepared,
         "repo_path": str(repo),
         "graphify_installed": True,
         "installed_now": installed,
-        "graph_path": str(cache / "graph.json"),
     }
 
 
@@ -133,9 +145,9 @@ def setup_context_discipline(arguments: dict[str, Any]) -> dict[str, Any]:
 
 def verify_setup(arguments: dict[str, Any]) -> dict[str, Any]:
     repo = repo_from(arguments)
-    graph = repo / "graphify-out" / "graph.json"
+    graph = graph_cache(repo) / "graph.json"
     if not graph.exists():
-        graph = graph_cache(repo) / "graph.json"
+        graph = repo / "graphify-out" / "graph.json"
     store = context_store(repo)
     return {
         "ok": True,

@@ -14,11 +14,11 @@
 
 """Provide a code graph for the current repository without touching the worktree.
 
-Order: an existing ``graphify-out/graph.json`` in the repository, then the
-user cache under ``~/.local/share/score-agent``. For eclipse-score repositories
-an empty cache is seeded from the central graph registry (merge-base commit,
-then ``main``). The cache is refreshed by a local code-only build in the
-background whenever HEAD moved.
+Prefer the user cache under ``~/.local/share/score-agent`` and the central
+graph registry (merge-base commit, then nightly ``main``), rechecked daily.
+Keep a usable cached graph if downloading fails, then fall back to an existing
+checkout-local graph. Build locally only when no graph exists or when an
+explicit local refresh is requested; retain provenance for published graphs.
 """
 
 import hashlib
@@ -30,6 +30,7 @@ import subprocess
 import sys
 import tarfile
 import threading
+import time
 import urllib.error
 import urllib.request
 from collections.abc import Callable
@@ -139,8 +140,8 @@ def resolve_graph_path(cwd: Path) -> Path | None:
     """Resolve the graph path for a repository (shared with context-discipline).
 
     Returns the path to the graph.json file, checking in order:
-    1. Repository's graphify-out/graph.json
-    2. User cache under ~/.local/share/score-agent
+    1. User cache under ~/.local/share/score-agent
+    2. Repository's graphify-out/graph.json
 
     Returns None if:
     - SCORE_AGENT_GRAPH=off is set
@@ -151,13 +152,13 @@ def resolve_graph_path(cwd: Path) -> Path | None:
     root = repo_root(cwd)
     if root is None:
         return None
-    in_repo = root / "graphify-out" / "graph.json"
-    if in_repo.exists():
-        return in_repo
     cache = cache_dir(root)
     graph = cache / "graph.json"
     if graph.exists():
         return graph
+    in_repo = root / "graphify-out" / "graph.json"
+    if in_repo.exists():
+        return in_repo
     return None
 
 
@@ -208,6 +209,13 @@ def fetch(module: str, tag: str, dest: Path, opener: Opener = _open) -> bool:
         if "sha256:" + hashlib.sha256(blob).hexdigest() != digest:
             raise ValueError("digest mismatch")
         _unpack(blob, dest)
+        provenance = dest / "registry.json"
+        partial = provenance.with_suffix(".partial")
+        partial.write_text(
+            json.dumps({"repository": repository, "tag": tag, "digest": digest}),
+            encoding="utf-8",
+        )
+        partial.replace(provenance)
     except (
         OSError,
         ValueError,
@@ -268,6 +276,8 @@ def build(root: Path, cache: Path) -> bool:
             return False
         built.replace(cache / "graph.json")
         (cache / "head").write_text(head, encoding="utf-8")
+        for name in ["registry.json", *sorted(ARTIFACT_FILES - {"graph.json"})]:
+            (cache / name).unlink(missing_ok=True)
     finally:
         if fcntl is not None:
             fcntl.flock(lock_file, fcntl.LOCK_UN)  # type: ignore[attr-defined]
@@ -281,6 +291,7 @@ def prepare(
     cwd: Path,
     fetcher: Callable[[str, str, Path], bool] = fetch,
     builder: Callable[[Path, Path], bool] = build,
+    force_local: bool = False,
 ) -> tuple[Path | None, threading.Thread | None]:
     """Return the graph path to serve and the background build, if started."""
     if os.environ.get("SCORE_AGENT_GRAPH", "").lower() in {"0", "off", "false"}:
@@ -288,31 +299,33 @@ def prepare(
     root = repo_root(cwd)
     if root is None:
         return None, None
-    in_repo = root / "graphify-out" / "graph.json"
-    if in_repo.exists():
-        return in_repo, None
     cache = cache_dir(root)
     graph = cache / "graph.json"
     module = module_name(root)
+    in_repo = root / "graphify-out" / "graph.json"
+    provenance = cache / "registry.json"
+    current_prebuilt = (
+        graph.exists()
+        and provenance.exists()
+        and 0 <= time.time() - provenance.stat().st_mtime < 24 * 60 * 60
+    )
+    if current_prebuilt and not force_local:
+        return graph, None
 
-    # Seed from registry with locking to prevent race conditions
-    if not graph.exists() and module and not os.environ.get("SCORE_AGENT_OFFLINE"):
+    if not force_local and module and not os.environ.get("SCORE_AGENT_OFFLINE"):
         lock_file = _acquire_lock(cache)
         if lock_file is not None:
             try:
-                # Recheck after acquiring lock (another process may have seeded)
-                if not graph.exists():
-                    for tag in candidate_tags(root):
-                        if fetcher(module, tag, cache):
-                            break
+                for tag in candidate_tags(root):
+                    if fetcher(module, tag, cache):
+                        return graph, None
             finally:
                 _release_lock(lock_file)
 
-    head_file = cache / "head"
-    head = git(root, "rev-parse", "HEAD")
-    current = head_file.exists() and head_file.read_text(encoding="utf-8") == head
-    if current and graph.exists():
+    if graph.exists() and not force_local:
         return graph, None
+    if in_repo.exists() and not force_local:
+        return in_repo, None
     thread = threading.Thread(target=builder, args=(root, cache), daemon=True)
     thread.start()
     return graph, thread

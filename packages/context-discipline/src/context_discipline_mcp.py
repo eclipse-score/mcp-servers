@@ -303,8 +303,6 @@ class ContextDisciplineMCP:
     def _graph_setup_status(self) -> dict[str, Any]:
         # Check in-repo graph first, then user cache
         repo_graph_path = self.repo_path / "graphify-out" / "graph.json"
-        if repo_graph_path.exists():
-            return {"ok": True, "graph_path": str(repo_graph_path)}
 
         # Check user cache (same logic as graphify-codegraph)
         import hashlib
@@ -317,11 +315,13 @@ class ContextDisciplineMCP:
 
         if cache_graph_path.exists():
             return {"ok": True, "graph_path": str(cache_graph_path)}
+        if repo_graph_path.exists():
+            return {"ok": True, "graph_path": str(repo_graph_path)}
 
         # Neither exists: report the primary (in-repo) path
         return {
             "ok": False,
-            "graph_path": str(repo_graph_path),
+            "graph_path": str(cache_graph_path),
             "next": "Call setup_graphify with install_graphify=true.",
         }
 

@@ -11,6 +11,7 @@
 # SPDX-License-Identifier: Apache-2.0
 # *******************************************************************************
 
+import hashlib
 import json
 from pathlib import Path
 
@@ -28,6 +29,17 @@ from context_discipline_mcp import (
 from context_merge import MergedGraph
 from context_overlay import OverlayNode, OverlayStore, Provenance
 from context_policy import Policy
+
+
+def _cached_graph_path(tmp_path: Path) -> Path:
+    digest = hashlib.sha256(str(tmp_path.resolve()).encode()).hexdigest()[:12]
+    return (
+        tmp_path
+        / "user-data"
+        / "score-agent"
+        / f"{tmp_path.name}-{digest}"
+        / "graph.json"
+    )
 
 
 def _write_graph(tmp_path: Path) -> Path:
@@ -274,7 +286,7 @@ def test_initialize_session_reports_missing_graph_setup(tmp_path: Path) -> None:
 
     assert result["setup"] == {
         "ok": False,
-        "graph_path": str(tmp_path / "graphify-out" / "graph.json"),
+        "graph_path": str(_cached_graph_path(tmp_path)),
         "next": "Call setup_graphify with install_graphify=true.",
     }
 
@@ -342,7 +354,7 @@ def test_query_graph_reports_missing_graph_setup(tmp_path: Path) -> None:
         "matches": [],
         "setup": {
             "ok": False,
-            "graph_path": str(tmp_path / "graphify-out" / "graph.json"),
+            "graph_path": str(_cached_graph_path(tmp_path)),
             "next": "Call setup_graphify with install_graphify=true.",
         },
     }

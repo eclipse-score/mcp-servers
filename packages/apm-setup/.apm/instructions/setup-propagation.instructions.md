@@ -30,6 +30,9 @@ Keep setup enabled and pass the consumer repository as `repo_path`; generated ou
 
 Use `verify_setup` and the paths returned by setup instead of assuming `graphify-out/` or `.score-local/` exists in the checkout.
 Graph generation uses the graph runtime's user cache under `$XDG_DATA_HOME/score-agent/` or `~/.local/share/score-agent/`.
+Setup uses the launcher's shared prebuilt-first policy: download the revision artifact or nightly `main`, then fall back to a usable cached graph, a checkout-local graph, or local extraction only when no graph is available.
+Do not replace a usable nightly graph merely because its commit differs from checkout HEAD.
+Use `setup_graphify(repo_path, force_local=true)` only when an explicit current-checkout rebuild is needed.
 Context setup and runtime use `$XDG_STATE_HOME/score-agent/` or `~/.local/state/score-agent/`.
 These setup operations do not modify the consumer's `.gitignore`.
 

@@ -15,8 +15,11 @@
 import hashlib
 import io
 import json
+import os
 import subprocess
+import sys
 import tarfile
+import time
 import urllib.error
 import urllib.request
 from pathlib import Path
@@ -63,6 +66,9 @@ def test_fetch_verifies_and_unpacks(tmp_path: Path) -> None:
     assert graph_cache.fetch("baselibs", "main", tmp_path, registry(blob))
     assert (tmp_path / "graph.json").read_bytes() == GRAPH
     assert (tmp_path / "metadata.json").exists()
+    provenance = json.loads((tmp_path / "registry.json").read_text())
+    assert provenance["tag"] == "main"
+    assert provenance["digest"] == "sha256:" + hashlib.sha256(blob).hexdigest()
 
 
 def test_fetch_rejects_digest_mismatch(tmp_path: Path) -> None:
@@ -75,7 +81,10 @@ def test_fetch_rejects_digest_mismatch(tmp_path: Path) -> None:
 def test_fetch_ignores_unexpected_members(tmp_path: Path) -> None:
     blob = artifact({"graph.json": GRAPH, "../evil.json": b"x", "sub/graph.json": b"x"})
     assert graph_cache.fetch("baselibs", "main", tmp_path / "cache", registry(blob))
-    assert sorted(p.name for p in (tmp_path / "cache").iterdir()) == ["graph.json"]
+    assert sorted(p.name for p in (tmp_path / "cache").iterdir()) == [
+        "graph.json",
+        "registry.json",
+    ]
     assert not (tmp_path / "evil.json").exists()
 
 
@@ -124,7 +133,7 @@ def test_module_name(repo: Path) -> None:
     assert graph_cache.module_name(repo) is None
 
 
-def test_prepare_seeds_from_registry_then_builds(repo: Path) -> None:
+def test_prepare_uses_registry_without_building(repo: Path) -> None:
     fetched: list[str] = []
     built: list[Path] = []
 
@@ -139,11 +148,10 @@ def test_prepare_seeds_from_registry_then_builds(repo: Path) -> None:
         return True
 
     graph, thread = graph_cache.prepare(repo, fetcher, builder)
-    assert thread is not None
-    thread.join()
+    assert thread is None
     assert graph == graph_cache.cache_dir(repo) / "graph.json"
     assert fetched == ["baselibs:main"]
-    assert built == [repo]
+    assert built == []
     assert not (repo / "graphify-out").exists()
 
 
@@ -155,6 +163,7 @@ def test_prepare_skips_build_when_current(repo: Path) -> None:
         ["git", "-C", str(repo), "rev-parse", "HEAD"], capture_output=True, text=True
     ).stdout.strip()
     (cache / "head").write_text(head, encoding="utf-8")
+    (cache / "registry.json").write_text("{}", encoding="utf-8")
 
     def fail(*_: object) -> bool:
         raise AssertionError("must not be called")
@@ -162,7 +171,10 @@ def test_prepare_skips_build_when_current(repo: Path) -> None:
     assert graph_cache.prepare(repo, fail, fail) == (cache / "graph.json", None)
 
 
-def test_prepare_prefers_graph_in_repo(repo: Path) -> None:
+def test_prepare_falls_back_to_graph_in_repo(
+    repo: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("SCORE_AGENT_OFFLINE", "1")
     (repo / "graphify-out").mkdir()
     (repo / "graphify-out" / "graph.json").write_bytes(GRAPH)
     graph, thread = graph_cache.prepare(repo)
@@ -173,6 +185,151 @@ def test_prepare_prefers_graph_in_repo(repo: Path) -> None:
 def test_prepare_disabled(repo: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("SCORE_AGENT_GRAPH", "off")
     assert graph_cache.prepare(repo) == (None, None)
+
+
+def test_prepare_upgrades_local_graph_without_rebuilding(repo: Path) -> None:
+    cache = graph_cache.cache_dir(repo)
+    cache.mkdir(parents=True)
+    (cache / "graph.json").write_bytes(GRAPH)
+    (repo / "graphify-out").mkdir()
+    (repo / "graphify-out" / "graph.json").write_bytes(GRAPH)
+
+    def fetcher(module: str, tag: str, dest: Path) -> bool:
+        (dest / "registry.json").write_text('{"tag": "main"}')
+        return True
+
+    def forbidden_builder(root: Path, dest: Path) -> bool:
+        raise AssertionError("prebuilt graph must not be rebuilt")
+
+    graph, thread = graph_cache.prepare(repo, fetcher, forbidden_builder)
+    assert graph == cache / "graph.json"
+    assert thread is None
+    assert graph_cache.resolve_graph_path(repo) == graph
+
+
+def test_prepare_rechecks_prebuilt_after_one_day(repo: Path) -> None:
+    cache = graph_cache.cache_dir(repo)
+    cache.mkdir(parents=True)
+    (cache / "graph.json").write_bytes(GRAPH)
+    provenance = cache / "registry.json"
+    provenance.write_text("{}")
+    old = time.time() - 25 * 60 * 60
+    os.utime(provenance, (old, old))
+    fetched: list[str] = []
+
+    def fetcher(module: str, tag: str, dest: Path) -> bool:
+        fetched.append(tag)
+        return True
+
+    graph, thread = graph_cache.prepare(repo, fetcher)
+    assert fetched == ["main"]
+    assert graph == cache / "graph.json"
+    assert thread is None
+
+
+def test_prepare_reuses_cache_when_download_fails(repo: Path) -> None:
+    cache = graph_cache.cache_dir(repo)
+    cache.mkdir(parents=True)
+    (cache / "graph.json").write_bytes(GRAPH)
+
+    def unavailable(module: str, tag: str, dest: Path) -> bool:
+        return False
+
+    def forbidden_builder(root: Path, dest: Path) -> bool:
+        raise AssertionError("usable cache must not be rebuilt")
+
+    assert graph_cache.prepare(repo, unavailable, forbidden_builder) == (
+        cache / "graph.json",
+        None,
+    )
+
+
+def test_prepare_builds_only_when_no_graph_is_available(repo: Path) -> None:
+    built: list[Path] = []
+
+    def unavailable(module: str, tag: str, dest: Path) -> bool:
+        return False
+
+    def builder(root: Path, dest: Path) -> bool:
+        built.append(root)
+        (dest / "graph.json").write_bytes(GRAPH)
+        return True
+
+    graph, thread = graph_cache.prepare(repo, unavailable, builder)
+    assert thread is not None
+    thread.join()
+    assert built == [repo]
+    assert graph is not None and graph.exists()
+
+
+def test_prepare_force_local_bypasses_prebuilt(repo: Path) -> None:
+    cache = graph_cache.cache_dir(repo)
+    cache.mkdir(parents=True)
+    (cache / "graph.json").write_bytes(GRAPH)
+    (cache / "registry.json").write_text("{}")
+    built: list[Path] = []
+
+    def forbidden_fetch(module: str, tag: str, dest: Path) -> bool:
+        raise AssertionError("explicit local refresh must not download")
+
+    def builder(root: Path, dest: Path) -> bool:
+        built.append(root)
+        return True
+
+    _, thread = graph_cache.prepare(repo, forbidden_fetch, builder, force_local=True)
+    assert thread is not None
+    thread.join()
+    assert built == [repo]
+
+
+def test_prepare_only_reports_prebuilt_provenance(
+    repo: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    import serve
+
+    cache = graph_cache.cache_dir(repo)
+    cache.mkdir(parents=True)
+    (cache / "graph.json").write_bytes(GRAPH)
+    (cache / "registry.json").write_text('{"tag": "main"}')
+    monkeypatch.setattr(
+        sys, "argv", ["graphify-codegraph", "--prepare-only", "--repo-path", str(repo)]
+    )
+    serve.main()
+    result = json.loads(capsys.readouterr().out)
+    assert result["ok"]
+    assert result["source"] == "prebuilt"
+    assert result["provenance"]["tag"] == "main"
+
+
+def test_prepare_only_reports_failed_local_refresh(
+    repo: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    import serve
+
+    cache = graph_cache.cache_dir(repo)
+    cache.mkdir(parents=True)
+    (cache / "graph.json").write_bytes(GRAPH)
+    (cache / "registry.json").write_text('{"tag": "main"}')
+
+    def failed_build(root: Path, dest: Path) -> bool:
+        return False
+
+    monkeypatch.setattr(serve, "build", failed_build)
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "graphify-codegraph",
+            "--prepare-only",
+            "--repo-path",
+            str(repo),
+            "--force-local",
+        ],
+    )
+    serve.main()
+    result = json.loads(capsys.readouterr().out)
+    assert not result["ok"]
+    assert (cache / "graph.json").read_bytes() == GRAPH
 
 
 def test_build_writes_only_to_cache(repo: Path, tmp_path: Path) -> None:
@@ -259,6 +416,7 @@ def test_prepare_locking_prevents_race_condition(repo: Path, tmp_path: Path) -> 
         seeded.append(f"{module}:{tag}")
         dest.mkdir(parents=True, exist_ok=True)
         (dest / "graph.json").write_bytes(GRAPH)
+        (dest / "registry.json").write_text("{}", encoding="utf-8")
         return True
 
     def fake_builder(root: Path, cache: Path) -> bool:
