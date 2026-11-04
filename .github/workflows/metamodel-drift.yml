@@ -30,7 +30,7 @@ concurrency:
 jobs:
   check:
     name: Check docs-as-code metamodel
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: read
       issues: write
