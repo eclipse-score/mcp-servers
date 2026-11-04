@@ -24,7 +24,8 @@ VERSION_RE = re.compile(r"^version:\s*['\"]?([^'\"\s]+)", re.MULTILINE)
 MARKETPLACE_VERSION_RE = re.compile(r"^\s+version:\s*['\"]?([^'\"\s]+)", re.MULTILINE)
 PYPROJECT_VERSION_RE = re.compile(r'^version\s*=\s*"([^"]+)"', re.MULTILINE)
 RELEASE_FILE_RE = re.compile(
-    r"apm\.yml|uv\.lock|packages/[^/]+/(?:apm\.yml|mcp\.yml|pyproject\.toml)"
+    r"apm\.yml|uv\.lock|\.github/workflows/[^/]+\.yml"
+    r"|packages/[^/]+/(?:apm\.yml|mcp\.yml|pyproject\.toml|uv\.lock)"
     r"|features/src/[^/]+/(?:install\.sh|devcontainer-feature\.json)"
 )
 FEATURE_VERSION_RE = re.compile(r'^\s*"version":\s*"([^"]+)"', re.MULTILINE)

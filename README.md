@@ -193,15 +193,22 @@ MCP sources are pinned to a commit SHA with the version as a comment:
 - git+https://github.com/eclipse-score/mcp-servers@<sha>#subdirectory=packages/apm-setup # v0.1.0
 ```
 
-1. On an up-to-date `main`, run `python3 scripts/prepare_release.py 0.2.0`.
-   It sets all package versions and pins the MCP sources to the current HEAD.
-2. Open a PR with only these changes and merge it.
-3. The `Release` workflow sees the new version, runs `scripts/check_pins.py --release`
-   (pinned commit may only differ in version metadata) and the tests, then creates
-   the tag `v0.2.0` and the GitHub release.
+1. Open and merge one PR with your code, documentation, or generated graph changes.
+   No separate release PR or manual pin update is required.
+2. The `Release` workflow pins MCP sources to that merged commit and prepares the
+   next patch version automatically. To request a higher minor or major version,
+   update the package versions in the same PR.
+3. The workflow tests the release, creates a metadata commit reachable only from
+   its version tag, and pushes that tag. It never pushes changes to `main` and
+   does not need a branch-protection bypass or an Otterdog policy change.
+4. It smoke-tests the exact shipped MCP pins, publishes devcontainer features
+   from the same release commit, and then publishes the GitHub release.
 
-If other changes land on `main` before the release PR, the release check fails;
-rerun step 1 on the new `main`.
+Use the version tag when installing the released marketplace. Versions and pins
+on `main` are development metadata; release metadata lives on the tags.
+Rerunning a workflow for the same merged commit reuses its tag and retries
+publication rather than allocating another version or skipping failed features.
+`python3 scripts/prepare_release.py --plan` prints the planned version as JSON.
 
 ## More Information
 
