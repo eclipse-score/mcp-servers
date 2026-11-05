@@ -15,6 +15,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import posixpath
@@ -133,19 +134,13 @@ class MergedGraph:
         conflicts: set[str] = set()
         edge_conflicts: set[tuple[str, str, str]] = set()
 
-        # Check in-repo graph first, then user cache
-        graph_path = repo / "graphify-out" / "graph.json"
+        base = os.environ.get("XDG_DATA_HOME") or str(Path.home() / ".local" / "share")
+        cache_root = Path(base) / "score-agent"
+        digest = hashlib.sha256(str(repo).encode()).hexdigest()[:12]
+        cache = cache_root / f"{repo.name}-{digest}"
+        graph_path = cache / "graph.json"
         if not graph_path.exists():
-            # Fallback to user cache
-            import hashlib
-
-            base = os.environ.get("XDG_DATA_HOME") or str(
-                Path.home() / ".local" / "share"
-            )
-            cache_root = Path(base) / "score-agent"
-            digest = hashlib.sha256(str(repo.resolve()).encode()).hexdigest()[:12]
-            cache = cache_root / f"{repo.name}-{digest}"
-            graph_path = cache / "graph.json"
+            graph_path = repo / "graphify-out" / "graph.json"
 
         if graph_path.exists():
             data = json.loads(graph_path.read_text(encoding="utf-8"))

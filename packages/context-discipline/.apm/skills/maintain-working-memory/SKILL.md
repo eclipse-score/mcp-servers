@@ -135,7 +135,7 @@ if unverified:
 The six MCP tools are the complete current API: `initialize_session`,
 `query_graph`, `record_decision`, `record_outcome`, `get_working_memory`, and
 `get_unverified_assumptions`. Working memory is held for the running server
-session; collaboration records are persisted to `.score-local/sessions.jsonl`.
+session; collaboration records are persisted to repository-keyed user state under `$XDG_STATE_HOME/score-agent/` or `~/.local/state/score-agent/` by default, without changing the consumer repository.
 
 ## Automatic Benefits
 

@@ -66,17 +66,15 @@ The `--trust-transitive-mcp` flag is required for the dependent
 `apm-setup` and `graphify-codegraph` MCP servers to be registered. Without it,
 `apm install` still exits successfully but registers only `context-discipline`.
 
-After installation, call the `apm-setup` MCP tool once:
+After installation, call the `apm-setup` MCP tool when graph setup is needed:
 
 ```text
 setup_graphify(repo_path="<your-repository>", install_graphify=true)
 ```
 
-This installs the `graphify` CLI and writes
-`graphify-out/graph.json` in the target repository. The
-`setup_context_discipline` tool is optional for writes because `.score-local/`
-is created lazily; its remaining purpose is adding `.score-local/` to
-`.gitignore`.
+This installs the `graphify` CLI when requested and generates the graph in repository-keyed user cache outside the target checkout.
+The `setup_context_discipline` tool prepares repository-keyed user state matching the runtime default.
+Both workflows remain available without modifying the consumer's `.gitignore`; use the storage paths returned by the setup tools.
 
 ### Use from Your Agent
 
@@ -156,7 +154,7 @@ unavailable rather than treating an ID as nonexistent.
 ### View Results
 
 **Working memory** is available through the `get_working_memory` MCP tool.
-Sessions are persisted in `.score-local/sessions.jsonl`. Durable domain nodes and
+Sessions are persisted in repository-keyed user state. Durable domain nodes and
 edges are persisted as individually reviewable shards in `score-context/`.
 
 The overlay layout is:
@@ -196,14 +194,14 @@ recorded score ordering.
 
 **Local session records** (append-only JSONL):
 ```bash
-cat .score-local/sessions.jsonl | jq
+cat "${XDG_STATE_HOME:-$HOME/.local/state}/score-agent/<repo>-<path-hash>/sessions.jsonl" | jq
 ```
 
 ## Local Learning Loop
 
 ```
 Session 1: Refactor auth
-  ↓ record_decision() → .score-local/sessions.jsonl
+  ↓ record_decision() → user-state/score-agent/<repo>-<path-hash>/sessions.jsonl
   {"record_type": "reasoning", "kind": "decision", ...}
 
 Session 2: Refactor payments
@@ -217,7 +215,13 @@ Session N: Pattern emerges
 
 ## Storage
 
-**Session records** stored in `.score-local/sessions.jsonl`:
+Sessions, observations, and agent salts default to `$XDG_STATE_HOME/score-agent/<repo>-<path-hash>/`, falling back to `~/.local/state/score-agent/<repo>-<path-hash>/`.
+The repository key hashes the resolved checkout path, keeping same-named checkouts separate.
+Relative `XDG_STATE_HOME` values are ignored in favor of the home-directory fallback.
+Pass `local_store=".score-local"` or an absolute directory to `ContextDisciplineMCP` or `SessionLog` to explicitly override storage.
+Existing repository-local records are not automatically migrated or merged; use the override to continue accessing them.
+
+**Session records** are stored in `sessions.jsonl` within the selected state directory:
 
 ```json
 {
@@ -232,7 +236,7 @@ Session N: Pattern emerges
 }
 ```
 
-**Add to `.gitignore`:**
+**Only for explicitly selected repository-local storage, add to `.gitignore`:**
 ```
 .score-local/            # Local session records (ephemeral)
 ```

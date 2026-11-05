@@ -47,6 +47,19 @@ def _empty_nodes() -> list[str]:
     return []
 
 
+def resolve_local_store(repo_path: str | Path, local_store: str | None = None) -> Path:
+    """Resolve explicit storage or repository-keyed user state without creating it."""
+    repo = Path(repo_path).expanduser().resolve()
+    if local_store is not None:
+        store = Path(local_store).expanduser()
+        return store if store.is_absolute() else repo / store
+    base = Path(os.environ.get("XDG_STATE_HOME") or Path.home() / ".local" / "state")
+    if not base.is_absolute():
+        base = Path.home() / ".local" / "state"
+    digest = hashlib.sha256(str(repo).encode("utf-8")).hexdigest()[:16]
+    return base / "score-agent" / f"{repo.name}-{digest}"
+
+
 def agent_salt(local_store_dir: Path) -> str:
     """Read or create the local salt used for agent pseudonyms."""
     local_store_dir.mkdir(parents=True, exist_ok=True)
@@ -201,11 +214,8 @@ def _record_from_dict(data: dict[str, Any]) -> Record:
 class SessionLog:
     """Append-only JSONL collaboration record log."""
 
-    def __init__(self, repo_path: str | Path, local_store: str = ".score-local"):
-        repo = Path(repo_path).expanduser().resolve()
-        store = Path(local_store).expanduser()
-        root = store if store.is_absolute() else repo / store
-        self.path = root / "sessions.jsonl"
+    def __init__(self, repo_path: str | Path, local_store: str | None = None):
+        self.path = resolve_local_store(repo_path, local_store) / "sessions.jsonl"
 
     def append(self, record: Record) -> None:
         self.path.parent.mkdir(parents=True, exist_ok=True)

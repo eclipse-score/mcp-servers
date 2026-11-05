@@ -191,13 +191,18 @@ External graphify tool: [Graphify Labs License](https://github.com/Graphify-Labs
 
 The server needs no setup in the repository and never writes into the worktree:
 
-1. An existing `graphify-out/graph.json` in the repository is used as is.
-2. Otherwise the graph lives in `~/.local/share/score-agent/<repo>-<hash>/`.
-   For eclipse-score repositories an empty cache is first seeded from
+1. The graph lives in `~/.local/share/score-agent/<repo>-<hash>/`.
+    For eclipse-score repositories the cache preferentially loads from
    `ghcr.io/eclipse-score/mcp-servers/graphs/<repo>` (merge-base commit, then `main`);
    the download is checked against its sha256 digest.
-3. Whenever HEAD moved, a code-only build runs in the background and replaces the
-   graph; the server reloads it automatically.
+2. A downloaded graph is served directly, even if the nightly commit differs from checkout HEAD.
+    Its artifact metadata and `registry.json` retain source revision, tag, and digest provenance.
+    The registry is rechecked after 24 hours on a subsequent launch; download failure keeps a usable cached graph.
+3. If downloading fails, a cached graph is reused, followed by an existing checkout-local graph.
+    A code-only background build runs only when no graph is available.
+
+Use `graphify-codegraph --prepare-only --repo-path <repo>` to wait for graph preparation and print its path, source, and provenance as JSON without starting MCP.
+Add `--force-local` to explicitly rebuild from the current checkout; successful local builds clear published provenance rather than claiming to remain a prebuilt artifact.
 
 Set `SCORE_AGENT_OFFLINE=1` to skip the download, `SCORE_AGENT_GRAPH=off` for the
 plain graphify behaviour.

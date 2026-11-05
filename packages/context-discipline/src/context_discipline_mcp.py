@@ -48,6 +48,7 @@ from context_sessions import (
     TaskRecord,
     agent_salt,
     pseudonymize_agent,
+    resolve_local_store,
 )
 from requirements_lookup import RequirementsIndex, resolve_requirements
 
@@ -199,20 +200,17 @@ class ContextDisciplineMCP:
     - graphify-codegraph (MCP) which wraps external graphify CLI for code queries
     """
 
-    def __init__(self, repo_path: str = ".", local_store: str = ".score-local"):
+    def __init__(self, repo_path: str = ".", local_store: str | None = None):
         self.repo_path = Path(repo_path).expanduser().resolve()
         self.policy = load_policy(self.repo_path)
-        store_path = Path(local_store).expanduser()
-        self.local_store = (
-            store_path if store_path.is_absolute() else self.repo_path / store_path
-        )
+        self.local_store = resolve_local_store(self.repo_path, local_store)
         self.local_store.mkdir(parents=True, exist_ok=True)
         self._agent_salt = agent_salt(self.local_store)
 
         self.session_id = f"session__{uuid4().hex[:8]}"
         self.working_memory: list[WorkingMemoryEntry] = []
         self.observations_path = self.local_store / "observations.jsonl"
-        self.session_log = SessionLog(self.repo_path, local_store)
+        self.session_log = SessionLog(self.repo_path, str(self.local_store))
         self.overlay_store = OverlayStore(self.repo_path)
         self.overlay_store.load()
         self.goal_task_id: str | None = None
@@ -305,8 +303,6 @@ class ContextDisciplineMCP:
     def _graph_setup_status(self) -> dict[str, Any]:
         # Check in-repo graph first, then user cache
         repo_graph_path = self.repo_path / "graphify-out" / "graph.json"
-        if repo_graph_path.exists():
-            return {"ok": True, "graph_path": str(repo_graph_path)}
 
         # Check user cache (same logic as graphify-codegraph)
         import hashlib
@@ -319,11 +315,13 @@ class ContextDisciplineMCP:
 
         if cache_graph_path.exists():
             return {"ok": True, "graph_path": str(cache_graph_path)}
+        if repo_graph_path.exists():
+            return {"ok": True, "graph_path": str(repo_graph_path)}
 
         # Neither exists: report the primary (in-repo) path
         return {
             "ok": False,
-            "graph_path": str(repo_graph_path),
+            "graph_path": str(cache_graph_path),
             "next": "Call setup_graphify with install_graphify=true.",
         }
 

@@ -8,6 +8,9 @@ command -v uv
 uv --version
 test -f /usr/local/share/agent-context/register_mcp.py
 test -x /usr/local/bin/graphify-codegraph
+command -v graphify
+test -x /usr/local/bin/graphify
+graphify --help | grep -F 'benchmark [graph.json]'
 python3 /usr/local/share/agent-context/register_mcp.py
 python3 - <<'PY'
 import json

@@ -41,4 +41,5 @@ install -m 0644 "$(dirname "$0")/register_mcp.py" "${SHARE}/register_mcp.py"
 UV_TOOL_DIR="${SHARE}/tools" \
 UV_TOOL_BIN_DIR=/usr/local/bin \
 UV_PYTHON_INSTALL_DIR="${SHARE}/python" \
-    "${UV}" tool install --python 3.12 --force "${SOURCE}"
+    "${UV}" tool install --python 3.12 --force \
+        --with-executables-from graphifyy "${SOURCE}"

@@ -18,7 +18,7 @@ command: python -m apm_setup.serve
 transport: stdio
 tools:
   - name: setup_graphify
-    description: Install graphify and generate graphify-out/graph.json in a repository
+    description: Prepare a prebuilt repository graph with local fallback or explicit refresh
     input_schema:
       type: object
       properties:
@@ -28,9 +28,13 @@ tools:
         install_graphify:
           type: boolean
           description: Install the pinned graphify version with uv when graphify is missing
+        force_local:
+          type: boolean
+          default: false
+          description: Explicitly rebuild from the current checkout instead of using a prebuilt graph
       required: []
   - name: setup_context_discipline
-    description: Create local working-memory storage in a repository
+    description: Create repository-keyed working-memory storage in user state
     input_schema:
       type: object
       properties:

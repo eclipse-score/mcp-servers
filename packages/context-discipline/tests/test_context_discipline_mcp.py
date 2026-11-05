@@ -11,6 +11,7 @@
 # SPDX-License-Identifier: Apache-2.0
 # *******************************************************************************
 
+import hashlib
 import json
 from pathlib import Path
 
@@ -28,6 +29,17 @@ from context_discipline_mcp import (
 from context_merge import MergedGraph
 from context_overlay import OverlayNode, OverlayStore, Provenance
 from context_policy import Policy
+
+
+def _cached_graph_path(tmp_path: Path) -> Path:
+    digest = hashlib.sha256(str(tmp_path.resolve()).encode()).hexdigest()[:12]
+    return (
+        tmp_path
+        / "user-data"
+        / "score-agent"
+        / f"{tmp_path.name}-{digest}"
+        / "graph.json"
+    )
 
 
 def _write_graph(tmp_path: Path) -> Path:
@@ -68,6 +80,26 @@ def _write_graph(tmp_path: Path) -> Path:
         encoding="utf-8",
     )
     return graph_path
+
+
+def test_default_session_state_does_not_modify_consumer(tmp_path: Path) -> None:
+    repo = tmp_path / "consumer"
+    repo.mkdir()
+    manager = ContextDisciplineMCP(str(repo))
+    manager.initialize_session("Goal", [])
+
+    assert list(repo.iterdir()) == []
+    assert manager.local_store.is_relative_to(tmp_path / "user-state")
+    assert manager.session_log.path.parent == manager.local_store
+    assert ContextDisciplineMCP(str(repo)).local_store == manager.local_store
+
+
+def test_explicit_repository_local_state_is_preserved(tmp_path: Path) -> None:
+    manager = ContextDisciplineMCP(str(tmp_path), local_store=".score-local")
+    manager.initialize_session("Goal", [])
+
+    assert manager.local_store == tmp_path / ".score-local"
+    assert manager.session_log.path.exists()
 
 
 def test_initialize_session_writes_one_session_record(tmp_path: Path) -> None:
@@ -254,7 +286,7 @@ def test_initialize_session_reports_missing_graph_setup(tmp_path: Path) -> None:
 
     assert result["setup"] == {
         "ok": False,
-        "graph_path": str(tmp_path / "graphify-out" / "graph.json"),
+        "graph_path": str(_cached_graph_path(tmp_path)),
         "next": "Call setup_graphify with install_graphify=true.",
     }
 
@@ -322,7 +354,7 @@ def test_query_graph_reports_missing_graph_setup(tmp_path: Path) -> None:
         "matches": [],
         "setup": {
             "ok": False,
-            "graph_path": str(tmp_path / "graphify-out" / "graph.json"),
+            "graph_path": str(_cached_graph_path(tmp_path)),
             "next": "Call setup_graphify with install_graphify=true.",
         },
     }

@@ -14,16 +14,54 @@
 
 """Launch Graphify's built-in MCP server."""
 
+import argparse
+import json
 import subprocess
 import sys
 from pathlib import Path
 
-from graph_cache import prepare
+from graph_cache import build, prepare
 
 
 def main() -> None:
     """Launch graphify's built-in MCP server."""
-    graph, _ = prepare(Path.cwd())
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--prepare-only", action="store_true")
+    parser.add_argument("--repo-path", type=Path, default=Path.cwd())
+    parser.add_argument("--force-local", action="store_true")
+    args = parser.parse_args()
+    build_results: list[bool] = []
+
+    def build_local(root: Path, cache: Path) -> bool:
+        result = build(root, cache)
+        build_results.append(result)
+        return result
+
+    graph, thread = prepare(
+        args.repo_path, builder=build_local, force_local=args.force_local
+    )
+    if args.prepare_only:
+        if thread is not None:
+            thread.join()
+        ready = graph is not None and graph.exists()
+        if thread is not None:
+            ready = ready and bool(build_results) and all(build_results)
+        provenance = graph.parent / "registry.json" if graph is not None else None
+        print(
+            json.dumps(
+                {
+                    "ok": ready,
+                    "graph_path": str(graph) if graph is not None else None,
+                    "source": "prebuilt"
+                    if provenance and provenance.exists()
+                    else "local",
+                    "provenance": json.loads(provenance.read_text())
+                    if provenance and provenance.exists()
+                    else None,
+                }
+            )
+        )
+        return
     command = [sys.executable, "-m", "graphify.serve"]
     try:
         subprocess.run([*command, str(graph)] if graph else command, check=True)
