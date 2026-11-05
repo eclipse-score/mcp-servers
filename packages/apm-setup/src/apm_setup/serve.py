@@ -93,7 +93,14 @@ def setup_graphify(arguments: dict[str, Any]) -> dict[str, Any]:
             "#subdirectory=packages/graphify-codegraph"
         )
         subprocess.run(
-            ["uv", "tool", "install", "--with-executables-from", "graphifyy", source],
+            [
+                "uv",
+                "tool",
+                "install",
+                "--with-executables-from",
+                "graphifyy==0.9.97",
+                source,
+            ],
             check=True,
         )
         graphify = shutil.which("graphify-codegraph")
