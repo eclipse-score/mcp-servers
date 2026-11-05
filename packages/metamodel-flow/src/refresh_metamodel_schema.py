@@ -18,7 +18,8 @@ from pathlib import Path
 # Source repository information
 _SOURCE_REPO_URL = "https://github.com/eclipse-score/docs-as-code.git"
 _SOURCE_FILE_HEADER = (
-    "# SPDX-License-Identifier: Apache-2.0\n"
+    "# SPDX"
+    "-License-Identifier: Apache-2.0\n"
     "# Copyright (c) 2026 Contributors to the Eclipse Foundation\n"
 )
 

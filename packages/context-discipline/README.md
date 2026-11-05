@@ -202,36 +202,7 @@ recorded score ordering.
 ```bash
 cat "${XDG_STATE_HOME:-$HOME/.local/state}/score-agent/<repo>-<path-hash>/sessions.jsonl" | jq
 ```
-
-Each node and edge has its own file, so independent changes touch disjoint
-files and avoid a single Git merge-conflict hotspot. Node IDs used as
-filenames must match `[A-Za-z0-9][A-Za-z0-9._-]{0,127}`. Edge filenames are
-hashes because Graphify endpoint IDs may contain path separators.
-
-`policy.toml` is the versioned single source of attention, privacy, and
 overlay thresholds. Validate an overlay locally with:
-
-```bash
-uv run python scripts/validate_overlay.py
-```
-
-The `[attention]` policy uses `selection = "rank"` by default, selecting
-results above the provisional `noise_floor = 0.037` and within
-`rank_gap_ratio = 0.35` of the best scored candidate. The noise floor is the
-relevance criterion; the rank gap only truncates the tail. The floor is the
-geometric mean of the worst relevant score (0.0619) and best control score
-(0.0217). Rank scoring uses Unicode-aware tokenization and filters function
-words because unfiltered overlap caused a measured false positive. The
-`live_ratio_floor = 0.25` prevents records grounded only in non-graph files
-from being permanently excluded. `selection = "threshold"` replays the
-absolute `score_threshold` rule. These provisional values are calibrated from
-`attention` records; `rank_gap_ratio` is calibrated separately from the
-recorded score ordering.
-
-**Local session records** (append-only JSONL):
-```bash
-cat .score-local/sessions.jsonl | jq
-```
 
 The process graph is resolved in this order: `SCORE_PROCESS_GRAPH` (absolute
 or repository-relative), `[process] path` from `score-context/policy.toml`,
