@@ -12,6 +12,10 @@ sdlc-harness is a local MCP server package that enforces a traceable SDLC workfl
 
 The package is deterministic and file-backed. No cloud calls are made by the tools.
 
+## Graph-Backed Evidence
+
+The APM package depends on `context-discipline` and `graphify-codegraph`. Its lifecycle guidance uses `query_graph` to locate relevant code and `resolve_requirements` to verify requirement IDs and links, then requires confirming findings against source files and tests before recording evidence. Graphs are discovery and traceability aids, not authoritative source content. The `agent-context` devcontainer feature registers the Graphify MCP server, but does not install these APM instructions or the SDLC harness; consumers need an APM deployment for the workflow guidance and tools.
+
 ## What This README Covers
 
 This is an implementation-level README for the package. It documents:

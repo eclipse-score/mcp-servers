@@ -27,6 +27,7 @@ from heapq import nsmallest
 
 from context_policy import AttentionPolicy, Policy
 from context_sessions import OutcomeRecord, ReasoningRecord, SessionLog
+from context_sources import PROCESS_ID_RE
 
 _DEFAULT_ATTENTION = AttentionPolicy()
 W_SEMANTIC = _DEFAULT_ATTENTION.w_semantic
@@ -308,6 +309,7 @@ def score_candidate(
     now: datetime,
     corroboration: int,
     live_nodes: set[str] | None,
+    process_layer_loaded: bool = True,
 ) -> ScoreFactors:
     semantic = jaccard(task_tokens, tokenize(reasoning.text))
     resolved_ground = (
@@ -328,11 +330,23 @@ def score_candidate(
         except (OverflowError, TypeError, ValueError):
             recency = 1.0
     grounded_nodes = set(reasoning.grounded_nodes)
-    live_ratio = (
-        1.0
-        if live_nodes is None or not reasoning.grounded_nodes
-        else len(grounded_nodes & live_nodes) / len(reasoning.grounded_nodes)
-    )
+    if live_nodes is None:
+        live_ratio = 1.0
+    else:
+        considered_grounded = (
+            grounded_nodes
+            if process_layer_loaded
+            else {
+                node_id
+                for node_id in grounded_nodes
+                if not PROCESS_ID_RE.match(node_id)
+            }
+        )
+        live_ratio = (
+            1.0
+            if not considered_grounded
+            else len(considered_grounded & live_nodes) / len(considered_grounded)
+        )
     live_ratio = max(live_ratio, policy.attention.live_ratio_floor)
     verdict = normalize_verdict(verdict)
     # Uncorroborated positive outcomes are neutral; corroborated positives
@@ -437,6 +451,7 @@ def get_prior_context(
     policy: Policy | None = None,
     now: datetime | None = None,
     live_nodes: set[str] | None = None,
+    process_layer_loaded: bool = True,
     top_k: int | None = None,
     node_resolver: Callable[[str], str | None] | None = None,
 ) -> PriorContextResult:
@@ -485,6 +500,7 @@ def get_prior_context(
             now=now,
             corroboration=corroboration,
             live_nodes=live_nodes,
+            process_layer_loaded=process_layer_loaded,
         )
         candidates.append(
             PriorContext(

@@ -26,7 +26,12 @@ only-include = [
   "src/context_overlay.py",
   "src/context_policy.py",
   "src/context_sessions.py",
+  "src/context_sources.py",
+  "src/context_taskclass.py",
   "src/requirements_lookup.py",
   "src/requirements_projection.py",
 ]
 sources = ["src"]
+
+[tool.hatch.build.targets.wheel.force-include]
+"../metamodel-flow/model/process_graph.json" = "process_graph.json"

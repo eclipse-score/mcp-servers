@@ -139,6 +139,19 @@ def test_release_only_changes_metadata(tmp_path: Path) -> None:
     ]
 
 
+@pytest.mark.parametrize(
+    "command",
+    [
+        "uv tool install --with-executables-from graphifyy package",
+        '["uv", "tool", "install", "--with-executables-from", "graphifyy", source]',
+    ],
+)
+def test_executable_provider_is_not_a_dependency_spec(command: str) -> None:
+    match = check_pins.GRAPHIFY_RE.search(command)
+    assert match is not None
+    assert not check_pins.is_install_spec(command, match)
+
+
 def test_release_unknown_commit(tmp_path: Path) -> None:
     git(tmp_path, "init", "-q")
     write_repo(tmp_path, "0.1.0", f"@{SHA} # v0.1.0")

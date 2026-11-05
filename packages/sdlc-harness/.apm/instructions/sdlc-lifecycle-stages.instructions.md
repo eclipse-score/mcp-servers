@@ -34,4 +34,8 @@ Call `assess_sdlc_issue` after filling the draft artifacts. Address every findin
 
 After each implementation task, call `record_implementation_evidence` with the task filename, requirement/need IDs, changed source files, actual test commands, test statuses, and an honest task status. If test statuses indicate failure, do not mark the task status as complete; instead mark it as blocked or in-progress and do not proceed to the next task until resolved. Call `assess_implementation_progress` before review to check completed-task percentage and unverified work. Call `write_progress_report` into the documentation source tree to publish an RST progress report.
 
+## Graph-Grounded Repository Evidence
+
+During repository inspection, use `query_graph` to locate relevant files, symbols, callers, and dependencies before opening source. Use `resolve_requirements` to verify every requirement ID and inspect its typed links before including it in an SDLC artifact or implementation evidence. Treat graph results as navigation and traceability data, not as proof that code or requirements are current: confirm claims in the referenced source, tests, and requirement text. Record the relevant paths, symbols, requirement IDs, and verification tests in each artifact's `## Repository evidence` section. If a graph or requirements projection is unavailable, state that in the evidence and continue with direct repository inspection; never invent IDs or relationships.
+
 Call `check_stage_completeness` before entering a later stage. It validates file presence only; it does not validate semantic consistency. Never treat a passing completeness check as proof that an agent followed the plan.

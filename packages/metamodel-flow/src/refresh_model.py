@@ -87,7 +87,8 @@ def fetch_metamodel(sha: str, fetcher: Fetcher = fetch) -> bytes:
 
 def source_text(sha: str) -> str:
     return (
-        "# SPDX-License-Identifier: Apache-2.0\n"
+        "# SPDX"
+        "-License-Identifier: Apache-2.0\n"
         "# Copyright (c) 2026 Contributors to the Eclipse Foundation\n"
         "\n"
         f"source_repo_url={REPO_URL}\n"

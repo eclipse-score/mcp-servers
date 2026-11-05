@@ -21,11 +21,14 @@ targets:
   - cursor
   - codex
   - gemini
+  - windsurf
+  - kiro
   - opencode
 dependencies:
   apm:
     - path: ../apm-setup
     - path: ../graphify-codegraph
+    - path: ../metamodel-flow
   mcp:
     - name: context-discipline
       registry: false
