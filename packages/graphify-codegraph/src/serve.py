@@ -16,11 +16,12 @@
 
 import argparse
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
 
-from graph_cache import build, prepare
+from graph_cache import build, cache_dir, prepare, repo_root
 
 
 def main() -> None:
@@ -62,9 +63,20 @@ def main() -> None:
             )
         )
         return
+    if graph is None:
+        root = repo_root(args.repo_path)
+        if root is not None:
+            graph = cache_dir(root) / "graph.json"
     command = [sys.executable, "-m", "graphify.serve"]
+    environment = os.environ.copy()
+    if graph is not None:
+        environment["GRAPHIFY_OUT"] = str(graph.parent.resolve())
     try:
-        subprocess.run([*command, str(graph)] if graph else command, check=True)
+        subprocess.run(
+            [*command, str(graph)] if graph else command,
+            check=True,
+            env=environment,
+        )
     except (FileNotFoundError, subprocess.CalledProcessError):
         print(
             "Error: graphify not found. Install with: uv tool install "

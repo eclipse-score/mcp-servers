@@ -89,7 +89,7 @@ def setup_graphify(arguments: dict[str, Any]) -> dict[str, Any]:
     if graphify is None and arguments.get("install_graphify", False):
         source = (
             "git+https://github.com/eclipse-score/mcp-servers@"
-            "a85a027acff417ef2718c07daf62491e98cdb4fd"
+            "ff5758419353d04d93a695001e5f7f13637db861"
             "#subdirectory=packages/graphify-codegraph"
         )
         subprocess.run(
@@ -153,8 +153,9 @@ def setup_context_discipline(arguments: dict[str, Any]) -> dict[str, Any]:
 def verify_setup(arguments: dict[str, Any]) -> dict[str, Any]:
     repo = repo_from(arguments)
     graph = graph_cache(repo) / "graph.json"
-    if not graph.exists():
-        graph = repo / "graphify-out" / "graph.json"
+    legacy_graph = repo / "graphify-out" / "graph.json"
+    if not graph.exists() and legacy_graph.exists():
+        graph = legacy_graph
     store = context_store(repo)
     return {
         "ok": True,
