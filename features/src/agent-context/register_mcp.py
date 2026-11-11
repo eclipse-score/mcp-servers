@@ -132,6 +132,46 @@ def update_codex(path: Path, command: str) -> bool:
     return True
 
 
+def _update_opencode(path: Path, command: str) -> bool:
+    """Register for OpenCode V2 (mcp.servers) and clean up V1 (mcp.<name>)."""
+    data: dict[str, Any] = {}
+    if path.exists():
+        try:
+            data = json.loads(path.read_text(encoding="utf-8") or "{}")
+        except json.JSONDecodeError:
+            warn(f"skipping {path}: not valid JSON")
+            return False
+    if not isinstance(data, dict):
+        warn(f"skipping {path}: unexpected content")
+        return False
+    if not path.exists():
+        data["$schema"] = "https://opencode.ai/config.json"
+    mcp = data.setdefault("mcp", {})
+    if not isinstance(mcp, dict):
+        warn(f"skipping {path}: mcp is not a mapping")
+        return False
+    # Remove legacy V1 flat entry (issue #56602)
+    mcp.pop(NAME, None)
+    servers = mcp.setdefault("servers", {})
+    if not isinstance(servers, dict):
+        warn(f"skipping {path}: mcp.servers is not a mapping")
+        return False
+    servers[NAME] = {
+        "type": "local",
+        "command": [command],
+    }
+    path.parent.mkdir(parents=True, exist_ok=True)
+    partial = path.with_name(path.name + ".agent-context")
+    partial.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
+    if path.exists():
+        original_mode = path.stat().st_mode
+        partial.replace(path)
+        path.chmod(original_mode)
+    else:
+        partial.replace(path)
+    return True
+
+
 def register(home: Path, which: Which = shutil.which) -> list[str]:
     """Register the server for every agent that is installed or configured."""
     command = which("graphify-codegraph") or str(
@@ -148,9 +188,7 @@ def register(home: Path, which: Which = shutil.which) -> list[str]:
         (
             "opencode",
             home / ".config" / "opencode" / "opencode.json",
-            lambda p: update_json(
-                p, "mcp", {"type": "local", "command": [command], "enabled": True}
-            ),
+            lambda p: _update_opencode(p, command),
         ),
         ("codex", home / ".codex" / "config.toml", lambda p: update_codex(p, command)),
     ]
