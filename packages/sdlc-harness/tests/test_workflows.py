@@ -12,10 +12,6 @@ from pathlib import Path
 import pytest
 
 PACKAGE_ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(PACKAGE_ROOT / "src"))
-
-from graphify_fabro_conversion import convert_sdlc_to_fabro_dot  # noqa: E402
-
 WORKFLOWS = PACKAGE_ROOT / "workflows"
 EXAMPLE_REQUIREMENT = "Example requirement: replace with the requirement text"
 
@@ -26,8 +22,20 @@ requires_fabro = pytest.mark.skipif(
 
 def test_sdlc_lifecycle_workflow_matches_generator() -> None:
     checked_in = (WORKFLOWS / "sdlc-lifecycle.fabro").read_text(encoding="utf-8")
-    generated = convert_sdlc_to_fabro_dot("ISSUE-1", EXAMPLE_REQUIREMENT)
-    assert checked_in == generated
+    generated = subprocess.run(
+        [
+            sys.executable,
+            str(PACKAGE_ROOT / "src" / "graphify_fabro_conversion.py"),
+            "sdlc",
+            "ISSUE-1",
+            "--requirement",
+            EXAMPLE_REQUIREMENT,
+        ],
+        capture_output=True,
+        text=True,
+        check=True,
+    ).stdout
+    assert checked_in == generated.removesuffix("\n")
 
 
 @requires_fabro

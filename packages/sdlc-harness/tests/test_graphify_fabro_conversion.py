@@ -354,7 +354,7 @@ class TestDotParsing:
 
     def test_chained_edges_with_attrs(self) -> None:
         dot = (
-            'digraph X {\n    a [shape=box]\n    b [shape=box]\n'
+            "digraph X {\n    a [shape=box]\n    b [shape=box]\n"
             '    c [shape=box]\n    a -> b -> c [label="Flow"]\n}'
         )
         wf = dot_to_fabro_workflow(dot)
@@ -402,7 +402,7 @@ class TestDotParsing:
 
     def test_edge_conditions(self) -> None:
         dot = (
-            'digraph X {\n    a [shape=diamond]\n    b [shape=box]\n'
+            "digraph X {\n    a [shape=diamond]\n    b [shape=box]\n"
             '    a -> b [condition="outcome=succeeded", label="Pass"]\n}'
         )
         wf = dot_to_fabro_workflow(dot)
