@@ -26,6 +26,7 @@ path = [
   "uv.lock",
   "**/.gitkeep",
   "packages/context/.apm/skills/query-context/SKILL.md",
+  "packages/sdlc-harness/workflows/sdlc-lifecycle.fabro",
 ]
 SPDX-FileCopyrightText = "Copyright (c) 2026 Contributors to the Eclipse Foundation"
 SPDX-License-Identifier = "Apache-2.0"
