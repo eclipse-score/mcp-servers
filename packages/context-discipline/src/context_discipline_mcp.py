@@ -19,13 +19,12 @@ Integrates with graphify-codegraph (wraps external graphify CLI).
 """
 
 import json
-import os
 import posixpath
 from contextlib import suppress
 from dataclasses import asdict, dataclass
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 from uuid import uuid4
 
 from context_attention import (
@@ -45,11 +44,14 @@ from context_sessions import (
     RetrievalRecord,
     SessionLog,
     SessionRecord,
+    TaskClassRecord,
     TaskRecord,
     agent_salt,
     pseudonymize_agent,
     resolve_local_store,
 )
+from context_sources import code_graph_path, load_process_graph
+from context_taskclass import Detection, detect_task_class, process_facts
 from requirements_lookup import RequirementsIndex, resolve_requirements
 
 
@@ -192,6 +194,79 @@ def _attention_entry(item: PriorContext | RejectedCandidate) -> dict[str, Any]:
     }
 
 
+def _detection_payload(
+    detection: Detection,
+    graph: MergedGraph,
+    repo_name: str,
+    policy: Policy,
+) -> dict[str, Any]:
+    facts: dict[str, list[str]]
+    if detection.task_class:
+        facts = process_facts(graph, detection.task_class)
+    else:
+        facts = {
+            "responsible": [],
+            "approved_by": [],
+            "supported_by": [],
+            "input": [],
+            "output": [],
+            "contains": [],
+            "satisfied_by": [],
+        }
+    if detection.status == "unknown":
+        announcement = f"Repository {repo_name} | task class unknown"
+    elif detection.status == "ambiguous":
+        best_score = detection.candidates[0].score
+        tie_floor = best_score * (1.0 - policy.process.gap_min)
+        tied = [
+            candidate
+            for candidate in detection.candidates
+            if candidate.score >= tie_floor
+        ]
+        candidate_text = ", ".join(
+            f"{candidate.title} ({candidate.id})" for candidate in tied
+        )
+        announcement = (
+            f"Repository {repo_name} | task class ambiguous: {candidate_text}"
+        )
+    else:
+        announcement = (
+            f"Repository {repo_name} | task class {detection.title} "
+            f"({detection.task_class})"
+        )
+        if facts["responsible"]:
+            announcement += f" | responsible {', '.join(facts['responsible'])}"
+        if facts["approved_by"]:
+            announcement += f" | approval {', '.join(facts['approved_by'])}"
+    payload: dict[str, Any] = {
+        "status": detection.status,
+        "task_class": detection.task_class,
+        "title": detection.title,
+        "gap": detection.gap,
+        **facts,
+        "announcement": announcement,
+    }
+    if detection.status == "unknown":
+        payload["question"] = {
+            "text": (
+                "No process workflow matched this task. Name a workflow "
+                "identifier from the process layer, or answer none to continue "
+                "without a process class."
+            ),
+            "options": [{"id": "none", "title": "Continue without a process class"}],
+        }
+    elif detection.status == "ambiguous":
+        payload["question"] = {
+            "text": "Which process workflow applies to this task?",
+            "options": [
+                {"id": candidate.id, "title": candidate.title}
+                for candidate in detection.candidates
+            ]
+            + [{"id": "none", "title": "Continue without a process class"}],
+        }
+    return payload
+
+
 class ContextDisciplineMCP:
     """
     Manages working memory and local learning.
@@ -237,6 +312,17 @@ class ContextDisciplineMCP:
         self.session_id = f"session__{uuid4().hex[:8]}"
         self.working_memory = []
         self.goal_task_id = None
+        detection_payload: dict[str, Any] | None = None
+        detected_task_class = ""
+        graph: MergedGraph | None = None
+        if not task_class:
+            graph = load_process_graph(self.repo_path, self.policy)
+            if "process" in graph.loaded_layers:
+                detection = detect_task_class(goal, graph, self.policy)
+                detected_task_class = detection.task_class
+                detection_payload = _detection_payload(
+                    detection, graph, self.repo_path.name, self.policy
+                )
         self.session_log.prune(self.policy.privacy.retention_days)
         self.session_log.append(
             SessionRecord(
@@ -248,17 +334,26 @@ class ContextDisciplineMCP:
         goal_task = TaskRecord(
             session_id=self.session_id,
             text=goal,
-            task_class=task_class,
+            task_class=task_class or detected_task_class,
         )
         self.goal_task_id = goal_task.id
         self.session_log.append(goal_task)
+        if detected_task_class:
+            self.session_log.append(
+                TaskClassRecord(
+                    session_id=self.session_id,
+                    task_id=goal_task.id,
+                    task_class=detected_task_class,
+                    source="detector",
+                )
+            )
         for subgoal in subgoals:
             self.session_log.append(
                 TaskRecord(
                     session_id=self.session_id,
                     text=subgoal,
                     parent_id=goal_task.id,
-                    task_class=task_class,
+                    task_class=task_class or detected_task_class,
                 )
             )
         self.working_memory.append(
@@ -294,34 +389,61 @@ class ContextDisciplineMCP:
                         )
                     )
 
+        if detection_payload is not None:
+            return {
+                "agent_instruction": (
+                    "Print the announcement string verbatim as the first line "
+                    "of the reply to the user, before any other text, without "
+                    "paraphrasing or summarising."
+                ),
+                "announcement": detection_payload["announcement"],
+                "session_id": self.session_id,
+                "task_class": task_class or detected_task_class,
+                "setup": self._graph_setup_status(),
+                "detection": detection_payload,
+            }
         return {
             "session_id": self.session_id,
-            "task_class": task_class,
+            "task_class": task_class or detected_task_class,
             "setup": self._graph_setup_status(),
         }
 
+    def set_task_class(self, task_class: str, task_id: str = "") -> dict[str, Any]:
+        """Record a user-selected process workflow for a task."""
+        graph = load_process_graph(self.repo_path, self.policy)
+        selected = "" if task_class == "none" else task_class
+        workflow_ids = {
+            node.id
+            for node in graph.nodes.values()
+            if node.layer == "process" and node.type == "workflow"
+        }
+        if selected and selected not in workflow_ids:
+            return {
+                "error": "task_class is not a known process workflow",
+                "task_class": task_class,
+            }
+        resolved_task_id = task_id or self.goal_task_id or ""
+        self.session_log.append(
+            TaskClassRecord(
+                session_id=self.session_id,
+                task_id=resolved_task_id,
+                task_class=selected,
+                source="user",
+            )
+        )
+        return {
+            "task_id": resolved_task_id,
+            "task_class": selected,
+            "source": "user",
+        }
+
     def _graph_setup_status(self) -> dict[str, Any]:
-        # Check in-repo graph first, then user cache
-        repo_graph_path = self.repo_path / "graphify-out" / "graph.json"
-
-        # Check user cache (same logic as graphify-codegraph)
-        import hashlib
-
-        base = os.environ.get("XDG_DATA_HOME") or str(Path.home() / ".local" / "share")
-        cache_root = Path(base) / "score-agent"
-        digest = hashlib.sha256(str(self.repo_path.resolve()).encode()).hexdigest()[:12]
-        cache = cache_root / f"{self.repo_path.name}-{digest}"
-        cache_graph_path = cache / "graph.json"
-
-        if cache_graph_path.exists():
-            return {"ok": True, "graph_path": str(cache_graph_path)}
-        if repo_graph_path.exists():
-            return {"ok": True, "graph_path": str(repo_graph_path)}
-
-        # Neither exists: report the primary (in-repo) path
+        graph_path = code_graph_path(self.repo_path)
+        if graph_path.exists():
+            return {"ok": True, "graph_path": str(graph_path)}
         return {
             "ok": False,
-            "graph_path": str(cache_graph_path),
+            "graph_path": str(graph_path),
             "next": "Call setup_graphify with install_graphify=true.",
         }
 
@@ -382,11 +504,8 @@ class ContextDisciplineMCP:
         return result
 
     def resolve_requirements(
-        self,
-        requirement_ids: list[str],
-        include_links: bool = True,
+        self, requirement_ids: list[str], include_links: bool = True
     ) -> dict[str, Any]:
-        """Resolve requirement IDs against the local projected requirements graph."""
         index = RequirementsIndex.load(self.repo_path)
         return resolve_requirements(index, requirement_ids, include_links)
 
@@ -520,6 +639,7 @@ class ContextDisciplineMCP:
             set(focus_nodes),
             policy=self.policy,
             live_nodes=set(graph.nodes),
+            process_layer_loaded="process" in graph.loaded_layers,
             node_resolver=lambda value: resolve_node_id(value, graph, self.repo_path),
         )
         attention = AttentionRecord(
@@ -629,46 +749,24 @@ TOOLS: list[dict[str, Any]] = [
         },
     },
     {
-        "name": "resolve_requirements",
-        "description": (
-            "Resolve Sphinx-Needs requirement IDs against the locally projected "
-            "requirements graph; reports whether each ID exists and returns its "
-            "typed links. Never invents IDs; reports explicitly when no projected "
-            "graph is available."
-        ),
+        "name": "set_task_class",
+        "description": "Record a user-selected process workflow for a task.",
         "inputSchema": {
             "type": "object",
             "properties": {
-                "requirement_ids": {
-                    "type": "array",
-                    "items": {"type": "string"},
-                    "description": "Requirement IDs to resolve.",
+                "task_class": {
+                    "type": "string",
+                    "description": (
+                        "Workflow identifier from the process layer, or empty "
+                        "or none to continue without a process class."
+                    ),
                 },
-                "include_links": {
-                    "type": "boolean",
-                    "default": True,
-                    "description": "Include typed incoming and outgoing links.",
+                "task_id": {
+                    "type": "string",
+                    "description": "Task identifier; defaults to the session goal.",
                 },
             },
-            "required": ["requirement_ids"],
-        },
-        "outputSchema": {
-            "type": "object",
-            "properties": {
-                "loaded": {"type": "boolean"},
-                "graph_path": {"type": "string"},
-                "source": {"type": "object"},
-                "results": {
-                    "type": "array",
-                    "items": {"type": "object"},
-                },
-                "unknown": {
-                    "type": "array",
-                    "items": {"type": "string"},
-                },
-                "next": {"type": "string"},
-            },
-            "required": ["loaded", "graph_path", "source", "results", "unknown"],
+            "required": ["task_class"],
         },
     },
     {
@@ -750,6 +848,21 @@ TOOLS: list[dict[str, Any]] = [
         "name": "get_working_memory",
         "description": "Get current working memory entries.",
         "inputSchema": {"type": "object", "properties": {}},
+    },
+    {
+        "name": "resolve_requirements",
+        "description": (
+            "Resolve requirement IDs and typed links from the "
+            "projected requirements graph."
+        ),
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "requirement_ids": {"type": "array", "items": {"type": "string"}},
+                "include_links": {"type": "boolean", "default": True},
+            },
+            "required": ["requirement_ids"],
+        },
     },
     {
         "name": "get_unverified_assumptions",
@@ -866,6 +979,8 @@ def call_tool(
         return manager.initialize_session(**arguments)
     if name == "query_graph":
         return manager.query_graph(**arguments)
+    if name == "set_task_class":
+        return manager.set_task_class(**arguments)
     if name == "resolve_requirements":
         return manager.resolve_requirements(**arguments)
     if name == "record_decision":
@@ -896,12 +1011,14 @@ def handle(manager: ContextDisciplineMCP, request: dict[str, Any]) -> str | None
     request_id = request.get("id")
     method = request.get("method")
     if method == "initialize":
-        result: dict[str, Any] = {
+        initialization_result: dict[str, Any] = {
             "protocolVersion": "2024-11-05",
             "capabilities": {"tools": {}},
             "serverInfo": {"name": "context-discipline", "version": "0.1.0"},
         }
-        return json.dumps({"jsonrpc": "2.0", "id": request_id, "result": result})
+        return json.dumps(
+            {"jsonrpc": "2.0", "id": request_id, "result": initialization_result}
+        )
     if method == "tools/list":
         return json.dumps(
             {"jsonrpc": "2.0", "id": request_id, "result": {"tools": TOOLS}}
@@ -910,7 +1027,19 @@ def handle(manager: ContextDisciplineMCP, request: dict[str, Any]) -> str | None
         try:
             params = request.get("params", {})
             result = call_tool(manager, params["name"], params.get("arguments", {}))
-            content = [{"type": "text", "text": json.dumps(result)}]
+            json_content = {"type": "text", "text": json.dumps(result)}
+            if isinstance(result, dict) and cast(dict[str, Any], result).get(
+                "announcement"
+            ):
+                content = [
+                    {
+                        "type": "text",
+                        "text": cast(dict[str, Any], result)["announcement"],
+                    },
+                    json_content,
+                ]
+            else:
+                content = [json_content]
             return json.dumps(
                 {"jsonrpc": "2.0", "id": request_id, "result": {"content": content}}
             )

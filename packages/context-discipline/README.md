@@ -25,6 +25,7 @@ Provides an MCP server with these tools:
 | Tool | Purpose |
 |------|----------|
 | `initialize_session` | Start with goal, subgoals, assumptions |
+| `set_task_class` | Record a user-selected workflow after ambiguous or unknown detection |
 | `query_graph` | Ask the merged code, domain, and collaboration graph |
 | `resolve_requirements` | Check requirement IDs against the local projected requirements graph |
 | `record_decision` | Track a decision + reasoning |
@@ -79,6 +80,11 @@ Both workflows remain available without modifying the consumer's `.gitignore`; u
 ### Use from Your Agent
 
 #### Input language and task class
+
+Initialization loads the versioned process model and detects a workflow when `task_class` is omitted.
+The response includes the workflow, responsible and approving roles, and required process inputs/outputs; print its announcement verbatim.
+Ambiguous or unknown detections include a question: ask the user and record the answer with `set_task_class`.
+The process graph is bundled in the runtime wheel; configured process graphs and APM-installed model copies remain supported.
 
 Free-text fields are recorded in English. The optional `task_class` argument
 to `initialize_session` accepts a process workflow identifier such as
@@ -196,6 +202,15 @@ recorded score ordering.
 ```bash
 cat "${XDG_STATE_HOME:-$HOME/.local/state}/score-agent/<repo>-<path-hash>/sessions.jsonl" | jq
 ```
+overlay thresholds. Validate an overlay locally with:
+
+The process graph is resolved in this order: `SCORE_PROCESS_GRAPH` (absolute
+or repository-relative), `[process] path` from `score-context/policy.toml`,
+the first sorted match under
+`apm_modules/**/metamodel-flow/model/process_graph.json`, the installed
+monorepo sibling package, and finally
+`score-context/process_graph.json`. Use `SCORE_PROCESS_GRAPH` as the escape
+hatch when a consumer needs to override the packaged process graph.
 
 ## Local Learning Loop
 
@@ -240,6 +255,9 @@ Existing repository-local records are not automatically migrated or merged; use 
 ```
 .score-local/            # Local session records (ephemeral)
 ```
+
+Unknown record types are skipped for forward compatibility; malformed lines
+still raise an error.
 
 ## Integration
 

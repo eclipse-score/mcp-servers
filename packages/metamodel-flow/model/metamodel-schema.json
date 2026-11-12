@@ -1,0 +1,3858 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://eclipse-score.github.io/schemas/metamodel-schema.json",
+  "title": "S-CORE Metamodel Schema",
+  "description": "JSON Schema for the S-CORE requirements metamodel",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "const": "https://json-schema.org/draft/2020-12/schema"
+    },
+    "metamodel_digest": {
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{64}$",
+      "description": "SHA256 digest of the source metamodel.yaml"
+    },
+    "schema_version": {
+      "type": "integer",
+      "const": 1,
+      "description": "Schema version identifier"
+    },
+    "needs_types_base_options": {
+      "type": "object",
+      "description": "Base options inherited by all need types",
+      "properties": {
+        "mandatory": {
+          "type": "object",
+          "description": "Mandatory options for all need types",
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "pattern": {
+                "type": "string",
+                "format": "regex"
+              }
+            },
+            "required": [
+              "name",
+              "pattern"
+            ]
+          }
+        },
+        "optional": {
+          "type": "object",
+          "description": "Optional options for all need types",
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "pattern": {
+                "type": "string",
+                "format": "regex"
+              }
+            },
+            "required": [
+              "name",
+              "pattern"
+            ]
+          }
+        }
+      }
+    },
+    "needs_types": {
+      "type": "object",
+      "description": "All Sphinx-Needs types (directives)",
+      "properties": {
+        "tsf": {
+          "type": "object",
+          "description": "Definition of tsf need type",
+          "properties": {
+            "title": {
+              "type": "string"
+            },
+            "prefix": {
+              "type": "string"
+            },
+            "color": {
+              "type": "string"
+            },
+            "style": {
+              "type": "string"
+            },
+            "tags": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "parts": {
+              "type": "integer"
+            },
+            "mandatory_options": {
+              "type": "object",
+              "description": "Mandatory field patterns for this type",
+              "additionalProperties": {
+                "type": "string",
+                "format": "regex"
+              }
+            },
+            "optional_options": {
+              "type": "object",
+              "description": "Optional field patterns for this type",
+              "additionalProperties": {
+                "type": "string",
+                "format": "regex"
+              }
+            },
+            "mandatory_links": {
+              "type": "object",
+              "description": "Mandatory link patterns for this type",
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "optional_links": {
+              "type": "object",
+              "description": "Optional link patterns for this type",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "title"
+          ]
+        },
+        "tenet": {
+          "type": "object",
+          "description": "Definition of tenet need type",
+          "properties": {
+            "title": {
+              "type": "string"
+            },
+            "prefix": {
+              "type": "string"
+            },
+            "color": {
+              "type": "string"
+            },
+            "style": {
+              "type": "string"
+            },
+            "tags": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "parts": {
+              "type": "integer"
+            },
+            "mandatory_options": {
+              "type": "object",
+              "description": "Mandatory field patterns for this type",
+              "additionalProperties": {
+                "type": "string",
+                "format": "regex"
+              }
+            },
+            "optional_options": {
+              "type": "object",
+              "description": "Optional field patterns for this type",
+              "additionalProperties": {
+                "type": "string",
+                "format": "regex"
+              }
+            },
+            "mandatory_links": {
+              "type": "object",
+              "description": "Mandatory link patterns for this type",
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "optional_links": {
+              "type": "object",
+              "description": "Optional link patterns for this type",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "title"
+          ]
+        },
+        "assertion": {
+          "type": "object",
+          "description": "Definition of assertion need type",
+          "properties": {
+            "title": {
+              "type": "string"
+            },
+            "prefix": {
+              "type": "string"
+            },
+            "color": {
+              "type": "string"
+            },
+            "style": {
+              "type": "string"
+            },
+            "tags": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "parts": {
+              "type": "integer"
+            },
+            "mandatory_options": {
+              "type": "object",
+              "description": "Mandatory field patterns for this type",
+              "additionalProperties": {
+                "type": "string",
+                "format": "regex"
+              }
+            },
+            "optional_options": {
+              "type": "object",
+              "description": "Optional field patterns for this type",
+              "additionalProperties": {
+                "type": "string",
+                "format": "regex"
+              }
+            },
+            "mandatory_links": {
+              "type": "object",
+              "description": "Mandatory link patterns for this type",
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "optional_links": {
+              "type": "object",
+              "description": "Optional link patterns for this type",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "title"
+          ]
+        },
+        "std_req": {
+          "type": "object",
+          "description": "Definition of std_req need type",
+          "properties": {
+            "title": {
+              "type": "string"
+            },
+            "prefix": {
+              "type": "string"
+            },
+            "color": {
+              "type": "string"
+            },
+            "style": {
+              "type": "string"
+            },
+            "tags": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "parts": {
+              "type": "integer"
+            },
+            "mandatory_options": {
+              "type": "object",
+              "description": "Mandatory field patterns for this type",
+              "additionalProperties": {
+                "type": "string",
+                "format": "regex"
+              }
+            },
+            "optional_options": {
+              "type": "object",
+              "description": "Optional field patterns for this type",
+              "additionalProperties": {
+                "type": "string",
+                "format": "regex"
+              }
+            },
+            "mandatory_links": {
+              "type": "object",
+              "description": "Mandatory link patterns for this type",
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "optional_links": {
+              "type": "object",
+              "description": "Optional link patterns for this type",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "title"
+          ]
+        },
+        "std_wp": {
+          "type": "object",
+          "description": "Definition of std_wp need type",
+          "properties": {
+            "title": {
+              "type": "string"
+            },
+            "prefix": {
+              "type": "string"
+            },
+            "color": {
+              "type": "string"
+            },
+            "style": {
+              "type": "string"
+            },
+            "tags": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "parts": {
+              "type": "integer"
+            },
+            "mandatory_options": {
+              "type": "object",
+              "description": "Mandatory field patterns for this type",
+              "additionalProperties": {
+                "type": "string",
+                "format": "regex"
+              }
+            },
+            "optional_options": {
+              "type": "object",
+              "description": "Optional field patterns for this type",
+              "additionalProperties": {
+                "type": "string",
+                "format": "regex"
+              }
+            },
+            "mandatory_links": {
+              "type": "object",
+              "description": "Mandatory link patterns for this type",
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "optional_links": {
+              "type": "object",
+              "description": "Optional link patterns for this type",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "title"
+          ]
+        },
+        "workflow": {
+          "type": "object",
+          "description": "Definition of workflow need type",
+          "properties": {
+            "title": {
+              "type": "string"
+            },
+            "prefix": {
+              "type": "string"
+            },
+            "color": {
+              "type": "string"
+            },
+            "style": {
+              "type": "string"
+            },
+            "tags": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "parts": {
+              "type": "integer"
+            },
+            "mandatory_options": {
+              "type": "object",
+              "description": "Mandatory field patterns for this type",
+              "additionalProperties": {
+                "type": "string",
+                "format": "regex"
+              }
+            },
+            "optional_options": {
+              "type": "object",
+              "description": "Optional field patterns for this type",
+              "additionalProperties": {
+                "type": "string",
+                "format": "regex"
+              }
+            },
+            "mandatory_links": {
+              "type": "object",
+              "description": "Mandatory link patterns for this type",
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "optional_links": {
+              "type": "object",
+              "description": "Optional link patterns for this type",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "title"
+          ]
+        },
+        "gd_req": {
+          "type": "object",
+          "description": "Definition of gd_req need type",
+          "properties": {
+            "title": {
+              "type": "string"
+            },
+            "prefix": {
+              "type": "string"
+            },
+            "color": {
+              "type": "string"
+            },
+            "style": {
+              "type": "string"
+            },
+            "tags": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "parts": {
+              "type": "integer"
+            },
+            "mandatory_options": {
+              "type": "object",
+              "description": "Mandatory field patterns for this type",
+              "additionalProperties": {
+                "type": "string",
+                "format": "regex"
+              }
+            },
+            "optional_options": {
+              "type": "object",
+              "description": "Optional field patterns for this type",
+              "additionalProperties": {
+                "type": "string",
+                "format": "regex"
+              }
+            },
+            "mandatory_links": {
+              "type": "object",
+              "description": "Mandatory link patterns for this type",
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "optional_links": {
+              "type": "object",
+              "description": "Optional link patterns for this type",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "title"
+          ]
+        },
+        "gd_temp": {
+          "type": "object",
+          "description": "Definition of gd_temp need type",
+          "properties": {
+            "title": {
+              "type": "string"
+            },
+            "prefix": {
+              "type": "string"
+            },
+            "color": {
+              "type": "string"
+            },
+            "style": {
+              "type": "string"
+            },
+            "tags": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "parts": {
+              "type": "integer"
+            },
+            "mandatory_options": {
+              "type": "object",
+              "description": "Mandatory field patterns for this type",
+              "additionalProperties": {
+                "type": "string",
+                "format": "regex"
+              }
+            },
+            "optional_options": {
+              "type": "object",
+              "description": "Optional field patterns for this type",
+              "additionalProperties": {
+                "type": "string",
+                "format": "regex"
+              }
+            },
+            "mandatory_links": {
+              "type": "object",
+              "description": "Mandatory link patterns for this type",
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "optional_links": {
+              "type": "object",
+              "description": "Optional link patterns for this type",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "title"
+          ]
+        },
+        "gd_chklst": {
+          "type": "object",
+          "description": "Definition of gd_chklst need type",
+          "properties": {
+            "title": {
+              "type": "string"
+            },
+            "prefix": {
+              "type": "string"
+            },
+            "color": {
+              "type": "string"
+            },
+            "style": {
+              "type": "string"
+            },
+            "tags": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "parts": {
+              "type": "integer"
+            },
+            "mandatory_options": {
+              "type": "object",
+              "description": "Mandatory field patterns for this type",
+              "additionalProperties": {
+                "type": "string",
+                "format": "regex"
+              }
+            },
+            "optional_options": {
+              "type": "object",
+              "description": "Optional field patterns for this type",
+              "additionalProperties": {
+                "type": "string",
+                "format": "regex"
+              }
+            },
+            "mandatory_links": {
+              "type": "object",
+              "description": "Mandatory link patterns for this type",
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "optional_links": {
+              "type": "object",
+              "description": "Optional link patterns for this type",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "title"
+          ]
+        },
+        "gd_guidl": {
+          "type": "object",
+          "description": "Definition of gd_guidl need type",
+          "properties": {
+            "title": {
+              "type": "string"
+            },
+            "prefix": {
+              "type": "string"
+            },
+            "color": {
+              "type": "string"
+            },
+            "style": {
+              "type": "string"
+            },
+            "tags": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "parts": {
+              "type": "integer"
+            },
+            "mandatory_options": {
+              "type": "object",
+              "description": "Mandatory field patterns for this type",
+              "additionalProperties": {
+                "type": "string",
+                "format": "regex"
+              }
+            },
+            "optional_options": {
+              "type": "object",
+              "description": "Optional field patterns for this type",
+              "additionalProperties": {
+                "type": "string",
+                "format": "regex"
+              }
+            },
+            "mandatory_links": {
+              "type": "object",
+              "description": "Mandatory link patterns for this type",
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "optional_links": {
+              "type": "object",
+              "description": "Optional link patterns for this type",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "title"
+          ]
+        },
+        "gd_method": {
+          "type": "object",
+          "description": "Definition of gd_method need type",
+          "properties": {
+            "title": {
+              "type": "string"
+            },
+            "prefix": {
+              "type": "string"
+            },
+            "color": {
+              "type": "string"
+            },
+            "style": {
+              "type": "string"
+            },
+            "tags": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "parts": {
+              "type": "integer"
+            },
+            "mandatory_options": {
+              "type": "object",
+              "description": "Mandatory field patterns for this type",
+              "additionalProperties": {
+                "type": "string",
+                "format": "regex"
+              }
+            },
+            "optional_options": {
+              "type": "object",
+              "description": "Optional field patterns for this type",
+              "additionalProperties": {
+                "type": "string",
+                "format": "regex"
+              }
+            },
+            "mandatory_links": {
+              "type": "object",
+              "description": "Mandatory link patterns for this type",
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "optional_links": {
+              "type": "object",
+              "description": "Optional link patterns for this type",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "title"
+          ]
+        },
+        "workproduct": {
+          "type": "object",
+          "description": "Definition of workproduct need type",
+          "properties": {
+            "title": {
+              "type": "string"
+            },
+            "prefix": {
+              "type": "string"
+            },
+            "color": {
+              "type": "string"
+            },
+            "style": {
+              "type": "string"
+            },
+            "tags": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "parts": {
+              "type": "integer"
+            },
+            "mandatory_options": {
+              "type": "object",
+              "description": "Mandatory field patterns for this type",
+              "additionalProperties": {
+                "type": "string",
+                "format": "regex"
+              }
+            },
+            "optional_options": {
+              "type": "object",
+              "description": "Optional field patterns for this type",
+              "additionalProperties": {
+                "type": "string",
+                "format": "regex"
+              }
+            },
+            "mandatory_links": {
+              "type": "object",
+              "description": "Mandatory link patterns for this type",
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "optional_links": {
+              "type": "object",
+              "description": "Optional link patterns for this type",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "title"
+          ]
+        },
+        "role": {
+          "type": "object",
+          "description": "Definition of role need type",
+          "properties": {
+            "title": {
+              "type": "string"
+            },
+            "prefix": {
+              "type": "string"
+            },
+            "color": {
+              "type": "string"
+            },
+            "style": {
+              "type": "string"
+            },
+            "tags": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "parts": {
+              "type": "integer"
+            },
+            "mandatory_options": {
+              "type": "object",
+              "description": "Mandatory field patterns for this type",
+              "additionalProperties": {
+                "type": "string",
+                "format": "regex"
+              }
+            },
+            "optional_options": {
+              "type": "object",
+              "description": "Optional field patterns for this type",
+              "additionalProperties": {
+                "type": "string",
+                "format": "regex"
+              }
+            },
+            "mandatory_links": {
+              "type": "object",
+              "description": "Mandatory link patterns for this type",
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "optional_links": {
+              "type": "object",
+              "description": "Optional link patterns for this type",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "title"
+          ]
+        },
+        "doc_concept": {
+          "type": "object",
+          "description": "Definition of doc_concept need type",
+          "properties": {
+            "title": {
+              "type": "string"
+            },
+            "prefix": {
+              "type": "string"
+            },
+            "color": {
+              "type": "string"
+            },
+            "style": {
+              "type": "string"
+            },
+            "tags": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "parts": {
+              "type": "integer"
+            },
+            "mandatory_options": {
+              "type": "object",
+              "description": "Mandatory field patterns for this type",
+              "additionalProperties": {
+                "type": "string",
+                "format": "regex"
+              }
+            },
+            "optional_options": {
+              "type": "object",
+              "description": "Optional field patterns for this type",
+              "additionalProperties": {
+                "type": "string",
+                "format": "regex"
+              }
+            },
+            "mandatory_links": {
+              "type": "object",
+              "description": "Mandatory link patterns for this type",
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "optional_links": {
+              "type": "object",
+              "description": "Optional link patterns for this type",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "title"
+          ]
+        },
+        "doc_getstrt": {
+          "type": "object",
+          "description": "Definition of doc_getstrt need type",
+          "properties": {
+            "title": {
+              "type": "string"
+            },
+            "prefix": {
+              "type": "string"
+            },
+            "color": {
+              "type": "string"
+            },
+            "style": {
+              "type": "string"
+            },
+            "tags": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "parts": {
+              "type": "integer"
+            },
+            "mandatory_options": {
+              "type": "object",
+              "description": "Mandatory field patterns for this type",
+              "additionalProperties": {
+                "type": "string",
+                "format": "regex"
+              }
+            },
+            "optional_options": {
+              "type": "object",
+              "description": "Optional field patterns for this type",
+              "additionalProperties": {
+                "type": "string",
+                "format": "regex"
+              }
+            },
+            "mandatory_links": {
+              "type": "object",
+              "description": "Mandatory link patterns for this type",
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "optional_links": {
+              "type": "object",
+              "description": "Optional link patterns for this type",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "title"
+          ]
+        },
+        "document": {
+          "type": "object",
+          "description": "Definition of document need type",
+          "properties": {
+            "title": {
+              "type": "string"
+            },
+            "prefix": {
+              "type": "string"
+            },
+            "color": {
+              "type": "string"
+            },
+            "style": {
+              "type": "string"
+            },
+            "tags": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "parts": {
+              "type": "integer"
+            },
+            "mandatory_options": {
+              "type": "object",
+              "description": "Mandatory field patterns for this type",
+              "additionalProperties": {
+                "type": "string",
+                "format": "regex"
+              }
+            },
+            "optional_options": {
+              "type": "object",
+              "description": "Optional field patterns for this type",
+              "additionalProperties": {
+                "type": "string",
+                "format": "regex"
+              }
+            },
+            "mandatory_links": {
+              "type": "object",
+              "description": "Mandatory link patterns for this type",
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "optional_links": {
+              "type": "object",
+              "description": "Optional link patterns for this type",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "title"
+          ]
+        },
+        "doc_tool": {
+          "type": "object",
+          "description": "Definition of doc_tool need type",
+          "properties": {
+            "title": {
+              "type": "string"
+            },
+            "prefix": {
+              "type": "string"
+            },
+            "color": {
+              "type": "string"
+            },
+            "style": {
+              "type": "string"
+            },
+            "tags": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "parts": {
+              "type": "integer"
+            },
+            "mandatory_options": {
+              "type": "object",
+              "description": "Mandatory field patterns for this type",
+              "additionalProperties": {
+                "type": "string",
+                "format": "regex"
+              }
+            },
+            "optional_options": {
+              "type": "object",
+              "description": "Optional field patterns for this type",
+              "additionalProperties": {
+                "type": "string",
+                "format": "regex"
+              }
+            },
+            "mandatory_links": {
+              "type": "object",
+              "description": "Mandatory link patterns for this type",
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "optional_links": {
+              "type": "object",
+              "description": "Optional link patterns for this type",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "title"
+          ]
+        },
+        "tool_usecase": {
+          "type": "object",
+          "description": "Definition of tool_usecase need type",
+          "properties": {
+            "title": {
+              "type": "string"
+            },
+            "prefix": {
+              "type": "string"
+            },
+            "color": {
+              "type": "string"
+            },
+            "style": {
+              "type": "string"
+            },
+            "tags": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "parts": {
+              "type": "integer"
+            },
+            "mandatory_options": {
+              "type": "object",
+              "description": "Mandatory field patterns for this type",
+              "additionalProperties": {
+                "type": "string",
+                "format": "regex"
+              }
+            },
+            "optional_options": {
+              "type": "object",
+              "description": "Optional field patterns for this type",
+              "additionalProperties": {
+                "type": "string",
+                "format": "regex"
+              }
+            },
+            "mandatory_links": {
+              "type": "object",
+              "description": "Mandatory link patterns for this type",
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "optional_links": {
+              "type": "object",
+              "description": "Optional link patterns for this type",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "title"
+          ]
+        },
+        "potential_tool_malfunction": {
+          "type": "object",
+          "description": "Definition of potential_tool_malfunction need type",
+          "properties": {
+            "title": {
+              "type": "string"
+            },
+            "prefix": {
+              "type": "string"
+            },
+            "color": {
+              "type": "string"
+            },
+            "style": {
+              "type": "string"
+            },
+            "tags": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "parts": {
+              "type": "integer"
+            },
+            "mandatory_options": {
+              "type": "object",
+              "description": "Mandatory field patterns for this type",
+              "additionalProperties": {
+                "type": "string",
+                "format": "regex"
+              }
+            },
+            "optional_options": {
+              "type": "object",
+              "description": "Optional field patterns for this type",
+              "additionalProperties": {
+                "type": "string",
+                "format": "regex"
+              }
+            },
+            "mandatory_links": {
+              "type": "object",
+              "description": "Mandatory link patterns for this type",
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "optional_links": {
+              "type": "object",
+              "description": "Optional link patterns for this type",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "title"
+          ]
+        },
+        "stkh_req": {
+          "type": "object",
+          "description": "Definition of stkh_req need type",
+          "properties": {
+            "title": {
+              "type": "string"
+            },
+            "prefix": {
+              "type": "string"
+            },
+            "color": {
+              "type": "string"
+            },
+            "style": {
+              "type": "string"
+            },
+            "tags": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "parts": {
+              "type": "integer"
+            },
+            "mandatory_options": {
+              "type": "object",
+              "description": "Mandatory field patterns for this type",
+              "additionalProperties": {
+                "type": "string",
+                "format": "regex"
+              }
+            },
+            "optional_options": {
+              "type": "object",
+              "description": "Optional field patterns for this type",
+              "additionalProperties": {
+                "type": "string",
+                "format": "regex"
+              }
+            },
+            "mandatory_links": {
+              "type": "object",
+              "description": "Mandatory link patterns for this type",
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "optional_links": {
+              "type": "object",
+              "description": "Optional link patterns for this type",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "title"
+          ]
+        },
+        "feat_req": {
+          "type": "object",
+          "description": "Definition of feat_req need type",
+          "properties": {
+            "title": {
+              "type": "string"
+            },
+            "prefix": {
+              "type": "string"
+            },
+            "color": {
+              "type": "string"
+            },
+            "style": {
+              "type": "string"
+            },
+            "tags": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "parts": {
+              "type": "integer"
+            },
+            "mandatory_options": {
+              "type": "object",
+              "description": "Mandatory field patterns for this type",
+              "additionalProperties": {
+                "type": "string",
+                "format": "regex"
+              }
+            },
+            "optional_options": {
+              "type": "object",
+              "description": "Optional field patterns for this type",
+              "additionalProperties": {
+                "type": "string",
+                "format": "regex"
+              }
+            },
+            "mandatory_links": {
+              "type": "object",
+              "description": "Mandatory link patterns for this type",
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "optional_links": {
+              "type": "object",
+              "description": "Optional link patterns for this type",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "title"
+          ]
+        },
+        "comp_req": {
+          "type": "object",
+          "description": "Definition of comp_req need type",
+          "properties": {
+            "title": {
+              "type": "string"
+            },
+            "prefix": {
+              "type": "string"
+            },
+            "color": {
+              "type": "string"
+            },
+            "style": {
+              "type": "string"
+            },
+            "tags": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "parts": {
+              "type": "integer"
+            },
+            "mandatory_options": {
+              "type": "object",
+              "description": "Mandatory field patterns for this type",
+              "additionalProperties": {
+                "type": "string",
+                "format": "regex"
+              }
+            },
+            "optional_options": {
+              "type": "object",
+              "description": "Optional field patterns for this type",
+              "additionalProperties": {
+                "type": "string",
+                "format": "regex"
+              }
+            },
+            "mandatory_links": {
+              "type": "object",
+              "description": "Mandatory link patterns for this type",
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "optional_links": {
+              "type": "object",
+              "description": "Optional link patterns for this type",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "title"
+          ]
+        },
+        "tool_req": {
+          "type": "object",
+          "description": "Definition of tool_req need type",
+          "properties": {
+            "title": {
+              "type": "string"
+            },
+            "prefix": {
+              "type": "string"
+            },
+            "color": {
+              "type": "string"
+            },
+            "style": {
+              "type": "string"
+            },
+            "tags": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "parts": {
+              "type": "integer"
+            },
+            "mandatory_options": {
+              "type": "object",
+              "description": "Mandatory field patterns for this type",
+              "additionalProperties": {
+                "type": "string",
+                "format": "regex"
+              }
+            },
+            "optional_options": {
+              "type": "object",
+              "description": "Optional field patterns for this type",
+              "additionalProperties": {
+                "type": "string",
+                "format": "regex"
+              }
+            },
+            "mandatory_links": {
+              "type": "object",
+              "description": "Mandatory link patterns for this type",
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "optional_links": {
+              "type": "object",
+              "description": "Optional link patterns for this type",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "title"
+          ]
+        },
+        "aou_req": {
+          "type": "object",
+          "description": "Definition of aou_req need type",
+          "properties": {
+            "title": {
+              "type": "string"
+            },
+            "prefix": {
+              "type": "string"
+            },
+            "color": {
+              "type": "string"
+            },
+            "style": {
+              "type": "string"
+            },
+            "tags": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "parts": {
+              "type": "integer"
+            },
+            "mandatory_options": {
+              "type": "object",
+              "description": "Mandatory field patterns for this type",
+              "additionalProperties": {
+                "type": "string",
+                "format": "regex"
+              }
+            },
+            "optional_options": {
+              "type": "object",
+              "description": "Optional field patterns for this type",
+              "additionalProperties": {
+                "type": "string",
+                "format": "regex"
+              }
+            },
+            "mandatory_links": {
+              "type": "object",
+              "description": "Mandatory link patterns for this type",
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "optional_links": {
+              "type": "object",
+              "description": "Optional link patterns for this type",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "title"
+          ]
+        },
+        "feat": {
+          "type": "object",
+          "description": "Definition of feat need type",
+          "properties": {
+            "title": {
+              "type": "string"
+            },
+            "prefix": {
+              "type": "string"
+            },
+            "color": {
+              "type": "string"
+            },
+            "style": {
+              "type": "string"
+            },
+            "tags": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "parts": {
+              "type": "integer"
+            },
+            "mandatory_options": {
+              "type": "object",
+              "description": "Mandatory field patterns for this type",
+              "additionalProperties": {
+                "type": "string",
+                "format": "regex"
+              }
+            },
+            "optional_options": {
+              "type": "object",
+              "description": "Optional field patterns for this type",
+              "additionalProperties": {
+                "type": "string",
+                "format": "regex"
+              }
+            },
+            "mandatory_links": {
+              "type": "object",
+              "description": "Mandatory link patterns for this type",
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "optional_links": {
+              "type": "object",
+              "description": "Optional link patterns for this type",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "title"
+          ]
+        },
+        "feat_arc_sta": {
+          "type": "object",
+          "description": "Definition of feat_arc_sta need type",
+          "properties": {
+            "title": {
+              "type": "string"
+            },
+            "prefix": {
+              "type": "string"
+            },
+            "color": {
+              "type": "string"
+            },
+            "style": {
+              "type": "string"
+            },
+            "tags": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "parts": {
+              "type": "integer"
+            },
+            "mandatory_options": {
+              "type": "object",
+              "description": "Mandatory field patterns for this type",
+              "additionalProperties": {
+                "type": "string",
+                "format": "regex"
+              }
+            },
+            "optional_options": {
+              "type": "object",
+              "description": "Optional field patterns for this type",
+              "additionalProperties": {
+                "type": "string",
+                "format": "regex"
+              }
+            },
+            "mandatory_links": {
+              "type": "object",
+              "description": "Mandatory link patterns for this type",
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "optional_links": {
+              "type": "object",
+              "description": "Optional link patterns for this type",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "title"
+          ]
+        },
+        "feat_arc_dyn": {
+          "type": "object",
+          "description": "Definition of feat_arc_dyn need type",
+          "properties": {
+            "title": {
+              "type": "string"
+            },
+            "prefix": {
+              "type": "string"
+            },
+            "color": {
+              "type": "string"
+            },
+            "style": {
+              "type": "string"
+            },
+            "tags": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "parts": {
+              "type": "integer"
+            },
+            "mandatory_options": {
+              "type": "object",
+              "description": "Mandatory field patterns for this type",
+              "additionalProperties": {
+                "type": "string",
+                "format": "regex"
+              }
+            },
+            "optional_options": {
+              "type": "object",
+              "description": "Optional field patterns for this type",
+              "additionalProperties": {
+                "type": "string",
+                "format": "regex"
+              }
+            },
+            "mandatory_links": {
+              "type": "object",
+              "description": "Mandatory link patterns for this type",
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "optional_links": {
+              "type": "object",
+              "description": "Optional link patterns for this type",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "title"
+          ]
+        },
+        "logic_arc_int": {
+          "type": "object",
+          "description": "Definition of logic_arc_int need type",
+          "properties": {
+            "title": {
+              "type": "string"
+            },
+            "prefix": {
+              "type": "string"
+            },
+            "color": {
+              "type": "string"
+            },
+            "style": {
+              "type": "string"
+            },
+            "tags": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "parts": {
+              "type": "integer"
+            },
+            "mandatory_options": {
+              "type": "object",
+              "description": "Mandatory field patterns for this type",
+              "additionalProperties": {
+                "type": "string",
+                "format": "regex"
+              }
+            },
+            "optional_options": {
+              "type": "object",
+              "description": "Optional field patterns for this type",
+              "additionalProperties": {
+                "type": "string",
+                "format": "regex"
+              }
+            },
+            "mandatory_links": {
+              "type": "object",
+              "description": "Mandatory link patterns for this type",
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "optional_links": {
+              "type": "object",
+              "description": "Optional link patterns for this type",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "title"
+          ]
+        },
+        "logic_arc_int_op": {
+          "type": "object",
+          "description": "Definition of logic_arc_int_op need type",
+          "properties": {
+            "title": {
+              "type": "string"
+            },
+            "prefix": {
+              "type": "string"
+            },
+            "color": {
+              "type": "string"
+            },
+            "style": {
+              "type": "string"
+            },
+            "tags": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "parts": {
+              "type": "integer"
+            },
+            "mandatory_options": {
+              "type": "object",
+              "description": "Mandatory field patterns for this type",
+              "additionalProperties": {
+                "type": "string",
+                "format": "regex"
+              }
+            },
+            "optional_options": {
+              "type": "object",
+              "description": "Optional field patterns for this type",
+              "additionalProperties": {
+                "type": "string",
+                "format": "regex"
+              }
+            },
+            "mandatory_links": {
+              "type": "object",
+              "description": "Mandatory link patterns for this type",
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "optional_links": {
+              "type": "object",
+              "description": "Optional link patterns for this type",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "title"
+          ]
+        },
+        "mod": {
+          "type": "object",
+          "description": "Definition of mod need type",
+          "properties": {
+            "title": {
+              "type": "string"
+            },
+            "prefix": {
+              "type": "string"
+            },
+            "color": {
+              "type": "string"
+            },
+            "style": {
+              "type": "string"
+            },
+            "tags": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "parts": {
+              "type": "integer"
+            },
+            "mandatory_options": {
+              "type": "object",
+              "description": "Mandatory field patterns for this type",
+              "additionalProperties": {
+                "type": "string",
+                "format": "regex"
+              }
+            },
+            "optional_options": {
+              "type": "object",
+              "description": "Optional field patterns for this type",
+              "additionalProperties": {
+                "type": "string",
+                "format": "regex"
+              }
+            },
+            "mandatory_links": {
+              "type": "object",
+              "description": "Mandatory link patterns for this type",
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "optional_links": {
+              "type": "object",
+              "description": "Optional link patterns for this type",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "title"
+          ]
+        },
+        "mod_view_sta": {
+          "type": "object",
+          "description": "Definition of mod_view_sta need type",
+          "properties": {
+            "title": {
+              "type": "string"
+            },
+            "prefix": {
+              "type": "string"
+            },
+            "color": {
+              "type": "string"
+            },
+            "style": {
+              "type": "string"
+            },
+            "tags": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "parts": {
+              "type": "integer"
+            },
+            "mandatory_options": {
+              "type": "object",
+              "description": "Mandatory field patterns for this type",
+              "additionalProperties": {
+                "type": "string",
+                "format": "regex"
+              }
+            },
+            "optional_options": {
+              "type": "object",
+              "description": "Optional field patterns for this type",
+              "additionalProperties": {
+                "type": "string",
+                "format": "regex"
+              }
+            },
+            "mandatory_links": {
+              "type": "object",
+              "description": "Mandatory link patterns for this type",
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "optional_links": {
+              "type": "object",
+              "description": "Optional link patterns for this type",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "title"
+          ]
+        },
+        "mod_view_dyn": {
+          "type": "object",
+          "description": "Definition of mod_view_dyn need type",
+          "properties": {
+            "title": {
+              "type": "string"
+            },
+            "prefix": {
+              "type": "string"
+            },
+            "color": {
+              "type": "string"
+            },
+            "style": {
+              "type": "string"
+            },
+            "tags": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "parts": {
+              "type": "integer"
+            },
+            "mandatory_options": {
+              "type": "object",
+              "description": "Mandatory field patterns for this type",
+              "additionalProperties": {
+                "type": "string",
+                "format": "regex"
+              }
+            },
+            "optional_options": {
+              "type": "object",
+              "description": "Optional field patterns for this type",
+              "additionalProperties": {
+                "type": "string",
+                "format": "regex"
+              }
+            },
+            "mandatory_links": {
+              "type": "object",
+              "description": "Mandatory link patterns for this type",
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "optional_links": {
+              "type": "object",
+              "description": "Optional link patterns for this type",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "title"
+          ]
+        },
+        "comp": {
+          "type": "object",
+          "description": "Definition of comp need type",
+          "properties": {
+            "title": {
+              "type": "string"
+            },
+            "prefix": {
+              "type": "string"
+            },
+            "color": {
+              "type": "string"
+            },
+            "style": {
+              "type": "string"
+            },
+            "tags": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "parts": {
+              "type": "integer"
+            },
+            "mandatory_options": {
+              "type": "object",
+              "description": "Mandatory field patterns for this type",
+              "additionalProperties": {
+                "type": "string",
+                "format": "regex"
+              }
+            },
+            "optional_options": {
+              "type": "object",
+              "description": "Optional field patterns for this type",
+              "additionalProperties": {
+                "type": "string",
+                "format": "regex"
+              }
+            },
+            "mandatory_links": {
+              "type": "object",
+              "description": "Mandatory link patterns for this type",
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "optional_links": {
+              "type": "object",
+              "description": "Optional link patterns for this type",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "title"
+          ]
+        },
+        "comp_arc_sta": {
+          "type": "object",
+          "description": "Definition of comp_arc_sta need type",
+          "properties": {
+            "title": {
+              "type": "string"
+            },
+            "prefix": {
+              "type": "string"
+            },
+            "color": {
+              "type": "string"
+            },
+            "style": {
+              "type": "string"
+            },
+            "tags": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "parts": {
+              "type": "integer"
+            },
+            "mandatory_options": {
+              "type": "object",
+              "description": "Mandatory field patterns for this type",
+              "additionalProperties": {
+                "type": "string",
+                "format": "regex"
+              }
+            },
+            "optional_options": {
+              "type": "object",
+              "description": "Optional field patterns for this type",
+              "additionalProperties": {
+                "type": "string",
+                "format": "regex"
+              }
+            },
+            "mandatory_links": {
+              "type": "object",
+              "description": "Mandatory link patterns for this type",
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "optional_links": {
+              "type": "object",
+              "description": "Optional link patterns for this type",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "title"
+          ]
+        },
+        "comp_arc_dyn": {
+          "type": "object",
+          "description": "Definition of comp_arc_dyn need type",
+          "properties": {
+            "title": {
+              "type": "string"
+            },
+            "prefix": {
+              "type": "string"
+            },
+            "color": {
+              "type": "string"
+            },
+            "style": {
+              "type": "string"
+            },
+            "tags": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "parts": {
+              "type": "integer"
+            },
+            "mandatory_options": {
+              "type": "object",
+              "description": "Mandatory field patterns for this type",
+              "additionalProperties": {
+                "type": "string",
+                "format": "regex"
+              }
+            },
+            "optional_options": {
+              "type": "object",
+              "description": "Optional field patterns for this type",
+              "additionalProperties": {
+                "type": "string",
+                "format": "regex"
+              }
+            },
+            "mandatory_links": {
+              "type": "object",
+              "description": "Mandatory link patterns for this type",
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "optional_links": {
+              "type": "object",
+              "description": "Optional link patterns for this type",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "title"
+          ]
+        },
+        "real_arc_int": {
+          "type": "object",
+          "description": "Definition of real_arc_int need type",
+          "properties": {
+            "title": {
+              "type": "string"
+            },
+            "prefix": {
+              "type": "string"
+            },
+            "color": {
+              "type": "string"
+            },
+            "style": {
+              "type": "string"
+            },
+            "tags": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "parts": {
+              "type": "integer"
+            },
+            "mandatory_options": {
+              "type": "object",
+              "description": "Mandatory field patterns for this type",
+              "additionalProperties": {
+                "type": "string",
+                "format": "regex"
+              }
+            },
+            "optional_options": {
+              "type": "object",
+              "description": "Optional field patterns for this type",
+              "additionalProperties": {
+                "type": "string",
+                "format": "regex"
+              }
+            },
+            "mandatory_links": {
+              "type": "object",
+              "description": "Mandatory link patterns for this type",
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "optional_links": {
+              "type": "object",
+              "description": "Optional link patterns for this type",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "title"
+          ]
+        },
+        "real_arc_int_op": {
+          "type": "object",
+          "description": "Definition of real_arc_int_op need type",
+          "properties": {
+            "title": {
+              "type": "string"
+            },
+            "prefix": {
+              "type": "string"
+            },
+            "color": {
+              "type": "string"
+            },
+            "style": {
+              "type": "string"
+            },
+            "tags": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "parts": {
+              "type": "integer"
+            },
+            "mandatory_options": {
+              "type": "object",
+              "description": "Mandatory field patterns for this type",
+              "additionalProperties": {
+                "type": "string",
+                "format": "regex"
+              }
+            },
+            "optional_options": {
+              "type": "object",
+              "description": "Optional field patterns for this type",
+              "additionalProperties": {
+                "type": "string",
+                "format": "regex"
+              }
+            },
+            "mandatory_links": {
+              "type": "object",
+              "description": "Mandatory link patterns for this type",
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "optional_links": {
+              "type": "object",
+              "description": "Optional link patterns for this type",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "title"
+          ]
+        },
+        "review_header": {
+          "type": "object",
+          "description": "Definition of review_header need type",
+          "properties": {
+            "title": {
+              "type": "string"
+            },
+            "prefix": {
+              "type": "string"
+            },
+            "color": {
+              "type": "string"
+            },
+            "style": {
+              "type": "string"
+            },
+            "tags": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "parts": {
+              "type": "integer"
+            },
+            "mandatory_options": {
+              "type": "object",
+              "description": "Mandatory field patterns for this type",
+              "additionalProperties": {
+                "type": "string",
+                "format": "regex"
+              }
+            },
+            "optional_options": {
+              "type": "object",
+              "description": "Optional field patterns for this type",
+              "additionalProperties": {
+                "type": "string",
+                "format": "regex"
+              }
+            },
+            "mandatory_links": {
+              "type": "object",
+              "description": "Mandatory link patterns for this type",
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "optional_links": {
+              "type": "object",
+              "description": "Optional link patterns for this type",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "title"
+          ]
+        },
+        "plat_saf_dfa": {
+          "type": "object",
+          "description": "Definition of plat_saf_dfa need type",
+          "properties": {
+            "title": {
+              "type": "string"
+            },
+            "prefix": {
+              "type": "string"
+            },
+            "color": {
+              "type": "string"
+            },
+            "style": {
+              "type": "string"
+            },
+            "tags": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "parts": {
+              "type": "integer"
+            },
+            "mandatory_options": {
+              "type": "object",
+              "description": "Mandatory field patterns for this type",
+              "additionalProperties": {
+                "type": "string",
+                "format": "regex"
+              }
+            },
+            "optional_options": {
+              "type": "object",
+              "description": "Optional field patterns for this type",
+              "additionalProperties": {
+                "type": "string",
+                "format": "regex"
+              }
+            },
+            "mandatory_links": {
+              "type": "object",
+              "description": "Mandatory link patterns for this type",
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "optional_links": {
+              "type": "object",
+              "description": "Optional link patterns for this type",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "title"
+          ]
+        },
+        "feat_saf_dfa": {
+          "type": "object",
+          "description": "Definition of feat_saf_dfa need type",
+          "properties": {
+            "title": {
+              "type": "string"
+            },
+            "prefix": {
+              "type": "string"
+            },
+            "color": {
+              "type": "string"
+            },
+            "style": {
+              "type": "string"
+            },
+            "tags": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "parts": {
+              "type": "integer"
+            },
+            "mandatory_options": {
+              "type": "object",
+              "description": "Mandatory field patterns for this type",
+              "additionalProperties": {
+                "type": "string",
+                "format": "regex"
+              }
+            },
+            "optional_options": {
+              "type": "object",
+              "description": "Optional field patterns for this type",
+              "additionalProperties": {
+                "type": "string",
+                "format": "regex"
+              }
+            },
+            "mandatory_links": {
+              "type": "object",
+              "description": "Mandatory link patterns for this type",
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "optional_links": {
+              "type": "object",
+              "description": "Optional link patterns for this type",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "title"
+          ]
+        },
+        "comp_saf_dfa": {
+          "type": "object",
+          "description": "Definition of comp_saf_dfa need type",
+          "properties": {
+            "title": {
+              "type": "string"
+            },
+            "prefix": {
+              "type": "string"
+            },
+            "color": {
+              "type": "string"
+            },
+            "style": {
+              "type": "string"
+            },
+            "tags": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "parts": {
+              "type": "integer"
+            },
+            "mandatory_options": {
+              "type": "object",
+              "description": "Mandatory field patterns for this type",
+              "additionalProperties": {
+                "type": "string",
+                "format": "regex"
+              }
+            },
+            "optional_options": {
+              "type": "object",
+              "description": "Optional field patterns for this type",
+              "additionalProperties": {
+                "type": "string",
+                "format": "regex"
+              }
+            },
+            "mandatory_links": {
+              "type": "object",
+              "description": "Mandatory link patterns for this type",
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "optional_links": {
+              "type": "object",
+              "description": "Optional link patterns for this type",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "title"
+          ]
+        },
+        "feat_saf_fmea": {
+          "type": "object",
+          "description": "Definition of feat_saf_fmea need type",
+          "properties": {
+            "title": {
+              "type": "string"
+            },
+            "prefix": {
+              "type": "string"
+            },
+            "color": {
+              "type": "string"
+            },
+            "style": {
+              "type": "string"
+            },
+            "tags": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "parts": {
+              "type": "integer"
+            },
+            "mandatory_options": {
+              "type": "object",
+              "description": "Mandatory field patterns for this type",
+              "additionalProperties": {
+                "type": "string",
+                "format": "regex"
+              }
+            },
+            "optional_options": {
+              "type": "object",
+              "description": "Optional field patterns for this type",
+              "additionalProperties": {
+                "type": "string",
+                "format": "regex"
+              }
+            },
+            "mandatory_links": {
+              "type": "object",
+              "description": "Mandatory link patterns for this type",
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "optional_links": {
+              "type": "object",
+              "description": "Optional link patterns for this type",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "title"
+          ]
+        },
+        "comp_saf_fmea": {
+          "type": "object",
+          "description": "Definition of comp_saf_fmea need type",
+          "properties": {
+            "title": {
+              "type": "string"
+            },
+            "prefix": {
+              "type": "string"
+            },
+            "color": {
+              "type": "string"
+            },
+            "style": {
+              "type": "string"
+            },
+            "tags": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "parts": {
+              "type": "integer"
+            },
+            "mandatory_options": {
+              "type": "object",
+              "description": "Mandatory field patterns for this type",
+              "additionalProperties": {
+                "type": "string",
+                "format": "regex"
+              }
+            },
+            "optional_options": {
+              "type": "object",
+              "description": "Optional field patterns for this type",
+              "additionalProperties": {
+                "type": "string",
+                "format": "regex"
+              }
+            },
+            "mandatory_links": {
+              "type": "object",
+              "description": "Mandatory link patterns for this type",
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "optional_links": {
+              "type": "object",
+              "description": "Optional link patterns for this type",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "title"
+          ]
+        },
+        "feat_sec_threat": {
+          "type": "object",
+          "description": "Definition of feat_sec_threat need type",
+          "properties": {
+            "title": {
+              "type": "string"
+            },
+            "prefix": {
+              "type": "string"
+            },
+            "color": {
+              "type": "string"
+            },
+            "style": {
+              "type": "string"
+            },
+            "tags": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "parts": {
+              "type": "integer"
+            },
+            "mandatory_options": {
+              "type": "object",
+              "description": "Mandatory field patterns for this type",
+              "additionalProperties": {
+                "type": "string",
+                "format": "regex"
+              }
+            },
+            "optional_options": {
+              "type": "object",
+              "description": "Optional field patterns for this type",
+              "additionalProperties": {
+                "type": "string",
+                "format": "regex"
+              }
+            },
+            "mandatory_links": {
+              "type": "object",
+              "description": "Mandatory link patterns for this type",
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "optional_links": {
+              "type": "object",
+              "description": "Optional link patterns for this type",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "title"
+          ]
+        },
+        "comp_sec_threat": {
+          "type": "object",
+          "description": "Definition of comp_sec_threat need type",
+          "properties": {
+            "title": {
+              "type": "string"
+            },
+            "prefix": {
+              "type": "string"
+            },
+            "color": {
+              "type": "string"
+            },
+            "style": {
+              "type": "string"
+            },
+            "tags": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "parts": {
+              "type": "integer"
+            },
+            "mandatory_options": {
+              "type": "object",
+              "description": "Mandatory field patterns for this type",
+              "additionalProperties": {
+                "type": "string",
+                "format": "regex"
+              }
+            },
+            "optional_options": {
+              "type": "object",
+              "description": "Optional field patterns for this type",
+              "additionalProperties": {
+                "type": "string",
+                "format": "regex"
+              }
+            },
+            "mandatory_links": {
+              "type": "object",
+              "description": "Mandatory link patterns for this type",
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "optional_links": {
+              "type": "object",
+              "description": "Optional link patterns for this type",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "title"
+          ]
+        },
+        "plat_sec_threat": {
+          "type": "object",
+          "description": "Definition of plat_sec_threat need type",
+          "properties": {
+            "title": {
+              "type": "string"
+            },
+            "prefix": {
+              "type": "string"
+            },
+            "color": {
+              "type": "string"
+            },
+            "style": {
+              "type": "string"
+            },
+            "tags": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "parts": {
+              "type": "integer"
+            },
+            "mandatory_options": {
+              "type": "object",
+              "description": "Mandatory field patterns for this type",
+              "additionalProperties": {
+                "type": "string",
+                "format": "regex"
+              }
+            },
+            "optional_options": {
+              "type": "object",
+              "description": "Optional field patterns for this type",
+              "additionalProperties": {
+                "type": "string",
+                "format": "regex"
+              }
+            },
+            "mandatory_links": {
+              "type": "object",
+              "description": "Mandatory link patterns for this type",
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "optional_links": {
+              "type": "object",
+              "description": "Optional link patterns for this type",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "title"
+          ]
+        },
+        "feat_sec_ana": {
+          "type": "object",
+          "description": "Definition of feat_sec_ana need type",
+          "properties": {
+            "title": {
+              "type": "string"
+            },
+            "prefix": {
+              "type": "string"
+            },
+            "color": {
+              "type": "string"
+            },
+            "style": {
+              "type": "string"
+            },
+            "tags": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "parts": {
+              "type": "integer"
+            },
+            "mandatory_options": {
+              "type": "object",
+              "description": "Mandatory field patterns for this type",
+              "additionalProperties": {
+                "type": "string",
+                "format": "regex"
+              }
+            },
+            "optional_options": {
+              "type": "object",
+              "description": "Optional field patterns for this type",
+              "additionalProperties": {
+                "type": "string",
+                "format": "regex"
+              }
+            },
+            "mandatory_links": {
+              "type": "object",
+              "description": "Mandatory link patterns for this type",
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "optional_links": {
+              "type": "object",
+              "description": "Optional link patterns for this type",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "title"
+          ]
+        },
+        "comp_sec_ana": {
+          "type": "object",
+          "description": "Definition of comp_sec_ana need type",
+          "properties": {
+            "title": {
+              "type": "string"
+            },
+            "prefix": {
+              "type": "string"
+            },
+            "color": {
+              "type": "string"
+            },
+            "style": {
+              "type": "string"
+            },
+            "tags": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "parts": {
+              "type": "integer"
+            },
+            "mandatory_options": {
+              "type": "object",
+              "description": "Mandatory field patterns for this type",
+              "additionalProperties": {
+                "type": "string",
+                "format": "regex"
+              }
+            },
+            "optional_options": {
+              "type": "object",
+              "description": "Optional field patterns for this type",
+              "additionalProperties": {
+                "type": "string",
+                "format": "regex"
+              }
+            },
+            "mandatory_links": {
+              "type": "object",
+              "description": "Mandatory link patterns for this type",
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "optional_links": {
+              "type": "object",
+              "description": "Optional link patterns for this type",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "title"
+          ]
+        },
+        "plat_sec_ana": {
+          "type": "object",
+          "description": "Definition of plat_sec_ana need type",
+          "properties": {
+            "title": {
+              "type": "string"
+            },
+            "prefix": {
+              "type": "string"
+            },
+            "color": {
+              "type": "string"
+            },
+            "style": {
+              "type": "string"
+            },
+            "tags": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "parts": {
+              "type": "integer"
+            },
+            "mandatory_options": {
+              "type": "object",
+              "description": "Mandatory field patterns for this type",
+              "additionalProperties": {
+                "type": "string",
+                "format": "regex"
+              }
+            },
+            "optional_options": {
+              "type": "object",
+              "description": "Optional field patterns for this type",
+              "additionalProperties": {
+                "type": "string",
+                "format": "regex"
+              }
+            },
+            "mandatory_links": {
+              "type": "object",
+              "description": "Mandatory link patterns for this type",
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "optional_links": {
+              "type": "object",
+              "description": "Optional link patterns for this type",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "title"
+          ]
+        },
+        "testcase": {
+          "type": "object",
+          "description": "Definition of testcase need type",
+          "properties": {
+            "title": {
+              "type": "string"
+            },
+            "prefix": {
+              "type": "string"
+            },
+            "color": {
+              "type": "string"
+            },
+            "style": {
+              "type": "string"
+            },
+            "tags": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "parts": {
+              "type": "integer"
+            },
+            "mandatory_options": {
+              "type": "object",
+              "description": "Mandatory field patterns for this type",
+              "additionalProperties": {
+                "type": "string",
+                "format": "regex"
+              }
+            },
+            "optional_options": {
+              "type": "object",
+              "description": "Optional field patterns for this type",
+              "additionalProperties": {
+                "type": "string",
+                "format": "regex"
+              }
+            },
+            "mandatory_links": {
+              "type": "object",
+              "description": "Mandatory link patterns for this type",
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "optional_links": {
+              "type": "object",
+              "description": "Optional link patterns for this type",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "title"
+          ]
+        },
+        "mod_ver_report": {
+          "type": "object",
+          "description": "Definition of mod_ver_report need type",
+          "properties": {
+            "title": {
+              "type": "string"
+            },
+            "prefix": {
+              "type": "string"
+            },
+            "color": {
+              "type": "string"
+            },
+            "style": {
+              "type": "string"
+            },
+            "tags": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "parts": {
+              "type": "integer"
+            },
+            "mandatory_options": {
+              "type": "object",
+              "description": "Mandatory field patterns for this type",
+              "additionalProperties": {
+                "type": "string",
+                "format": "regex"
+              }
+            },
+            "optional_options": {
+              "type": "object",
+              "description": "Optional field patterns for this type",
+              "additionalProperties": {
+                "type": "string",
+                "format": "regex"
+              }
+            },
+            "mandatory_links": {
+              "type": "object",
+              "description": "Mandatory link patterns for this type",
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "optional_links": {
+              "type": "object",
+              "description": "Optional link patterns for this type",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "title"
+          ]
+        },
+        "dec_rec": {
+          "type": "object",
+          "description": "Definition of dec_rec need type",
+          "properties": {
+            "title": {
+              "type": "string"
+            },
+            "prefix": {
+              "type": "string"
+            },
+            "color": {
+              "type": "string"
+            },
+            "style": {
+              "type": "string"
+            },
+            "tags": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "parts": {
+              "type": "integer"
+            },
+            "mandatory_options": {
+              "type": "object",
+              "description": "Mandatory field patterns for this type",
+              "additionalProperties": {
+                "type": "string",
+                "format": "regex"
+              }
+            },
+            "optional_options": {
+              "type": "object",
+              "description": "Optional field patterns for this type",
+              "additionalProperties": {
+                "type": "string",
+                "format": "regex"
+              }
+            },
+            "mandatory_links": {
+              "type": "object",
+              "description": "Mandatory link patterns for this type",
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "optional_links": {
+              "type": "object",
+              "description": "Optional link patterns for this type",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "title"
+          ]
+        }
+      }
+    },
+    "needs_extra_links": {
+      "type": "object",
+      "description": "All extra link definitions",
+      "properties": {
+        "contains": {
+          "type": "object",
+          "description": "Definition of contains link type",
+          "properties": {
+            "outgoing": {
+              "type": "string"
+            },
+            "incoming": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "outgoing",
+            "incoming"
+          ]
+        },
+        "has": {
+          "type": "object",
+          "description": "Definition of has link type",
+          "properties": {
+            "outgoing": {
+              "type": "string"
+            },
+            "incoming": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "outgoing",
+            "incoming"
+          ]
+        },
+        "input": {
+          "type": "object",
+          "description": "Definition of input link type",
+          "properties": {
+            "outgoing": {
+              "type": "string"
+            },
+            "incoming": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "outgoing",
+            "incoming"
+          ]
+        },
+        "output": {
+          "type": "object",
+          "description": "Definition of output link type",
+          "properties": {
+            "outgoing": {
+              "type": "string"
+            },
+            "incoming": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "outgoing",
+            "incoming"
+          ]
+        },
+        "responsible": {
+          "type": "object",
+          "description": "Definition of responsible link type",
+          "properties": {
+            "outgoing": {
+              "type": "string"
+            },
+            "incoming": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "outgoing",
+            "incoming"
+          ]
+        },
+        "approved_by": {
+          "type": "object",
+          "description": "Definition of approved_by link type",
+          "properties": {
+            "outgoing": {
+              "type": "string"
+            },
+            "incoming": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "outgoing",
+            "incoming"
+          ]
+        },
+        "supported_by": {
+          "type": "object",
+          "description": "Definition of supported_by link type",
+          "properties": {
+            "outgoing": {
+              "type": "string"
+            },
+            "incoming": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "outgoing",
+            "incoming"
+          ]
+        },
+        "complies": {
+          "type": "object",
+          "description": "Definition of complies link type",
+          "properties": {
+            "outgoing": {
+              "type": "string"
+            },
+            "incoming": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "outgoing",
+            "incoming"
+          ]
+        },
+        "realizes": {
+          "type": "object",
+          "description": "Definition of realizes link type",
+          "properties": {
+            "outgoing": {
+              "type": "string"
+            },
+            "incoming": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "outgoing",
+            "incoming"
+          ]
+        },
+        "realized_by": {
+          "type": "object",
+          "description": "Definition of realized_by link type",
+          "properties": {
+            "outgoing": {
+              "type": "string"
+            },
+            "incoming": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "outgoing",
+            "incoming"
+          ]
+        },
+        "parent_needs": {
+          "type": "object",
+          "description": "Definition of parent_needs link type",
+          "properties": {
+            "outgoing": {
+              "type": "string"
+            },
+            "incoming": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "outgoing",
+            "incoming"
+          ]
+        },
+        "affects": {
+          "type": "object",
+          "description": "Definition of affects link type",
+          "properties": {
+            "outgoing": {
+              "type": "string"
+            },
+            "incoming": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "outgoing",
+            "incoming"
+          ]
+        },
+        "derived_from": {
+          "type": "object",
+          "description": "Definition of derived_from link type",
+          "properties": {
+            "outgoing": {
+              "type": "string"
+            },
+            "incoming": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "outgoing",
+            "incoming"
+          ]
+        },
+        "covers": {
+          "type": "object",
+          "description": "Definition of covers link type",
+          "properties": {
+            "outgoing": {
+              "type": "string"
+            },
+            "incoming": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "outgoing",
+            "incoming"
+          ]
+        },
+        "consists_of": {
+          "type": "object",
+          "description": "Definition of consists_of link type",
+          "properties": {
+            "outgoing": {
+              "type": "string"
+            },
+            "incoming": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "outgoing",
+            "incoming"
+          ]
+        },
+        "belongs_to": {
+          "type": "object",
+          "description": "Definition of belongs_to link type",
+          "properties": {
+            "outgoing": {
+              "type": "string"
+            },
+            "incoming": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "outgoing",
+            "incoming"
+          ]
+        },
+        "satisfied_by": {
+          "type": "object",
+          "description": "Definition of satisfied_by link type",
+          "properties": {
+            "outgoing": {
+              "type": "string"
+            },
+            "incoming": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "outgoing",
+            "incoming"
+          ]
+        },
+        "satisfies": {
+          "type": "object",
+          "description": "Definition of satisfies link type",
+          "properties": {
+            "outgoing": {
+              "type": "string"
+            },
+            "incoming": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "outgoing",
+            "incoming"
+          ]
+        },
+        "fulfils": {
+          "type": "object",
+          "description": "Definition of fulfils link type",
+          "properties": {
+            "outgoing": {
+              "type": "string"
+            },
+            "incoming": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "outgoing",
+            "incoming"
+          ]
+        },
+        "implements": {
+          "type": "object",
+          "description": "Definition of implements link type",
+          "properties": {
+            "outgoing": {
+              "type": "string"
+            },
+            "incoming": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "outgoing",
+            "incoming"
+          ]
+        },
+        "uses": {
+          "type": "object",
+          "description": "Definition of uses link type",
+          "properties": {
+            "outgoing": {
+              "type": "string"
+            },
+            "incoming": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "outgoing",
+            "incoming"
+          ]
+        },
+        "provides": {
+          "type": "object",
+          "description": "Definition of provides link type",
+          "properties": {
+            "outgoing": {
+              "type": "string"
+            },
+            "incoming": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "outgoing",
+            "incoming"
+          ]
+        },
+        "includes": {
+          "type": "object",
+          "description": "Definition of includes link type",
+          "properties": {
+            "outgoing": {
+              "type": "string"
+            },
+            "incoming": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "outgoing",
+            "incoming"
+          ]
+        },
+        "included_by": {
+          "type": "object",
+          "description": "Definition of included_by link type",
+          "properties": {
+            "outgoing": {
+              "type": "string"
+            },
+            "incoming": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "outgoing",
+            "incoming"
+          ]
+        },
+        "mitigated_by": {
+          "type": "object",
+          "description": "Definition of mitigated_by link type",
+          "properties": {
+            "outgoing": {
+              "type": "string"
+            },
+            "incoming": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "outgoing",
+            "incoming"
+          ]
+        },
+        "violates": {
+          "type": "object",
+          "description": "Definition of violates link type",
+          "properties": {
+            "outgoing": {
+              "type": "string"
+            },
+            "incoming": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "outgoing",
+            "incoming"
+          ]
+        },
+        "fully_verifies": {
+          "type": "object",
+          "description": "Definition of fully_verifies link type",
+          "properties": {
+            "outgoing": {
+              "type": "string"
+            },
+            "incoming": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "outgoing",
+            "incoming"
+          ]
+        },
+        "partially_verifies": {
+          "type": "object",
+          "description": "Definition of partially_verifies link type",
+          "properties": {
+            "outgoing": {
+              "type": "string"
+            },
+            "incoming": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "outgoing",
+            "incoming"
+          ]
+        },
+        "evidence": {
+          "type": "object",
+          "description": "Definition of evidence link type",
+          "properties": {
+            "outgoing": {
+              "type": "string"
+            },
+            "incoming": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "outgoing",
+            "incoming"
+          ]
+        }
+      }
+    },
+    "prohibited_words_checks": {
+      "type": "object",
+      "description": "Prohibited words validation rules",
+      "properties": {
+        "title_check": {
+          "type": "object",
+          "description": "Prohibited words check: title_check",
+          "properties": {
+            "types": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Tag types this check applies to"
+            },
+            "title": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Prohibited words for title"
+            }
+          }
+        },
+        "content_check": {
+          "type": "object",
+          "description": "Prohibited words check: content_check",
+          "properties": {
+            "types": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Tag types this check applies to"
+            },
+            "content": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Prohibited words for content"
+            }
+          }
+        }
+      }
+    },
+    "graph_checks": {
+      "type": "object",
+      "description": "Graph validation rules",
+      "properties": {
+        "tool_req__docs_common_attr_safety_link_check": {
+          "type": "object",
+          "description": "Graph validation rule: tool_req__docs_common_attr_safety_link_check",
+          "properties": {
+            "needs": {
+              "type": "object",
+              "properties": {
+                "include": {
+                  "type": "string"
+                },
+                "condition": {
+                  "type": "object"
+                }
+              }
+            },
+            "check": {
+              "type": "object"
+            },
+            "explanation": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "needs",
+            "check"
+          ]
+        },
+        "tool_req__docs_arch_link_qm_to_safety_req": {
+          "type": "object",
+          "description": "Graph validation rule: tool_req__docs_arch_link_qm_to_safety_req",
+          "properties": {
+            "needs": {
+              "type": "object",
+              "properties": {
+                "include": {
+                  "type": "string"
+                },
+                "condition": {
+                  "type": "object"
+                }
+              }
+            },
+            "check": {
+              "type": "object"
+            },
+            "explanation": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "needs",
+            "check"
+          ]
+        },
+        "tool_req__docs_req_arch_link_safety_to_arch": {
+          "type": "object",
+          "description": "Graph validation rule: tool_req__docs_req_arch_link_safety_to_arch",
+          "properties": {
+            "needs": {
+              "type": "object",
+              "properties": {
+                "include": {
+                  "type": "string"
+                },
+                "condition": {
+                  "type": "object"
+                }
+              }
+            },
+            "check": {
+              "type": "object"
+            },
+            "explanation": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "needs",
+            "check"
+          ]
+        },
+        "tool_req__docs_arch_link_security": {
+          "type": "object",
+          "description": "Graph validation rule: tool_req__docs_arch_link_security",
+          "properties": {
+            "needs": {
+              "type": "object",
+              "properties": {
+                "include": {
+                  "type": "string"
+                },
+                "condition": {
+                  "type": "object"
+                }
+              }
+            },
+            "check": {
+              "type": "object"
+            },
+            "explanation": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "needs",
+            "check"
+          ]
+        },
+        "workproduct_aspice_40": {
+          "type": "object",
+          "description": "Graph validation rule: workproduct_aspice_40",
+          "properties": {
+            "needs": {
+              "type": "object",
+              "properties": {
+                "include": {
+                  "type": "string"
+                },
+                "condition": {
+                  "type": "object"
+                }
+              }
+            },
+            "check": {
+              "type": "object"
+            },
+            "explanation": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "needs",
+            "check"
+          ]
+        }
+      }
+    }
+  },
+  "required": [
+    "$schema",
+    "schema_version",
+    "metamodel_digest"
+  ],
+  "additionalProperties": false
+}

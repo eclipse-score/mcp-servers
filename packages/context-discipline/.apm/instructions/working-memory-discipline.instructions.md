@@ -21,6 +21,15 @@ SPDX-License-Identifier: Apache-2.0
 
 # Working Memory Discipline
 
+## Mandatory Session Start
+
+Call `initialize_session` as the first tool call of every coding session, before reading files, searching, or editing.
+If it was missed, initialize before the next edit.
+Print the returned `announcement` verbatim; it reports the detected workflow and its responsible and approving roles from the process model.
+If `detection.question` is present, ask the user before continuing and record the selection with `set_task_class`.
+Do not silently choose an ambiguous workflow or treat a workflow's responsible role as proof of the user's personal role.
+These initialization and announcement requirements also apply to small or familiar tasks.
+
 When solving a coding task, maintain explicit working memory and track decisions. This guidance feeds the local session log and durable context overlay.
 
 ## What Gets Tracked
@@ -128,8 +137,10 @@ Missing nodes: [any edge cases not covered]
 
 ## When NOT to Use
 
+The detailed per-step bookkeeping in this pattern can be reduced for:
+
 - Simple one-file fixes
-- Well-known codebase (you built it)
+- Well-known codebases
 - Low-risk changes (add one function)
 
 ## Durable Context Overlay
