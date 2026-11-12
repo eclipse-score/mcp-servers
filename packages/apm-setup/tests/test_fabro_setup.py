@@ -66,9 +66,9 @@ def test_install_fabro_uses_documented_homebrew_command(
 
     def which(name: str) -> str | None:
         if name == "fabro":
-            return "/opt/homebrew/bin/fabro" if installed["done"] else None
+            return "/usr/local/bin/fabro" if installed["done"] else None
         if name == "brew":
-            return "/opt/homebrew/bin/brew"
+            return "/usr/local/bin/brew"
         return None
 
     commands: list[list[str]] = []
@@ -79,7 +79,7 @@ def test_install_fabro_uses_documented_homebrew_command(
             if command[1] == "install":
                 installed["done"] = True
             return subprocess.CompletedProcess(command, 0)
-        assert command == ["/opt/homebrew/bin/fabro", "--version"]
+        assert command == ["/usr/local/bin/fabro", "--version"]
         return subprocess.CompletedProcess(command, 0, stdout="fabro 0.0.0-test\n")
 
     monkeypatch.setattr(setup_module.shutil, "which", which)
