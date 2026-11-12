@@ -23,7 +23,6 @@ from graphify_fabro_conversion import (
     _safe_id,
     convert_fabro_dot_to_graphify,
     convert_graphify_to_fabro_dot,
-    convert_process_graph_to_fabro_dot,
     convert_sdlc_to_fabro_dot,
     dot_to_fabro_workflow,
     fabro_to_dot,
@@ -34,7 +33,6 @@ from graphify_fabro_conversion import (
     sdlc_to_fabro,
 )
 
-
 # ---------------------------------------------------------------------------
 # GraphifyGraph serialization
 # ---------------------------------------------------------------------------
@@ -44,7 +42,9 @@ class TestGraphifyGraph:
     def test_to_dict_roundtrip(self) -> None:
         graph = GraphifyGraph(
             nodes=[
-                GraphifyNode(id="n1", name="foo", kind="function", path="a.py", line=10),
+                GraphifyNode(
+                    id="n1", name="foo", kind="function", path="a.py", line=10
+                ),
                 GraphifyNode(id="n2", name="bar", kind="class", path="b.py"),
             ],
             edges=[GraphifyEdge(source="n1", target="n2", kind="calls")],
@@ -206,8 +206,11 @@ class TestFabroToGraphify:
             name="Test",
             nodes=[
                 FabroNode(
-                    id="n", fidelity="full", thread_id="impl",
-                    goal_gate=True, max_visits=3,
+                    id="n",
+                    fidelity="full",
+                    thread_id="impl",
+                    goal_gate=True,
+                    max_visits=3,
                 ),
             ],
             edges=[],
@@ -253,8 +256,11 @@ class TestFabroToDot:
             nodes=[
                 FabroNode(id="start", label="Start", shape="Mdiamond"),
                 FabroNode(
-                    id="do", label="Do", shape="box",
-                    prompt="Do analysis", goal_gate=True,
+                    id="do",
+                    label="Do",
+                    shape="box",
+                    prompt="Do analysis",
+                    goal_gate=True,
                 ),
             ],
         )
@@ -269,8 +275,10 @@ class TestFabroToDot:
             name="Test",
             edges=[
                 FabroEdge(
-                    source="a", target="b",
-                    label="Go", condition="outcome=succeeded",
+                    source="a",
+                    target="b",
+                    label="Go",
+                    condition="outcome=succeeded",
                 ),
             ],
         )
@@ -321,25 +329,34 @@ class TestDotParsing:
             dot_to_fabro_workflow("graph foo { }")
 
     def test_graph_block_attributes(self) -> None:
-        dot = 'digraph X {\n    graph [goal="Build", rankdir="LR"]\n    start [shape=Mdiamond]\n}'
+        dot = (
+            'digraph X {\n    graph [goal="Build", rankdir="LR"]\n'
+            "    start [shape=Mdiamond]\n}"
+        )
         wf = dot_to_fabro_workflow(dot)
         assert wf.graph_attributes["goal"] == "Build"
         assert wf.graph_attributes["rankdir"] == "LR"
 
     def test_bare_graph_attributes(self) -> None:
-        dot = 'digraph X {\n    rankdir=LR\n    start [shape=Mdiamond]\n}'
+        dot = "digraph X {\n    rankdir=LR\n    start [shape=Mdiamond]\n}"
         wf = dot_to_fabro_workflow(dot)
         assert wf.graph_attributes["rankdir"] == "LR"
 
     def test_chained_edges(self) -> None:
-        dot = "digraph X {\n    a [shape=box]\n    b [shape=box]\n    c [shape=box]\n    a -> b -> c\n}"
+        dot = (
+            "digraph X {\n    a [shape=box]\n    b [shape=box]\n"
+            "    c [shape=box]\n    a -> b -> c\n}"
+        )
         wf = dot_to_fabro_workflow(dot)
         pairs = wf.edge_pairs
         assert ("a", "b") in pairs
         assert ("b", "c") in pairs
 
     def test_chained_edges_with_attrs(self) -> None:
-        dot = 'digraph X {\n    a [shape=box]\n    b [shape=box]\n    c [shape=box]\n    a -> b -> c [label="Flow"]\n}'
+        dot = (
+            'digraph X {\n    a [shape=box]\n    b [shape=box]\n'
+            '    c [shape=box]\n    a -> b -> c [label="Flow"]\n}'
+        )
         wf = dot_to_fabro_workflow(dot)
         assert all(e.label == "Flow" for e in wf.edges)
 
@@ -358,7 +375,9 @@ class TestDotParsing:
         assert len(wf.edges) == 1
 
     def test_node_defaults(self) -> None:
-        dot = 'digraph X {\n    node [shape=box]\n    a [label="A"]\n    b [label="B"]\n}'
+        dot = (
+            'digraph X {\n    node [shape=box]\n    a [label="A"]\n    b [label="B"]\n}'
+        )
         wf = dot_to_fabro_workflow(dot)
         assert wf.nodes[0].shape == "box"
         assert wf.nodes[1].shape == "box"
@@ -370,7 +389,8 @@ class TestDotParsing:
 
     def test_fabro_attributes(self) -> None:
         dot = """digraph X {
-    do [label="Do", shape=box, prompt="Analyze code", fidelity="full", thread_id="impl", goal_gate=true, max_visits=3]
+    do [label="Do", shape=box, prompt="Analyze code", fidelity="full",
+        thread_id="impl", goal_gate=true, max_visits=3]
 }"""
         wf = dot_to_fabro_workflow(dot)
         n = wf.nodes[0]
@@ -381,7 +401,10 @@ class TestDotParsing:
         assert n.max_visits == 3
 
     def test_edge_conditions(self) -> None:
-        dot = 'digraph X {\n    a [shape=diamond]\n    b [shape=box]\n    a -> b [condition="outcome=succeeded", label="Pass"]\n}'
+        dot = (
+            'digraph X {\n    a [shape=diamond]\n    b [shape=box]\n'
+            '    a -> b [condition="outcome=succeeded", label="Pass"]\n}'
+        )
         wf = dot_to_fabro_workflow(dot)
         assert wf.edges[0].condition == "outcome=succeeded"
         assert wf.edges[0].label == "Pass"
@@ -457,9 +480,7 @@ class TestSdlcToFabro:
 
     def test_loopback_returns_to_fill_drafts(self) -> None:
         wf = sdlc_to_fabro("ISSUE-42")
-        loopback_edge = next(
-            e for e in wf.edges if e.source == "record_loopback"
-        )
+        loopback_edge = next(e for e in wf.edges if e.source == "record_loopback")
         assert loopback_edge.target == "fill_drafts"
 
     def test_renders_valid_dot(self) -> None:
@@ -503,16 +524,21 @@ class TestRoundTrips:
             nodes=[
                 FabroNode(id="start", label="Start", shape="Mdiamond"),
                 FabroNode(
-                    id="do", label="Do", shape="box",
-                    prompt="Do analysis", fidelity="full",
-                    thread_id="impl", goal_gate=True,
+                    id="do",
+                    label="Do",
+                    shape="box",
+                    prompt="Do analysis",
+                    fidelity="full",
+                    thread_id="impl",
+                    goal_gate=True,
                 ),
                 FabroNode(id="exit", label="Exit", shape="Msquare"),
             ],
             edges=[
                 FabroEdge(source="start", target="do"),
                 FabroEdge(
-                    source="do", target="exit",
+                    source="do",
+                    target="exit",
                     condition="outcome=succeeded",
                 ),
             ],
@@ -606,11 +632,10 @@ class TestHelpers:
 class TestEdgeCases:
     def test_large_graph(self) -> None:
         nodes = [
-            GraphifyNode(id=f"n{i}", name=f"f{i}", kind="function")
-            for i in range(50)
+            GraphifyNode(id=f"n{i}", name=f"f{i}", kind="function") for i in range(50)
         ]
         edges = [
-            GraphifyEdge(source=f"n{i}", target=f"n{i+1}", kind="calls")
+            GraphifyEdge(source=f"n{i}", target=f"n{i + 1}", kind="calls")
             for i in range(49)
         ]
         graph = GraphifyGraph(nodes=nodes, edges=edges)
@@ -650,58 +675,127 @@ _PROCESS_GRAPH_FIXTURE: dict = {
         "digest": "sha256:deadbeef",
     },
     "nodes": [
-        {"id": "wf__req_feat_req", "type": "workflow",
-         "title": "Create/Maintain Feature requirements",
-         "attributes": {"status": "valid", "tags": "requirements_engineering"}},
-        {"id": "wf__cr_mt_featarch", "type": "workflow",
-         "title": "Create/Maintain Feature architecture",
-         "attributes": {"status": "valid", "tags": "architecture_design"}},
-        {"id": "wf__verification_feat_int_test", "type": "workflow",
-         "title": "Create/Maintain Feature Integration Test",
-         "attributes": {"status": "valid", "tags": "verification"}},
-        {"id": "wp__feat_req", "type": "workproduct",
-         "title": "Feature Requirements",
-         "attributes": {"status": "valid", "tags": "requirements_engineering"}},
-        {"id": "wp__feat_arch", "type": "workproduct",
-         "title": "Feature Architecture",
-         "attributes": {"status": "valid", "tags": "architecture_design"}},
-        {"id": "rl__contributor", "type": "role",
-         "title": "Contributor",
-         "attributes": {"status": "valid", "tags": "development"}},
-        {"id": "rl__arch_community", "type": "role",
-         "title": "Architecture Community Member",
-         "attributes": {"status": "valid", "tags": "architecture_design"}},
-        {"id": "rl__safety_mgr", "type": "role",
-         "title": "Safety Manager",
-         "attributes": {"status": "valid", "tags": "safety_management"}},
-        {"id": "gd_req__req_attr", "type": "gd_req",
-         "title": "Requirement attribute: description",
-         "attributes": {"status": "valid", "tags": "requirements_engineering"}},
-        {"id": "gd_temp__feat_req", "type": "gd_temp",
-         "title": "Feature Requirements Template",
-         "attributes": {"status": "valid", "tags": "requirements_engineering"}},
-        {"id": "std_req__aspice_swe1", "type": "std_req",
-         "title": "SWE.1.BP1: Elicit requirements",
-         "attributes": {"status": "valid", "tags": "aspice40_swe1"}},
+        {
+            "id": "wf__req_feat_req",
+            "type": "workflow",
+            "title": "Create/Maintain Feature requirements",
+            "attributes": {"status": "valid", "tags": "requirements_engineering"},
+        },
+        {
+            "id": "wf__cr_mt_featarch",
+            "type": "workflow",
+            "title": "Create/Maintain Feature architecture",
+            "attributes": {"status": "valid", "tags": "architecture_design"},
+        },
+        {
+            "id": "wf__verification_feat_int_test",
+            "type": "workflow",
+            "title": "Create/Maintain Feature Integration Test",
+            "attributes": {"status": "valid", "tags": "verification"},
+        },
+        {
+            "id": "wp__feat_req",
+            "type": "workproduct",
+            "title": "Feature Requirements",
+            "attributes": {"status": "valid", "tags": "requirements_engineering"},
+        },
+        {
+            "id": "wp__feat_arch",
+            "type": "workproduct",
+            "title": "Feature Architecture",
+            "attributes": {"status": "valid", "tags": "architecture_design"},
+        },
+        {
+            "id": "rl__contributor",
+            "type": "role",
+            "title": "Contributor",
+            "attributes": {"status": "valid", "tags": "development"},
+        },
+        {
+            "id": "rl__arch_community",
+            "type": "role",
+            "title": "Architecture Community Member",
+            "attributes": {"status": "valid", "tags": "architecture_design"},
+        },
+        {
+            "id": "rl__safety_mgr",
+            "type": "role",
+            "title": "Safety Manager",
+            "attributes": {"status": "valid", "tags": "safety_management"},
+        },
+        {
+            "id": "gd_req__req_attr",
+            "type": "gd_req",
+            "title": "Requirement attribute: description",
+            "attributes": {"status": "valid", "tags": "requirements_engineering"},
+        },
+        {
+            "id": "gd_temp__feat_req",
+            "type": "gd_temp",
+            "title": "Feature Requirements Template",
+            "attributes": {"status": "valid", "tags": "requirements_engineering"},
+        },
+        {
+            "id": "std_req__aspice_swe1",
+            "type": "std_req",
+            "title": "SWE.1.BP1: Elicit requirements",
+            "attributes": {"status": "valid", "tags": "aspice40_swe1"},
+        },
     ],
     "edges": [
         # requirements → outputs Feature Requirements
         {"source": "wf__req_feat_req", "relation": "output", "target": "wp__feat_req"},
         # architecture inputs Feature Requirements, outputs Feature Architecture
         {"source": "wf__cr_mt_featarch", "relation": "input", "target": "wp__feat_req"},
-        {"source": "wf__cr_mt_featarch", "relation": "output", "target": "wp__feat_arch"},
+        {
+            "source": "wf__cr_mt_featarch",
+            "relation": "output",
+            "target": "wp__feat_arch",
+        },
         # verification inputs Feature Architecture
-        {"source": "wf__verification_feat_int_test", "relation": "input", "target": "wp__feat_arch"},
+        {
+            "source": "wf__verification_feat_int_test",
+            "relation": "input",
+            "target": "wp__feat_arch",
+        },
         # roles
-        {"source": "wf__req_feat_req", "relation": "responsible", "target": "rl__contributor"},
-        {"source": "wf__req_feat_req", "relation": "approved_by", "target": "rl__arch_community"},
-        {"source": "wf__req_feat_req", "relation": "supported_by", "target": "rl__safety_mgr"},
-        {"source": "wf__cr_mt_featarch", "relation": "responsible", "target": "rl__contributor"},
+        {
+            "source": "wf__req_feat_req",
+            "relation": "responsible",
+            "target": "rl__contributor",
+        },
+        {
+            "source": "wf__req_feat_req",
+            "relation": "approved_by",
+            "target": "rl__arch_community",
+        },
+        {
+            "source": "wf__req_feat_req",
+            "relation": "supported_by",
+            "target": "rl__safety_mgr",
+        },
+        {
+            "source": "wf__cr_mt_featarch",
+            "relation": "responsible",
+            "target": "rl__contributor",
+        },
         # contains
-        {"source": "wf__req_feat_req", "relation": "contains", "target": "gd_temp__feat_req"},
+        {
+            "source": "wf__req_feat_req",
+            "relation": "contains",
+            "target": "gd_temp__feat_req",
+        },
         # satisfies + complies chain
-        {"source": "gd_req__req_attr", "relation": "satisfies", "target": "wf__req_feat_req"},
-        {"source": "gd_req__req_attr", "relation": "complies", "target": "std_req__aspice_swe1"},
+        {
+            "source": "gd_req__req_attr",
+            "relation": "satisfies",
+            "target": "wf__req_feat_req",
+        },
+        {
+            "source": "gd_req__req_attr",
+            "relation": "complies",
+            "target": "std_req__aspice_swe1",
+        },
     ],
 }
 
@@ -805,9 +899,15 @@ class TestProcessGraphToFabro:
         pairs = wf.edge_pairs
         # arch (or its gate) → verification via Feature Architecture
         arch_out = next(
-            (n.id for n in wf.nodes
-             if ("approve" in n.id or n.id == "wf__cr_mt_featarch")
-             and any(e.source == n.id and e.target == "wf__verification_feat_int_test" for e in wf.edges)),
+            (
+                n.id
+                for n in wf.nodes
+                if ("approve" in n.id or n.id == "wf__cr_mt_featarch")
+                and any(
+                    e.source == n.id and e.target == "wf__verification_feat_int_test"
+                    for e in wf.edges
+                )
+            ),
             None,
         )
         assert arch_out is not None, (
@@ -820,7 +920,12 @@ class TestProcessGraphWithRealData:
 
     @pytest.fixture
     def real_process_graph(self) -> dict | None:
-        p = Path(__file__).resolve().parents[2] / "metamodel-flow" / "model" / "process_graph.json"
+        p = (
+            Path(__file__).resolve().parents[2]
+            / "metamodel-flow"
+            / "model"
+            / "process_graph.json"
+        )
         if p.exists():
             return json.loads(p.read_text(encoding="utf-8"))
         return None
@@ -846,7 +951,8 @@ class TestProcessGraphWithRealData:
             pytest.skip("process_graph.json not available")
         full = process_graph_to_fabro(real_process_graph)
         req_only = process_graph_to_fabro(
-            real_process_graph, workflow_filter="requirements_engineering",
+            real_process_graph,
+            workflow_filter="requirements_engineering",
         )
         assert len(req_only.nodes) < len(full.nodes)
 
@@ -858,7 +964,9 @@ class TestProcessGraphWithRealData:
             if node.shape == "box":
                 assert node.prompt, f"Workflow node {node.id} has no prompt"
 
-    def test_approval_gates_have_approvers(self, real_process_graph: dict | None) -> None:
+    def test_approval_gates_have_approvers(
+        self, real_process_graph: dict | None
+    ) -> None:
         if real_process_graph is None:
             pytest.skip("process_graph.json not available")
         wf = process_graph_to_fabro(real_process_graph)
@@ -907,12 +1015,18 @@ def test_sdlc_workflow_passes_fabro_validate(tmp_path: Path) -> None:
 @requires_fabro
 def test_requirements_workflow_passes_fabro_validate(tmp_path: Path) -> None:
     data = json.loads(
-        (Path(__file__).resolve().parents[2] / "metamodel-flow" / "model" / "process_graph.json")
-        .read_text(encoding="utf-8")
+        (
+            Path(__file__).resolve().parents[2]
+            / "metamodel-flow"
+            / "model"
+            / "process_graph.json"
+        ).read_text(encoding="utf-8")
     )
     path = tmp_path / "req.fabro"
     path.write_text(
-        fabro_to_dot(process_graph_to_fabro(data, workflow_filter="requirements_engineering")),
+        fabro_to_dot(
+            process_graph_to_fabro(data, workflow_filter="requirements_engineering")
+        ),
         encoding="utf-8",
     )
     result = _fabro_validate(path)

@@ -215,34 +215,40 @@ def graphify_to_fabro(
     nodes: list[FabroNode] = []
     edges: list[FabroEdge] = []
 
-    nodes.append(FabroNode(
-        id="start",
-        label="Start",
-        shape="Mdiamond",
-    ))
+    nodes.append(
+        FabroNode(
+            id="start",
+            label="Start",
+            shape="Mdiamond",
+        )
+    )
 
     node_id_map: dict[str, str] = {}
     for gn in graph.nodes:
         fid = _safe_id(gn.id)
         node_id_map[gn.id] = fid
         is_structural = gn.kind in ("module", "class")
-        nodes.append(FabroNode(
-            id=fid,
-            label=gn.name,
-            shape="box" if is_structural else "tab",
-            prompt=_build_node_prompt(gn, graph),
-            model=graph.metadata.get("model", ""),
-        ))
+        nodes.append(
+            FabroNode(
+                id=fid,
+                label=gn.name,
+                shape="box" if is_structural else "tab",
+                prompt=_build_node_prompt(gn, graph),
+                model=graph.metadata.get("model", ""),
+            )
+        )
 
     for ge in graph.edges:
         src = node_id_map.get(ge.source)
         tgt = node_id_map.get(ge.target)
         if src and tgt:
-            edges.append(FabroEdge(
-                source=src,
-                target=tgt,
-                label=ge.kind.capitalize(),
-            ))
+            edges.append(
+                FabroEdge(
+                    source=src,
+                    target=tgt,
+                    label=ge.kind.capitalize(),
+                )
+            )
 
     # Wire start → first node(s) and last node(s) → exit.
     fabro_ids = [n.id for n in nodes if n.id != "start"]
@@ -275,7 +281,9 @@ def _build_node_prompt(node: GraphifyNode, graph: GraphifyGraph) -> str:
     """Build a Fabro prompt describing a single graphify node."""
     lines: list[str] = [f"Analyze the {node.kind} **{node.name}**."]
     if node.path:
-        lines.append(f"File: `{node.path}`" + (f" line {node.line}" if node.line else ""))
+        lines.append(
+            f"File: `{node.path}`" + (f" line {node.line}" if node.line else "")
+        )
 
     incoming = [e for e in graph.edges if e.target == node.id]
     outgoing = [e for e in graph.edges if e.source == node.id]
@@ -331,12 +339,14 @@ def fabro_to_graphify(workflow: FabroWorkflow) -> GraphifyGraph:
             props["max_visits"] = fn.max_visits
         props.update(fn.attributes)
 
-        nodes.append(GraphifyNode(
-            id=fn.id,
-            name=fn.label or fn.id,
-            kind=kind,
-            properties=props,
-        ))
+        nodes.append(
+            GraphifyNode(
+                id=fn.id,
+                name=fn.label or fn.id,
+                kind=kind,
+                properties=props,
+            )
+        )
 
     for fe in workflow.edges:
         props: dict[str, Any] = {}
@@ -350,12 +360,14 @@ def fabro_to_graphify(workflow: FabroWorkflow) -> GraphifyGraph:
             props["fidelity"] = fe.fidelity
         props.update(fe.attributes)
 
-        edges.append(GraphifyEdge(
-            source=fe.source,
-            target=fe.target,
-            kind=fe.label or "references",
-            properties=props,
-        ))
+        edges.append(
+            GraphifyEdge(
+                source=fe.source,
+                target=fe.target,
+                kind=fe.label or "references",
+                properties=props,
+            )
+        )
 
     return GraphifyGraph(
         nodes=nodes,
@@ -395,11 +407,10 @@ def sdlc_to_fabro(
     The workflow includes a human review gate and a loopback loop for
     specification gaps discovered during implementation.
     """
-    goal = (
-        f"Complete SDLC lifecycle for {issue_id}"
-        + (f": {requirement}" if requirement else "")
+    goal = f"Complete SDLC lifecycle for {issue_id}" + (
+        f": {requirement}" if requirement else ""
     )
-    model_line = f'model: {model};' if model else ''
+    model_line = f"model: {model};" if model else ""
 
     nodes: list[FabroNode] = [
         FabroNode(id="start", label="Start", shape="Mdiamond"),
@@ -489,10 +500,10 @@ def sdlc_to_fabro(
             label="Record Evidence",
             shape="box",
             prompt=(
-                f"For each completed task, call record_implementation_evidence "
-                f"with the task filename, requirement IDs, changed source files, "
-                f"test commands, test statuses, and task status. "
-                f"Do not mark tasks as completed if tests fail."
+                "For each completed task, call record_implementation_evidence "
+                "with the task filename, requirement IDs, changed source files, "
+                "test commands, test statuses, and task status. "
+                "Do not mark tasks as completed if tests fail."
             ),
         ),
         # Step 6: Assess progress
@@ -698,15 +709,14 @@ def process_graph_to_fabro(
         or ID prefix like ``"req"``) to include only workflows from
         that domain.  Empty string includes all 79 workflows.
     """
-    node_map: dict[str, dict[str, Any]] = {
-        n["id"]: n for n in data.get("nodes", [])
-    }
+    node_map: dict[str, dict[str, Any]] = {n["id"]: n for n in data.get("nodes", [])}
     all_wf_nodes = [n for n in data["nodes"] if n["type"] == "workflow"]
 
     # Apply filter by tag domain or by ID prefix.
     if workflow_filter:
         wf_nodes = [
-            n for n in all_wf_nodes
+            n
+            for n in all_wf_nodes
             if (
                 workflow_filter in n.get("attributes", {}).get("tags", "")
                 or n["id"].split("__", 1)[-1].startswith(workflow_filter)
@@ -767,9 +777,7 @@ def process_graph_to_fabro(
             shared = outputs_a & inputs_b
             if shared:
                 wp_names = [
-                    node_map[wp]["title"]
-                    for wp in sorted(shared)[:4]
-                    if wp in node_map
+                    node_map[wp]["title"] for wp in sorted(shared)[:4] if wp in node_map
                 ]
                 seq_edges.append((wf_a, wf_b, wp_names))
 
@@ -797,9 +805,21 @@ def process_graph_to_fabro(
             names = sorted(node_map[o]["title"] for o in outputs if o in node_map)
             prompt_parts.append(f"Output work products: {', '.join(names[:10])}")
         if contains:
-            guidl = sorted(node_map[c]["title"] for c in contains if c in node_map and node_map[c]["type"] == "gd_guidl")
-            temps = sorted(node_map[c]["title"] for c in contains if c in node_map and node_map[c]["type"] == "gd_temp")
-            chklst = sorted(node_map[c]["title"] for c in contains if c in node_map and node_map[c]["type"] == "gd_chklst")
+            guidl = sorted(
+                node_map[c]["title"]
+                for c in contains
+                if c in node_map and node_map[c]["type"] == "gd_guidl"
+            )
+            temps = sorted(
+                node_map[c]["title"]
+                for c in contains
+                if c in node_map and node_map[c]["type"] == "gd_temp"
+            )
+            chklst = sorted(
+                node_map[c]["title"]
+                for c in contains
+                if c in node_map and node_map[c]["type"] == "gd_chklst"
+            )
             if guidl:
                 prompt_parts.append(f"Guidelines: {', '.join(guidl[:6])}")
             if temps:
@@ -807,35 +827,45 @@ def process_graph_to_fabro(
             if chklst:
                 prompt_parts.append(f"Checklists: {', '.join(chklst[:6])}")
         if roles.get("responsible"):
-            prompt_parts.append(f"Responsible: {', '.join(sorted(roles['responsible']))}")
+            prompt_parts.append(
+                f"Responsible: {', '.join(sorted(roles['responsible']))}"
+            )
         if roles.get("supported_by"):
-            prompt_parts.append(f"Supported by: {', '.join(sorted(roles['supported_by']))}")
+            prompt_parts.append(
+                f"Supported by: {', '.join(sorted(roles['supported_by']))}"
+            )
         if compliance:
             std_sample = sorted(compliance)[:6]
             prompt_parts.append(f"Complies with: {', '.join(std_sample)}")
 
-        fabro_nodes.append(FabroNode(
-            id=fid,
-            label=wf["title"][:50],
-            shape="box",
-            prompt="\\n".join(prompt_parts),
-        ))
+        fabro_nodes.append(
+            FabroNode(
+                id=fid,
+                label=wf["title"][:50],
+                shape="box",
+                prompt="\\n".join(prompt_parts),
+            )
+        )
 
         approvers = roles.get("approved_by", set())
         if approvers:
             gate_id = f"{fid}__approve"
             approval_gates[wf["id"]] = gate_id
-            fabro_nodes.append(FabroNode(
-                id=gate_id,
-                label=f"Approve: {wf['title'][:30]}",
-                shape="hexagon",
-            ))
+            fabro_nodes.append(
+                FabroNode(
+                    id=gate_id,
+                    label=f"Approve: {wf['title'][:30]}",
+                    shape="hexagon",
+                )
+            )
 
-    fabro_nodes.append(FabroNode(
-        id="select_activity",
-        label="Select process activity",
-        shape="hexagon",
-    ))
+    fabro_nodes.append(
+        FabroNode(
+            id="select_activity",
+            label="Select process activity",
+            shape="hexagon",
+        )
+    )
     fabro_nodes.append(FabroNode(id="exit", label="Exit", shape="Msquare"))
 
     # --- Build Fabro edges ---
@@ -850,29 +880,35 @@ def process_graph_to_fabro(
         fid = _safe_id(wf_id)
         approvers = wf_roles.get(wf_id, {}).get("approved_by", set())
         fabro_edges.append(FabroEdge(source=fid, target=gate_id))
-        fabro_edges.append(FabroEdge(
-            source=gate_id,
-            target=fid,
-            label=f"[R] Revise ({', '.join(sorted(approvers)[:2])})",
-        ))
+        fabro_edges.append(
+            FabroEdge(
+                source=gate_id,
+                target=fid,
+                label=f"[R] Revise ({', '.join(sorted(approvers)[:2])})",
+            )
+        )
 
     for wf_a, wf_b, wp_names in seq_edges:
         src = _out_id(wf_a)
         tgt = _safe_id(wf_b)
         if src in all_ids and tgt in all_ids:
-            fabro_edges.append(FabroEdge(
-                source=src,
-                target=tgt,
-                label=", ".join(wp_names)[:60],
-            ))
+            fabro_edges.append(
+                FabroEdge(
+                    source=src,
+                    target=tgt,
+                    label=", ".join(wp_names)[:60],
+                )
+            )
 
     fabro_edges.append(FabroEdge(source="start", target="select_activity"))
     for wf in wf_nodes:
-        fabro_edges.append(FabroEdge(
-            source="select_activity",
-            target=_safe_id(wf["id"]),
-            label=wf["title"][:50],
-        ))
+        fabro_edges.append(
+            FabroEdge(
+                source="select_activity",
+                target=_safe_id(wf["id"]),
+                label=wf["title"][:50],
+            )
+        )
 
     all_sources = {e.source for e in fabro_edges}
     for wf in wf_nodes:
@@ -882,15 +918,16 @@ def process_graph_to_fabro(
 
     for wf_id, gate_id in approval_gates.items():
         gate_has_seq = any(
-            e.source == gate_id and e.target != _safe_id(wf_id)
-            for e in fabro_edges
+            e.source == gate_id and e.target != _safe_id(wf_id) for e in fabro_edges
         )
         if not gate_has_seq:
-            fabro_edges.append(FabroEdge(
-                source=gate_id,
-                target="exit",
-                label="[A] Approved",
-            ))
+            fabro_edges.append(
+                FabroEdge(
+                    source=gate_id,
+                    target="exit",
+                    label="[A] Approved",
+                )
+            )
 
     domain_label = ""
     if workflow_filter and workflow_filter in _PROCESS_DOMAINS:
@@ -898,7 +935,9 @@ def process_graph_to_fabro(
     elif workflow_filter:
         domain_label = workflow_filter
 
-    wf_name = f"Process_{_safe_id(domain_label)}" if domain_label else "ProcessWorkflows"
+    wf_name = (
+        f"Process_{_safe_id(domain_label)}" if domain_label else "ProcessWorkflows"
+    )
     goal = (
         f"S-CORE ISO 26262 process: {domain_label}"
         if domain_label
@@ -1117,10 +1156,15 @@ def dot_to_fabro_workflow(dot_text: str) -> FabroWorkflow:
             last = parts[-1]
             bracket = _find_top_level_bracket(last)
             if bracket is not None:
-                edge_attrs_str = last[bracket + 1 : -1].strip() if last.endswith("]") else ""
+                edge_attrs_str = (
+                    last[bracket + 1 : -1].strip() if last.endswith("]") else ""
+                )
                 parts[-1] = last[:bracket].strip()
 
-            parsed_edge_attrs = {**edge_defaults, **_parse_dot_attributes(edge_attrs_str)}
+            parsed_edge_attrs = {
+                **edge_defaults,
+                **_parse_dot_attributes(edge_attrs_str),
+            }
             for i in range(len(parts) - 1):
                 src = parts[i].strip()
                 tgt = parts[i + 1].strip()
@@ -1243,9 +1287,7 @@ def _attrs_to_fabro_node(node_id: str, attrs: dict[str, str]) -> FabroNode:
     )
 
 
-def _attrs_to_fabro_edge(
-    source: str, target: str, attrs: dict[str, str]
-) -> FabroEdge:
+def _attrs_to_fabro_edge(source: str, target: str, attrs: dict[str, str]) -> FabroEdge:
     """Build a FabroEdge from parsed DOT attributes."""
     return FabroEdge(
         source=source,
@@ -1255,7 +1297,8 @@ def _attrs_to_fabro_edge(
         weight=int(attrs.get("weight", "0")),
         fidelity=attrs.get("fidelity", ""),
         attributes={
-            k: v for k, v in attrs.items()
+            k: v
+            for k, v in attrs.items()
             if k not in ("label", "condition", "weight", "fidelity")
         },
     )
@@ -1395,7 +1438,10 @@ def convert_sdlc_to_fabro_dot(
 ) -> str:
     """Generate a Fabro DOT workflow for the SDLC lifecycle."""
     workflow = sdlc_to_fabro(
-        issue_id, requirement, model=model, stage_dir=stage_dir,
+        issue_id,
+        requirement,
+        model=model,
+        stage_dir=stage_dir,
     )
     return fabro_to_dot(workflow)
 
@@ -1410,7 +1456,9 @@ def main() -> int:
     import argparse
 
     parser = argparse.ArgumentParser(
-        description="Convert between Graphify code graphs, Fabro workflows, and SDLC stages."
+        description=(
+            "Convert between Graphify code graphs, Fabro workflows, and SDLC stages."
+        )
     )
     sub = parser.add_subparsers(dest="command")
 
@@ -1430,9 +1478,7 @@ def main() -> int:
     p_to_graph.add_argument("-o", "--output", help="Output file (default: stdout)")
 
     # sdlc → fabro
-    p_sdlc = sub.add_parser(
-        "sdlc", help="Generate SDLC lifecycle Fabro workflow"
-    )
+    p_sdlc = sub.add_parser("sdlc", help="Generate SDLC lifecycle Fabro workflow")
     p_sdlc.add_argument("issue_id", help="Issue identifier (e.g. ISSUE-42)")
     p_sdlc.add_argument("--requirement", default="", help="Requirement text")
     p_sdlc.add_argument("--model", default="", help="LLM model identifier")
@@ -1445,7 +1491,9 @@ def main() -> int:
     )
     p_proc.add_argument("input", help="Path to process_graph.json")
     p_proc.add_argument(
-        "--filter", default="", dest="workflow_filter",
+        "--filter",
+        default="",
+        dest="workflow_filter",
         help="Domain tag or ID prefix filter (e.g. requirements_engineering)",
     )
     p_proc.add_argument("-o", "--output", help="Output file (default: stdout)")

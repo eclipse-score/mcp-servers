@@ -1,0 +1,14 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright (c) 2026 Contributors to the Eclipse Foundation
+//
+// Minimal Fabro workflow to verify the local LM Studio setup before running
+// the SDLC lifecycle. See packages/sdlc-harness/README.md ("Local Fabro MVP").
+digraph LocalSmoke {
+    graph [goal="Verify that the local model answers through Fabro"]
+
+    start [shape=Mdiamond, label="Start"]
+    say   [label="Say hello", shape=tab, prompt="Reply with exactly: HELLO FROM LM STUDIO"]
+    exit  [shape=Msquare, label="Exit"]
+
+    start -> say -> exit
+}
