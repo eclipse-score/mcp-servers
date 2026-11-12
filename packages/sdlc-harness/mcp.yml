@@ -15,6 +15,13 @@ name: sdlc-harness
 version: 0.2.8
 description: MCP server for SDLC lifecycle management and implementation progress reporting
 entry_point: serve
+# Fabro is not vendored: the runtime is a separate Rust binary. Install it via
+# the apm-setup MCP tool setup_fabro. Unpinned: s-core_sw_fabric has not selected
+# a runtime (upstream.lock.yaml fabro status: unresolved).
+external_dependency:
+  tool: fabro
+  install: brew install fabro-sh/tap/fabro-nightly
+  docs: https://docs.fabro.sh
 tools:
   - name: record_implementation_evidence
     description: Link a task to requirement IDs, source files, and real test results.

@@ -42,8 +42,17 @@ tools:
           type: string
           description: Repository path, defaulting to the current project
       required: []
+  - name: setup_fabro
+    description: Check the Fabro CLI used to run generated SDLC workflows; install_fabro installs the nightly build via Homebrew when missing
+    input_schema:
+      type: object
+      properties:
+        install_fabro:
+          type: boolean
+          default: false
+      required: []
   - name: verify_setup
-    description: Check graphify and local working-memory setup status
+    description: Check graphify, Fabro, and local working-memory setup status
     input_schema:
       type: object
       properties:
