@@ -455,6 +455,45 @@ Results on the verified setup:
 9. **The SDLC lifecycle cannot produce artifacts yet.** Its agent nodes are instructed to call the sdlc-harness MCP tools (`bootstrap_sdlc_issue`, `assess_sdlc_issue`, and others). The runs have no MCP servers configured, so those calls cannot happen. A real run would walk the graph without writing `.stage/` artifacts. Wiring the tools through `[run.agent.mcps]` is the next step.
 10. **Fabro version.** The nightly channel is the newest published build and it is unpinned. Stable `v0.254.0` is older and lacks workflow-version registration, which the `s-core_sw_fabric` runtime contract depends on. Pin a specific build once a runtime is chosen.
 
+### Review Watcher Prototype
+
+`workflows/review-watch.fabro` is the in-run GitHub review gate. It polls a pull request and continues only when a reviewer other than the author approves the current head commit. Approval comes from GitHub, not from a local command.
+
+```bash
+fabro run workflows/review-watch.fabro -I repo=OWNER/REPO -I pr=NUMBER \
+  --environment local --auto-approve
+```
+
+Routing:
+
+- `approved` goes to `record_approved` and then exit.
+- `pending` and any unrecognised routing go through a 5-minute wait back to the check. Unrecognised routing is treated as pending, so it can never approve.
+- `changes_requested` goes to a human gate. The gate shows the PR as `review_target`. `[A]` lets the agent address the feedback, `[S]` stops.
+- A failed check (`gh` error) goes to exit. The goal gate then fails the run.
+
+The check node is a single `gh api` script. It reads the REST reviews endpoint, not `latestReviews` from GraphQL, because the REST `commit_id` is the reviewed commit. The rule:
+
+- Ignore the author's own reviews.
+- Use each reviewer's latest approval or change request.
+- Any outstanding change request blocks approval.
+- An approval counts only on the current head commit.
+
+Verified:
+
+- Live approved run against PR #74 (approved on its head): `SUCCEEDED`.
+- Live pending run against PR #78 (no reviews): the check, wait and re-check loop ran, then the run failed closed when the visit budget ran out (`node 1 exceeded its firing budget`).
+- The check script is tested by `tests/test_review_watch.py`. That file runs the exact script from the DOT file against a fake `gh` and fixture reviews. It covers approval by the author, approval on an older commit, comments only, changes requested, a later approval after a request, and a request from a second reviewer.
+
+Findings:
+
+1. **`latestReviews` is unreliable for approvals.** The approval on PR #74 had an empty `commit.oid`. The REST endpoint reports the reviewed commit in `commit_id`.
+2. **`gh api --paginate --slurp` does not work with `--jq`.** The script uses `per_page=100` instead, so only the first 100 reviews are read.
+3. **`jq` 1.7 rejects `+` inside an object value without parentheses.** `gh`'s built-in jq accepts it, so the bug only shows up in local tests. The script uses parentheses.
+4. **A live `gh` call works inside a Fabro worker with the local environment,** so the worker doesn't need a token passed in.
+5. **Live tests can't cover changes requested or approval by someone else.** The only logged-in account here is the PR author, so those paths are tested with fixtures only.
+6. **The 5-minute wait is not tested for stall timeouts yet.** The 24-hour cap comes from `max_visits=288`. Whether a long wait trips `stall_timeout` is still open.
+7. **`fabro validate` warns about unbound inputs** (`repo`, `pr`). That is expected because inputs are bound at run time. `fabro preflight -I` returned no detail in this setup.
+
 ### Not Yet Done
 
 - Expose the sdlc-harness MCP tools to workflow agents.
