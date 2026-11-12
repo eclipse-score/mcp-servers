@@ -86,25 +86,38 @@ jobs:
           echo "CONSUMER_WORKSPACE=${workspace}" >> "$GITHUB_ENV"
           mkdir -p "$workspace/.devcontainer/features"
           cp -R features/src/agent-context "$workspace/.devcontainer/features/"
-          cp features/test/agent-context/test.sh "$workspace/test.sh"
+          cp features/test/agent-context/test.sh \
+            features/test/agent-context/test_apm_setup.sh \
+            features/test/agent-context/test_container_setup.sh \
+            features/test/agent-context/seed_mcp_config.sh "$workspace/"
           node - "$workspace" <<'JS'
           const fs = require('fs');
           const path = require('path');
+          const workspace = process.argv[2];
           const config = {
             image: 'mcr.microsoft.com/devcontainers/javascript-node:4-24',
             remoteUser: 'node',
             features: { './features/agent-context': {} },
-            postCreateCommand: 'touch "$HOME/.claude.json" && python3 /usr/local/share/agent-context/register_mcp.py',
+            containerEnv: {
+              AGENT_CONTEXT_APM_PACKAGE_ROOT: '/tmp/agent-context-apm-packages',
+              VSCODE_AGENT_FOLDER: '/home/node/.vscode-server',
+            },
+            onCreateCommand: 'bash seed_mcp_config.sh',
           };
-          fs.writeFileSync(path.join(process.argv[2], '.devcontainer/devcontainer.json'), JSON.stringify(config));
+          fs.writeFileSync(
+            path.join(workspace, '.devcontainer/devcontainer.json'),
+            JSON.stringify(config),
+          );
           JS
-          devcontainer up --workspace-folder "$workspace"
+          devcontainer up --workspace-folder "$workspace" \
+            --update-remote-user-uid-default never \
+            --mount "type=bind,source=${GITHUB_WORKSPACE}/packages,target=/tmp/agent-context-apm-packages"
 
       - name: Verify installed server and registration as remote user
         run: |
           devcontainer exec --workspace-folder "$CONSUMER_WORKSPACE" bash test.sh
-          devcontainer exec --workspace-folder "$CONSUMER_WORKSPACE" \
-            bash -euc 'uv --version; python3 -c '\''import json, os; from pathlib import Path; config = json.loads((Path.home() / ".claude.json").read_text()); command = config["mcpServers"]["score-codegraph"]["command"]; assert os.access(command, os.X_OK), command'\'''
+          devcontainer exec --workspace-folder "$CONSUMER_WORKSPACE" bash test_container_setup.sh
+          devcontainer exec --workspace-folder "$CONSUMER_WORKSPACE" bash test_apm_setup.sh
       - name: Remove consumer container
         if: always()
         run: |

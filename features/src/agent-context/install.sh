@@ -14,6 +14,7 @@
 set -euo pipefail
 
 SOURCE=git+https://github.com/eclipse-score/mcp-servers@8dd8093f36581024f2332c5920a5961aa8448bc4#subdirectory=packages/graphify-codegraph # v0.2.8
+APM_VERSION=0.35.0
 SHARE=/usr/local/share/agent-context
 
 if ! command -v python3 >/dev/null 2>&1 || \
@@ -38,8 +39,14 @@ fi
 
 install -d -m 0755 "${SHARE}"
 install -m 0644 "$(dirname "$0")/register_mcp.py" "${SHARE}/register_mcp.py"
+install -m 0644 "$(dirname "$0")/setup_apm.sh" "${SHARE}/setup_apm.sh"
 UV_TOOL_DIR="${SHARE}/tools" \
 UV_TOOL_BIN_DIR=/usr/local/bin \
 UV_PYTHON_INSTALL_DIR="${SHARE}/python" \
     "${UV}" tool install --python 3.12 --force \
         --with-executables-from graphifyy "${SOURCE}"
+UV_TOOL_DIR="${SHARE}/tools" \
+UV_TOOL_BIN_DIR=/usr/local/bin \
+UV_PYTHON_INSTALL_DIR="${SHARE}/python" \
+    "${UV}" tool install --python 3.12 --force \
+        "apm-cli==${APM_VERSION}"

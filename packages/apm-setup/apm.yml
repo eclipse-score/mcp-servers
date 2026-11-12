@@ -16,6 +16,7 @@ version: 0.2.8
 description: Local setup MCP server for Eclipse S-CORE APM packages
 license: Apache-2.0
 targets:
+  - agent-skills
   - copilot
   - claude
   - cursor

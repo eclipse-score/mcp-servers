@@ -42,7 +42,7 @@ def test_registers_installed_agents(tmp_path: Path) -> None:
     command = str(tmp_path / ".local/bin/graphify-codegraph")
     assert claude["mcpServers"]["score-codegraph"]["command"] == command
     opencode = json.loads((tmp_path / ".config/opencode/opencode.json").read_text())
-    assert opencode["mcp"]["score-codegraph"]["command"] == [command]
+    assert opencode["mcp"]["servers"]["score-codegraph"]["command"] == [command]
     assert not (tmp_path / ".copilot").exists()
 
 
