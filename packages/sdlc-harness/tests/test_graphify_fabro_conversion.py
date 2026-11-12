@@ -5,6 +5,8 @@
 from __future__ import annotations
 
 import json
+import shutil
+import subprocess
 from pathlib import Path
 
 import pytest
@@ -861,7 +863,7 @@ class TestProcessGraphWithRealData:
             pytest.skip("process_graph.json not available")
         wf = process_graph_to_fabro(real_process_graph)
         for node in wf.nodes:
-            if node.shape == "hexagon":
+            if node.id.endswith("__approve"):
                 assert "Approve" in node.label, f"Gate {node.id} missing Approve label"
 
     def test_graphify_adapter(self, real_process_graph: dict | None) -> None:
@@ -872,3 +874,46 @@ class TestProcessGraphWithRealData:
         assert len(g.edges) == 2999
         wf_nodes = [n for n in g.nodes if n.kind == "workflow"]
         assert len(wf_nodes) == 79
+
+
+# ---------------------------------------------------------------------------
+# Native Fabro validation (runs only when the fabro CLI is on PATH)
+# ---------------------------------------------------------------------------
+
+requires_fabro = pytest.mark.skipif(
+    shutil.which("fabro") is None, reason="fabro CLI not installed"
+)
+
+
+def _fabro_validate(path: Path) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(
+        ["fabro", "validate", str(path)],
+        capture_output=True,
+        text=True,
+        check=False,
+        timeout=120,
+    )
+
+
+@requires_fabro
+def test_sdlc_workflow_passes_fabro_validate(tmp_path: Path) -> None:
+    path = tmp_path / "sdlc.fabro"
+    path.write_text(convert_sdlc_to_fabro_dot("ISSUE-42", "Add auth"), encoding="utf-8")
+    result = _fabro_validate(path)
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "warning:" not in result.stdout + result.stderr
+
+
+@requires_fabro
+def test_requirements_workflow_passes_fabro_validate(tmp_path: Path) -> None:
+    data = json.loads(
+        (Path(__file__).resolve().parents[2] / "metamodel-flow" / "model" / "process_graph.json")
+        .read_text(encoding="utf-8")
+    )
+    path = tmp_path / "req.fabro"
+    path.write_text(
+        fabro_to_dot(process_graph_to_fabro(data, workflow_filter="requirements_engineering")),
+        encoding="utf-8",
+    )
+    result = _fabro_validate(path)
+    assert result.returncode == 0, result.stdout + result.stderr

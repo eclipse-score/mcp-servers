@@ -10,7 +10,7 @@ Central setup MCP package for the Eclipse S-CORE APM package tree.
 - `verify_setup(repo_path)` checks local setup state, including whether the Fabro CLI is on `PATH` and its `--version` output.
 - `setup_graphify(repo_path)` installs Graphify when requested and generates the code graph.
 - `setup_context_discipline(repo_path)` creates local working-memory storage.
-- `setup_fabro(install_fabro=false)` checks the Fabro CLI used to run generated SDLC workflows. With `install_fabro=true` it runs `brew install fabro-sh/tap/fabro-nightly` when Fabro is missing and Homebrew is available. It never pipes a remote install script. The nightly build is unpinned: `s-core_sw_fabric` has not selected a Fabro runtime (its `upstream.lock.yaml` marks Fabro as unresolved).
+- `setup_fabro(install_fabro=false)` checks the Fabro CLI used to run generated SDLC workflows. With `install_fabro=true` it runs `brew tap fabro-sh/tap`, `brew trust --formula fabro-sh/tap/fabro-nightly`, and `brew install fabro-sh/tap/fabro-nightly` when Fabro is missing and Homebrew is available. The trust step is scoped to that single formula. It never pipes a remote install script. The nightly channel is the newest published build and is unpinned: `s-core_sw_fabric` has not selected a Fabro runtime (its `upstream.lock.yaml` marks Fabro as unresolved), and its stable v0.254.0 is older.
 
 Setup remains enabled through MCP tools and is keyed by the consumer repository.
 Graphs are generated in `$XDG_DATA_HOME/score-agent/<repo>-<path-hash>/`, falling back to `~/.local/share/score-agent/`.

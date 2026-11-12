@@ -74,9 +74,10 @@ def test_install_fabro_uses_documented_homebrew_command(
     commands: list[list[str]] = []
 
     def run(command: list[str], **kwargs: Any) -> subprocess.CompletedProcess[str]:
-        if command[:2] == ["brew", "install"]:
+        if command[0] == "brew":
             commands.append(command)
-            installed["done"] = True
+            if command[1] == "install":
+                installed["done"] = True
             return subprocess.CompletedProcess(command, 0)
         assert command == ["/opt/homebrew/bin/fabro", "--version"]
         return subprocess.CompletedProcess(command, 0, stdout="fabro 0.0.0-test\n")
@@ -85,7 +86,11 @@ def test_install_fabro_uses_documented_homebrew_command(
     monkeypatch.setattr(setup_module.subprocess, "run", run)
     result = setup_module.setup_fabro({"install_fabro": True})
 
-    assert commands == [["brew", "install", "fabro-sh/tap/fabro-nightly"]]
+    assert commands == [
+        ["brew", "tap", "fabro-sh/tap"],
+        ["brew", "trust", "--formula", "fabro-sh/tap/fabro-nightly"],
+        ["brew", "install", "fabro-sh/tap/fabro-nightly"],
+    ]
     assert result["ok"] is True
     assert result["installed_now"] is True
 

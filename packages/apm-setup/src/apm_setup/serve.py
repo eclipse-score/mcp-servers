@@ -163,7 +163,12 @@ def setup_context_discipline(arguments: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-FABRO_INSTALL_COMMAND = ["brew", "install", "fabro-sh/tap/fabro-nightly"]
+FABRO_FORMULA = "fabro-sh/tap/fabro-nightly"
+FABRO_INSTALL_COMMANDS = [
+    ["brew", "tap", "fabro-sh/tap"],
+    ["brew", "trust", "--formula", FABRO_FORMULA],
+    ["brew", "install", FABRO_FORMULA],
+]
 
 
 def fabro_status() -> dict[str, Any]:
@@ -202,12 +207,14 @@ def setup_fabro(arguments: dict[str, Any]) -> dict[str, Any]:
                 "Homebrew is required for install_fabro; install Fabro manually "
                 "from https://docs.fabro.sh/getting-started/quick-start"
             )
-        subprocess.run(FABRO_INSTALL_COMMAND, check=True, stdin=subprocess.DEVNULL)
+        for command in FABRO_INSTALL_COMMANDS:
+            subprocess.run(command, check=True, stdin=subprocess.DEVNULL)
         status = fabro_status()
         installed_now = True
     note = (
-        "Nightly build from Homebrew with no version pin; s-core_sw_fabric has not "
-        "selected a Fabro runtime (upstream.lock.yaml: fabro unresolved)."
+        "Newest published Fabro build (nightly channel), no version pin. Stable "
+        "v0.254.0 is older; s-core_sw_fabric has not selected a runtime "
+        "(upstream.lock.yaml: fabro unresolved)."
     )
     if not status["fabro_installed"]:
         return {

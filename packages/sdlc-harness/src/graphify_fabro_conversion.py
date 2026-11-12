@@ -428,6 +428,7 @@ def sdlc_to_fabro(
             ),
             fidelity="full",
             thread_id="sdlc",
+            max_visits=5,
         ),
         # Step 3: Assess (gate)
         FabroNode(
@@ -440,12 +441,15 @@ def sdlc_to_fabro(
                 f"analysis, and missing repository evidence sections."
             ),
             goal_gate=True,
+            max_visits=5,
+            attributes={"retry_target": "fill_drafts"},
         ),
         # Assessment gate
         FabroNode(
             id="assess_gate",
             label="All findings resolved?",
             shape="diamond",
+            max_visits=5,
         ),
         # Step 4: Implement
         FabroNode(
@@ -467,6 +471,7 @@ def sdlc_to_fabro(
             id="loopback_gate",
             label="Specification gap?",
             shape="diamond",
+            max_visits=5,
         ),
         FabroNode(
             id="record_loopback",
@@ -510,6 +515,7 @@ def sdlc_to_fabro(
                 f"'review' stage. Verify all prerequisites are met."
             ),
             goal_gate=True,
+            attributes={"retry_target": "implement"},
         ),
         # Human review gate
         FabroNode(
@@ -567,6 +573,7 @@ def sdlc_to_fabro(
     graph_attrs: dict[str, Any] = {
         "goal": goal,
         "rankdir": "TB",
+        "max_node_visits": 5,
     }
     if model:
         graph_attrs["model_stylesheet"] = f"* {{ {model_line} }}"
@@ -822,9 +829,13 @@ def process_graph_to_fabro(
                 id=gate_id,
                 label=f"Approve: {wf['title'][:30]}",
                 shape="hexagon",
-                attributes={"approvers": ", ".join(sorted(approvers))},
             ))
 
+    fabro_nodes.append(FabroNode(
+        id="select_activity",
+        label="Select process activity",
+        shape="hexagon",
+    ))
     fabro_nodes.append(FabroNode(id="exit", label="Exit", shape="Msquare"))
 
     # --- Build Fabro edges ---
@@ -855,11 +866,13 @@ def process_graph_to_fabro(
                 label=", ".join(wp_names)[:60],
             ))
 
-    incoming_targets = {_safe_id(b) for _, b, _ in seq_edges}
+    fabro_edges.append(FabroEdge(source="start", target="select_activity"))
     for wf in wf_nodes:
-        fid = _safe_id(wf["id"])
-        if fid not in incoming_targets:
-            fabro_edges.append(FabroEdge(source="start", target=fid))
+        fabro_edges.append(FabroEdge(
+            source="select_activity",
+            target=_safe_id(wf["id"]),
+            label=wf["title"][:50],
+        ))
 
     all_sources = {e.source for e in fabro_edges}
     for wf in wf_nodes:
@@ -899,6 +912,7 @@ def process_graph_to_fabro(
         graph_attributes={
             "goal": goal,
             "rankdir": "TB",
+            "max_node_visits": 5,
         },
     )
 

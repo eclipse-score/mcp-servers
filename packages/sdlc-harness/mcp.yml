@@ -20,7 +20,7 @@ entry_point: serve
 # a runtime (upstream.lock.yaml fabro status: unresolved).
 external_dependency:
   tool: fabro
-  install: brew install fabro-sh/tap/fabro-nightly
+  install: brew tap fabro-sh/tap && brew trust --formula fabro-sh/tap/fabro-nightly && brew install fabro-sh/tap/fabro-nightly
   docs: https://docs.fabro.sh
 tools:
   - name: record_implementation_evidence
