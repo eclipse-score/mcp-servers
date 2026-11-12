@@ -122,3 +122,43 @@ tools:
         stage_dir:
           type: string
       required: [issue_id, stage]
+  - name: generate_sdlc_workflow
+    description: >-
+      Generate a Fabro .fabro workflow encoding the full SDLC lifecycle for
+      an issue (bootstrap, drafts, assess, implement, evidence, review).
+    input_schema:
+      type: object
+      properties:
+        issue_id:
+          type: string
+        requirement:
+          type: string
+        model:
+          type: string
+        stage_dir:
+          type: string
+          default: .stage
+      required: [issue_id]
+  - name: graphify_to_fabro_workflow
+    description: >-
+      Convert a Graphify graph.json code graph into a Fabro workflow DOT
+      file where code elements become analysis nodes.
+    input_schema:
+      type: object
+      properties:
+        graph_path:
+          type: string
+        workflow_name:
+          type: string
+          default: CodeAnalysis
+      required: [graph_path]
+  - name: fabro_to_graphify_graph
+    description: >-
+      Convert a Fabro workflow DOT string into a Graphify graph.json
+      representation for graph queries.
+    input_schema:
+      type: object
+      properties:
+        dot_text:
+          type: string
+      required: [dot_text]
