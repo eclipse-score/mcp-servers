@@ -21,11 +21,14 @@ from graphify_fabro_conversion import (
     _safe_id,
     convert_fabro_dot_to_graphify,
     convert_graphify_to_fabro_dot,
+    convert_process_graph_to_fabro_dot,
     convert_sdlc_to_fabro_dot,
     dot_to_fabro_workflow,
     fabro_to_dot,
     fabro_to_graphify,
     graphify_to_fabro,
+    process_graph_to_fabro,
+    process_graph_to_graphify,
     sdlc_to_fabro,
 )
 
@@ -630,3 +633,242 @@ class TestEdgeCases:
         """Every Fabro shape maps to a known handler."""
         for shape, handler in FABRO_SHAPE_HANDLER.items():
             assert handler, f"Shape {shape} has no handler"
+
+
+# ---------------------------------------------------------------------------
+# Process graph → Fabro / Graphify conversion
+# ---------------------------------------------------------------------------
+
+# Minimal process_graph.json fixture with ISO 26262 semantics.
+_PROCESS_GRAPH_FIXTURE: dict = {
+    "schema_version": 1,
+    "source": {
+        "repo": "eclipse-score/process_description",
+        "commit": "abc123",
+        "digest": "sha256:deadbeef",
+    },
+    "nodes": [
+        {"id": "wf__req_feat_req", "type": "workflow",
+         "title": "Create/Maintain Feature requirements",
+         "attributes": {"status": "valid", "tags": "requirements_engineering"}},
+        {"id": "wf__cr_mt_featarch", "type": "workflow",
+         "title": "Create/Maintain Feature architecture",
+         "attributes": {"status": "valid", "tags": "architecture_design"}},
+        {"id": "wf__verification_feat_int_test", "type": "workflow",
+         "title": "Create/Maintain Feature Integration Test",
+         "attributes": {"status": "valid", "tags": "verification"}},
+        {"id": "wp__feat_req", "type": "workproduct",
+         "title": "Feature Requirements",
+         "attributes": {"status": "valid", "tags": "requirements_engineering"}},
+        {"id": "wp__feat_arch", "type": "workproduct",
+         "title": "Feature Architecture",
+         "attributes": {"status": "valid", "tags": "architecture_design"}},
+        {"id": "rl__contributor", "type": "role",
+         "title": "Contributor",
+         "attributes": {"status": "valid", "tags": "development"}},
+        {"id": "rl__arch_community", "type": "role",
+         "title": "Architecture Community Member",
+         "attributes": {"status": "valid", "tags": "architecture_design"}},
+        {"id": "rl__safety_mgr", "type": "role",
+         "title": "Safety Manager",
+         "attributes": {"status": "valid", "tags": "safety_management"}},
+        {"id": "gd_req__req_attr", "type": "gd_req",
+         "title": "Requirement attribute: description",
+         "attributes": {"status": "valid", "tags": "requirements_engineering"}},
+        {"id": "gd_temp__feat_req", "type": "gd_temp",
+         "title": "Feature Requirements Template",
+         "attributes": {"status": "valid", "tags": "requirements_engineering"}},
+        {"id": "std_req__aspice_swe1", "type": "std_req",
+         "title": "SWE.1.BP1: Elicit requirements",
+         "attributes": {"status": "valid", "tags": "aspice40_swe1"}},
+    ],
+    "edges": [
+        # requirements → outputs Feature Requirements
+        {"source": "wf__req_feat_req", "relation": "output", "target": "wp__feat_req"},
+        # architecture inputs Feature Requirements, outputs Feature Architecture
+        {"source": "wf__cr_mt_featarch", "relation": "input", "target": "wp__feat_req"},
+        {"source": "wf__cr_mt_featarch", "relation": "output", "target": "wp__feat_arch"},
+        # verification inputs Feature Architecture
+        {"source": "wf__verification_feat_int_test", "relation": "input", "target": "wp__feat_arch"},
+        # roles
+        {"source": "wf__req_feat_req", "relation": "responsible", "target": "rl__contributor"},
+        {"source": "wf__req_feat_req", "relation": "approved_by", "target": "rl__arch_community"},
+        {"source": "wf__req_feat_req", "relation": "supported_by", "target": "rl__safety_mgr"},
+        {"source": "wf__cr_mt_featarch", "relation": "responsible", "target": "rl__contributor"},
+        # contains
+        {"source": "wf__req_feat_req", "relation": "contains", "target": "gd_temp__feat_req"},
+        # satisfies + complies chain
+        {"source": "gd_req__req_attr", "relation": "satisfies", "target": "wf__req_feat_req"},
+        {"source": "gd_req__req_attr", "relation": "complies", "target": "std_req__aspice_swe1"},
+    ],
+}
+
+
+class TestProcessGraphToGraphify:
+    def test_adapts_schema(self) -> None:
+        g = process_graph_to_graphify(_PROCESS_GRAPH_FIXTURE)
+        assert len(g.nodes) == 11
+        assert len(g.edges) == 11
+        wf = next(n for n in g.nodes if n.id == "wf__req_feat_req")
+        assert wf.kind == "workflow"
+        assert wf.name == "Create/Maintain Feature requirements"
+
+    def test_preserves_metadata(self) -> None:
+        g = process_graph_to_graphify(_PROCESS_GRAPH_FIXTURE)
+        assert g.metadata["source_repo"] == "eclipse-score/process_description"
+        assert g.metadata["source_commit"] == "abc123"
+
+
+class TestProcessGraphToFabro:
+    def test_creates_workflow_nodes(self) -> None:
+        wf = process_graph_to_fabro(_PROCESS_GRAPH_FIXTURE)
+        ids = {n.id for n in wf.nodes}
+        assert "wf__req_feat_req" in ids
+        assert "wf__cr_mt_featarch" in ids
+        assert "wf__verification_feat_int_test" in ids
+
+    def test_derives_workproduct_sequencing(self) -> None:
+        """req → outputs Feature Requirements → inputs architecture."""
+        wf = process_graph_to_fabro(_PROCESS_GRAPH_FIXTURE)
+        pairs = wf.edge_pairs
+        # req workflow (or its approval gate) → arch workflow via Feature Requirements
+        req_out_id = next(
+            (n.id for n in wf.nodes if "approve" in n.id and "req_feat_req" in n.id),
+            "wf__req_feat_req",
+        )
+        assert (req_out_id, "wf__cr_mt_featarch") in pairs
+
+    def test_inserts_approval_gates(self) -> None:
+        """req workflow has approved_by → should get a hexagon gate."""
+        wf = process_graph_to_fabro(_PROCESS_GRAPH_FIXTURE)
+        gates = [n for n in wf.nodes if n.shape == "hexagon"]
+        assert len(gates) >= 1
+        gate = next(g for g in gates if "req_feat_req" in g.id)
+        assert "Approve" in gate.label
+
+    def test_prompt_includes_workproducts(self) -> None:
+        wf = process_graph_to_fabro(_PROCESS_GRAPH_FIXTURE)
+        req_node = next(n for n in wf.nodes if n.id == "wf__req_feat_req")
+        assert "Feature Requirements" in req_node.prompt
+
+    def test_prompt_includes_roles(self) -> None:
+        wf = process_graph_to_fabro(_PROCESS_GRAPH_FIXTURE)
+        req_node = next(n for n in wf.nodes if n.id == "wf__req_feat_req")
+        assert "Contributor" in req_node.prompt
+        assert "Safety Manager" in req_node.prompt
+
+    def test_prompt_includes_templates(self) -> None:
+        wf = process_graph_to_fabro(_PROCESS_GRAPH_FIXTURE)
+        req_node = next(n for n in wf.nodes if n.id == "wf__req_feat_req")
+        assert "Feature Requirements Template" in req_node.prompt
+
+    def test_prompt_includes_compliance(self) -> None:
+        wf = process_graph_to_fabro(_PROCESS_GRAPH_FIXTURE)
+        req_node = next(n for n in wf.nodes if n.id == "wf__req_feat_req")
+        assert "SWE.1.BP1" in req_node.prompt
+
+    def test_filter_by_domain_tag(self) -> None:
+        wf = process_graph_to_fabro(
+            _PROCESS_GRAPH_FIXTURE,
+            workflow_filter="requirements_engineering",
+        )
+        wf_nodes = [n for n in wf.nodes if n.shape == "box"]
+        assert len(wf_nodes) == 1
+        assert wf_nodes[0].id == "wf__req_feat_req"
+
+    def test_filter_by_id_prefix(self) -> None:
+        wf = process_graph_to_fabro(
+            _PROCESS_GRAPH_FIXTURE,
+            workflow_filter="verification",
+        )
+        wf_nodes = [n for n in wf.nodes if n.shape == "box"]
+        assert len(wf_nodes) == 1
+        assert "verification" in wf_nodes[0].id
+
+    def test_renders_valid_dot(self) -> None:
+        wf = process_graph_to_fabro(_PROCESS_GRAPH_FIXTURE)
+        dot = fabro_to_dot(wf)
+        assert dot.startswith("digraph Process")
+
+    def test_dot_roundtrip(self) -> None:
+        wf = process_graph_to_fabro(_PROCESS_GRAPH_FIXTURE)
+        dot = fabro_to_dot(wf)
+        restored = dot_to_fabro_workflow(dot)
+        assert len(restored.nodes) == len(wf.nodes)
+        assert len(restored.edges) == len(wf.edges)
+
+    def test_v_model_chain(self) -> None:
+        """Full V-model: req → arch → verification via work products."""
+        wf = process_graph_to_fabro(_PROCESS_GRAPH_FIXTURE)
+        pairs = wf.edge_pairs
+        # arch (or its gate) → verification via Feature Architecture
+        arch_out = next(
+            (n.id for n in wf.nodes
+             if ("approve" in n.id or n.id == "wf__cr_mt_featarch")
+             and any(e.source == n.id and e.target == "wf__verification_feat_int_test" for e in wf.edges)),
+            None,
+        )
+        assert arch_out is not None, (
+            f"No edge from arch to verification. Pairs: {pairs}"
+        )
+
+
+class TestProcessGraphWithRealData:
+    """Test with the actual committed process_graph.json if available."""
+
+    @pytest.fixture
+    def real_process_graph(self) -> dict | None:
+        p = Path(__file__).resolve().parents[2] / "metamodel-flow" / "model" / "process_graph.json"
+        if p.exists():
+            return json.loads(p.read_text(encoding="utf-8"))
+        return None
+
+    def test_full_graph_converts(self, real_process_graph: dict | None) -> None:
+        if real_process_graph is None:
+            pytest.skip("process_graph.json not available")
+        wf = process_graph_to_fabro(real_process_graph)
+        assert len(wf.nodes) > 80  # 79 workflows + start + exit + approval gates
+        assert len(wf.edges) > 100
+
+    def test_full_graph_roundtrips(self, real_process_graph: dict | None) -> None:
+        if real_process_graph is None:
+            pytest.skip("process_graph.json not available")
+        wf = process_graph_to_fabro(real_process_graph)
+        dot = fabro_to_dot(wf)
+        restored = dot_to_fabro_workflow(dot)
+        assert len(restored.nodes) == len(wf.nodes)
+        assert len(restored.edges) == len(wf.edges)
+
+    def test_domain_filter_reduces_scope(self, real_process_graph: dict | None) -> None:
+        if real_process_graph is None:
+            pytest.skip("process_graph.json not available")
+        full = process_graph_to_fabro(real_process_graph)
+        req_only = process_graph_to_fabro(
+            real_process_graph, workflow_filter="requirements_engineering",
+        )
+        assert len(req_only.nodes) < len(full.nodes)
+
+    def test_every_workflow_has_prompt(self, real_process_graph: dict | None) -> None:
+        if real_process_graph is None:
+            pytest.skip("process_graph.json not available")
+        wf = process_graph_to_fabro(real_process_graph)
+        for node in wf.nodes:
+            if node.shape == "box":
+                assert node.prompt, f"Workflow node {node.id} has no prompt"
+
+    def test_approval_gates_have_approvers(self, real_process_graph: dict | None) -> None:
+        if real_process_graph is None:
+            pytest.skip("process_graph.json not available")
+        wf = process_graph_to_fabro(real_process_graph)
+        for node in wf.nodes:
+            if node.shape == "hexagon":
+                assert "Approve" in node.label, f"Gate {node.id} missing Approve label"
+
+    def test_graphify_adapter(self, real_process_graph: dict | None) -> None:
+        if real_process_graph is None:
+            pytest.skip("process_graph.json not available")
+        g = process_graph_to_graphify(real_process_graph)
+        assert len(g.nodes) == 1160
+        assert len(g.edges) == 2999
+        wf_nodes = [n for n in g.nodes if n.kind == "workflow"]
+        assert len(wf_nodes) == 79

@@ -580,6 +580,341 @@ def sdlc_to_fabro(
 
 
 # ---------------------------------------------------------------------------
+# Process graph → Fabro workflow conversion
+# ---------------------------------------------------------------------------
+
+# ISO 26262 / ASPICE process domains derived from Sphinx-Needs tags.
+_PROCESS_DOMAINS: dict[str, str] = {
+    "requirements_engineering": "Requirements",
+    "architecture_design": "Architecture",
+    "implementation": "Implementation",
+    "verification": "Verification",
+    "safety_analysis": "Safety Analysis",
+    "safety_management": "Safety Management",
+    "security_analysis": "Security Analysis",
+    "security_management": "Security Management",
+    "change_management": "Change Management",
+    "problem_resolution": "Problem Resolution",
+    "quality_management": "Quality Management",
+    "process_management": "Process Management",
+    "release_management": "Release Management",
+    "platform_management": "Platform Management",
+    "tool_management": "Tool Management",
+}
+
+
+def process_graph_to_graphify(data: dict[str, Any]) -> GraphifyGraph:
+    """Adapt a S-CORE process_graph.json to the GraphifyGraph schema.
+
+    The S-CORE process graph (exported from ``eclipse-score/process_description``
+    via Sphinx-Needs) uses ``id/type/title/attributes`` for nodes and
+    ``source/relation/target`` for edges.  This function maps them to the
+    Graphify ``id/name/kind/properties`` and ``source/target/kind``
+    conventions so that downstream graph queries work unchanged.
+    """
+    nodes = [
+        GraphifyNode(
+            id=n["id"],
+            name=n.get("title", n["id"]),
+            kind=n.get("type", "other"),
+            properties=n.get("attributes", {}),
+        )
+        for n in data.get("nodes", [])
+    ]
+    edges = [
+        GraphifyEdge(
+            source=e["source"],
+            target=e["target"],
+            kind=e.get("relation", "references"),
+        )
+        for e in data.get("edges", [])
+    ]
+    source = data.get("source", {})
+    return GraphifyGraph(
+        nodes=nodes,
+        edges=edges,
+        metadata={
+            "schema_version": data.get("schema_version"),
+            "source_repo": source.get("repo", ""),
+            "source_commit": source.get("commit", ""),
+            "source_digest": source.get("digest", ""),
+        },
+    )
+
+
+def process_graph_to_fabro(
+    data: dict[str, Any],
+    *,
+    workflow_filter: str = "",
+) -> FabroWorkflow:
+    """Convert a S-CORE ISO 26262 process graph into a Fabro workflow.
+
+    The process graph is an export of ``eclipse-score/process_description``
+    built with Sphinx-Needs.  It encodes ISO 26262 / ASPICE process
+    activities, their work products, responsible roles, guidance documents,
+    and compliance links to standard requirements.
+
+    Conversion strategy
+    -------------------
+
+    **Workflow nodes** (Sphinx-Needs type ``workflow``) become Fabro agent
+    nodes.  Each prompt lists the activity's input/output work products,
+    applicable guidelines/templates/checklists, and responsible roles.
+
+    **Workproduct-based sequencing**: If workflow A *outputs* a work
+    product that workflow B *inputs*, a Fabro edge A → B is created with
+    the work product name as label.  This reconstructs the V-model data
+    flow that Sphinx-Needs encodes as separate ``input``/``output`` link
+    types.
+
+    **Role-based approval gates**: Workflows with an ``approved_by`` role
+    get a Fabro human gate (``hexagon``) inserted after the agent node.
+    The gate pauses for the approver (e.g. Safety Manager, Project Lead).
+
+    **Compliance context**: ``satisfies`` edges from ``gd_req`` (guidance
+    requirements) and ``complies`` edges to ``std_req`` (standard
+    requirements like ASPICE SWE-2-BP4 or ISO 26262 clauses) are
+    summarized in each workflow node's prompt so the agent knows what
+    the activity must achieve.
+
+    **Domain grouping**: Workflows are tagged by ISO 26262 process
+    domain (e.g. ``requirements_engineering``, ``safety_analysis``).
+    The workflow name and goal reflect the selected domain when a
+    filter is applied.
+
+    Parameters
+    ----------
+    data:
+        Parsed ``process_graph.json`` content.
+    workflow_filter:
+        Optional domain tag filter (e.g. ``"requirements_engineering"``
+        or ID prefix like ``"req"``) to include only workflows from
+        that domain.  Empty string includes all 79 workflows.
+    """
+    node_map: dict[str, dict[str, Any]] = {
+        n["id"]: n for n in data.get("nodes", [])
+    }
+    all_wf_nodes = [n for n in data["nodes"] if n["type"] == "workflow"]
+
+    # Apply filter by tag domain or by ID prefix.
+    if workflow_filter:
+        wf_nodes = [
+            n for n in all_wf_nodes
+            if (
+                workflow_filter in n.get("attributes", {}).get("tags", "")
+                or n["id"].split("__", 1)[-1].startswith(workflow_filter)
+            )
+        ]
+    else:
+        wf_nodes = all_wf_nodes
+
+    wf_ids = {n["id"] for n in wf_nodes}
+
+    # Collect relationship maps.
+    wf_roles: dict[str, dict[str, set[str]]] = {}
+    wf_inputs: dict[str, set[str]] = {}
+    wf_outputs: dict[str, set[str]] = {}
+    wf_contains: dict[str, set[str]] = {}
+    wf_satisfied_by: dict[str, set[str]] = {}
+
+    for e in data.get("edges", []):
+        src, rel, tgt = e["source"], e.get("relation", ""), e["target"]
+
+        if src in wf_ids:
+            if rel in ("responsible", "approved_by", "supported_by"):
+                wf_roles.setdefault(src, {}).setdefault(rel, set()).add(
+                    node_map.get(tgt, {}).get("title", tgt)
+                )
+            elif rel == "input":
+                wf_inputs.setdefault(src, set()).add(tgt)
+            elif rel == "output":
+                wf_outputs.setdefault(src, set()).add(tgt)
+            elif rel == "contains":
+                wf_contains.setdefault(src, set()).add(tgt)
+
+        if tgt in wf_ids and rel == "satisfies":
+            wf_satisfied_by.setdefault(tgt, set()).add(src)
+
+    # Build compliance summary per workflow.
+    wf_complies: dict[str, set[str]] = {}
+    for wf_id in wf_ids:
+        gd_reqs = wf_satisfied_by.get(wf_id, set())
+        std_set: set[str] = set()
+        for gd_id in gd_reqs:
+            for e in data.get("edges", []):
+                if e["source"] == gd_id and e.get("relation") == "complies":
+                    std = node_map.get(e["target"], {})
+                    if std.get("type") in ("std_req", "std_wp"):
+                        std_set.add(std.get("title", e["target"]))
+        if std_set:
+            wf_complies[wf_id] = std_set
+
+    # Derive sequencing via shared workproducts.
+    seq_edges: list[tuple[str, str, list[str]]] = []
+    for wf_a, outputs_a in wf_outputs.items():
+        if wf_a not in wf_ids:
+            continue
+        for wf_b, inputs_b in wf_inputs.items():
+            if wf_b not in wf_ids or wf_a == wf_b:
+                continue
+            shared = outputs_a & inputs_b
+            if shared:
+                wp_names = [
+                    node_map[wp]["title"]
+                    for wp in sorted(shared)[:4]
+                    if wp in node_map
+                ]
+                seq_edges.append((wf_a, wf_b, wp_names))
+
+    # --- Build Fabro nodes ---
+    fabro_nodes: list[FabroNode] = [
+        FabroNode(id="start", label="Start", shape="Mdiamond"),
+    ]
+    approval_gates: dict[str, str] = {}
+
+    for wf in wf_nodes:
+        fid = _safe_id(wf["id"])
+        roles = wf_roles.get(wf["id"], {})
+        inputs = wf_inputs.get(wf["id"], set())
+        outputs = wf_outputs.get(wf["id"], set())
+        contains = wf_contains.get(wf["id"], set())
+        compliance = wf_complies.get(wf["id"], set())
+
+        prompt_parts: list[str] = [
+            f"Execute the ISO 26262 process activity: {wf['title']}.",
+        ]
+        if inputs:
+            names = sorted(node_map[i]["title"] for i in inputs if i in node_map)
+            prompt_parts.append(f"Input work products: {', '.join(names[:10])}")
+        if outputs:
+            names = sorted(node_map[o]["title"] for o in outputs if o in node_map)
+            prompt_parts.append(f"Output work products: {', '.join(names[:10])}")
+        if contains:
+            guidl = sorted(node_map[c]["title"] for c in contains if c in node_map and node_map[c]["type"] == "gd_guidl")
+            temps = sorted(node_map[c]["title"] for c in contains if c in node_map and node_map[c]["type"] == "gd_temp")
+            chklst = sorted(node_map[c]["title"] for c in contains if c in node_map and node_map[c]["type"] == "gd_chklst")
+            if guidl:
+                prompt_parts.append(f"Guidelines: {', '.join(guidl[:6])}")
+            if temps:
+                prompt_parts.append(f"Templates: {', '.join(temps[:6])}")
+            if chklst:
+                prompt_parts.append(f"Checklists: {', '.join(chklst[:6])}")
+        if roles.get("responsible"):
+            prompt_parts.append(f"Responsible: {', '.join(sorted(roles['responsible']))}")
+        if roles.get("supported_by"):
+            prompt_parts.append(f"Supported by: {', '.join(sorted(roles['supported_by']))}")
+        if compliance:
+            std_sample = sorted(compliance)[:6]
+            prompt_parts.append(f"Complies with: {', '.join(std_sample)}")
+
+        fabro_nodes.append(FabroNode(
+            id=fid,
+            label=wf["title"][:50],
+            shape="box",
+            prompt="\\n".join(prompt_parts),
+        ))
+
+        approvers = roles.get("approved_by", set())
+        if approvers:
+            gate_id = f"{fid}__approve"
+            approval_gates[wf["id"]] = gate_id
+            fabro_nodes.append(FabroNode(
+                id=gate_id,
+                label=f"Approve: {wf['title'][:30]}",
+                shape="hexagon",
+                attributes={"approvers": ", ".join(sorted(approvers))},
+            ))
+
+    fabro_nodes.append(FabroNode(id="exit", label="Exit", shape="Msquare"))
+
+    # --- Build Fabro edges ---
+    fabro_edges: list[FabroEdge] = []
+    all_ids = {n.id for n in fabro_nodes}
+
+    def _out_id(wf_id: str) -> str:
+        gate = approval_gates.get(wf_id)
+        return gate if gate and gate in all_ids else _safe_id(wf_id)
+
+    for wf_id, gate_id in approval_gates.items():
+        fid = _safe_id(wf_id)
+        approvers = wf_roles.get(wf_id, {}).get("approved_by", set())
+        fabro_edges.append(FabroEdge(source=fid, target=gate_id))
+        fabro_edges.append(FabroEdge(
+            source=gate_id,
+            target=fid,
+            label=f"[R] Revise ({', '.join(sorted(approvers)[:2])})",
+        ))
+
+    for wf_a, wf_b, wp_names in seq_edges:
+        src = _out_id(wf_a)
+        tgt = _safe_id(wf_b)
+        if src in all_ids and tgt in all_ids:
+            fabro_edges.append(FabroEdge(
+                source=src,
+                target=tgt,
+                label=", ".join(wp_names)[:60],
+            ))
+
+    incoming_targets = {_safe_id(b) for _, b, _ in seq_edges}
+    for wf in wf_nodes:
+        fid = _safe_id(wf["id"])
+        if fid not in incoming_targets:
+            fabro_edges.append(FabroEdge(source="start", target=fid))
+
+    all_sources = {e.source for e in fabro_edges}
+    for wf in wf_nodes:
+        out = _out_id(wf["id"])
+        if out not in all_sources:
+            fabro_edges.append(FabroEdge(source=out, target="exit"))
+
+    for wf_id, gate_id in approval_gates.items():
+        gate_has_seq = any(
+            e.source == gate_id and e.target != _safe_id(wf_id)
+            for e in fabro_edges
+        )
+        if not gate_has_seq:
+            fabro_edges.append(FabroEdge(
+                source=gate_id,
+                target="exit",
+                label="[A] Approved",
+            ))
+
+    domain_label = ""
+    if workflow_filter and workflow_filter in _PROCESS_DOMAINS:
+        domain_label = _PROCESS_DOMAINS[workflow_filter]
+    elif workflow_filter:
+        domain_label = workflow_filter
+
+    wf_name = f"Process_{_safe_id(domain_label)}" if domain_label else "ProcessWorkflows"
+    goal = (
+        f"S-CORE ISO 26262 process: {domain_label}"
+        if domain_label
+        else "S-CORE ISO 26262 process description workflows"
+    )
+
+    return FabroWorkflow(
+        name=wf_name,
+        nodes=fabro_nodes,
+        edges=fabro_edges,
+        graph_attributes={
+            "goal": goal,
+            "rankdir": "TB",
+        },
+    )
+
+
+def convert_process_graph_to_fabro_dot(
+    graph_path: Path,
+    *,
+    workflow_filter: str = "",
+) -> str:
+    """Load a process_graph.json and return a Fabro DOT string."""
+    data = json.loads(graph_path.read_text(encoding="utf-8"))
+    workflow = process_graph_to_fabro(data, workflow_filter=workflow_filter)
+    return fabro_to_dot(workflow)
+
+
+# ---------------------------------------------------------------------------
 # DOT serialization
 # ---------------------------------------------------------------------------
 
@@ -1090,6 +1425,17 @@ def main() -> int:
     p_sdlc.add_argument("--stage-dir", default=".stage", help="Stage directory")
     p_sdlc.add_argument("-o", "--output", help="Output file (default: stdout)")
 
+    # process graph → fabro
+    p_proc = sub.add_parser(
+        "process", help="Convert ISO 26262 process graph → Fabro workflow"
+    )
+    p_proc.add_argument("input", help="Path to process_graph.json")
+    p_proc.add_argument(
+        "--filter", default="", dest="workflow_filter",
+        help="Domain tag or ID prefix filter (e.g. requirements_engineering)",
+    )
+    p_proc.add_argument("-o", "--output", help="Output file (default: stdout)")
+
     args = parser.parse_args()
     if not args.command:
         parser.print_help()
@@ -1107,6 +1453,11 @@ def main() -> int:
             args.requirement,
             model=args.model,
             stage_dir=args.stage_dir,
+        )
+    elif args.command == "process":
+        output = convert_process_graph_to_fabro_dot(
+            Path(args.input),
+            workflow_filter=args.workflow_filter,
         )
     else:
         parser.print_help()

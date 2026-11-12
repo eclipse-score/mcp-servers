@@ -33,11 +33,14 @@ from implementation_tracking import (
 from graphify_fabro_conversion import (
     convert_fabro_dot_to_graphify,
     convert_graphify_to_fabro_dot,
+    convert_process_graph_to_fabro_dot,
     convert_sdlc_to_fabro_dot,
     dot_to_fabro_workflow,
     fabro_to_dot,
     fabro_to_graphify,
     graphify_to_fabro,
+    process_graph_to_fabro,
+    process_graph_to_graphify,
     sdlc_to_fabro,
 )
 from loopback import record_loopback
@@ -212,6 +215,34 @@ TOOLS = [
             "required": ["dot_text"],
         },
     },
+    {
+        "name": "process_graph_to_fabro_workflow",
+        "description": (
+            "Convert a S-CORE ISO 26262 process graph (from "
+            "eclipse-score/process_description Sphinx-Needs export) into "
+            "a Fabro workflow. Workflows become agent nodes, work product "
+            "data flow becomes sequencing edges, approved_by roles become "
+            "human gates. Optionally filter by process domain."
+        ),
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "graph_path": {
+                    "type": "string",
+                    "description": "Path to process_graph.json",
+                },
+                "workflow_filter": {
+                    "type": "string",
+                    "default": "",
+                    "description": (
+                        "Domain tag or ID prefix to filter workflows, e.g. "
+                        "'requirements_engineering', 'verification', 'safety_analysis'"
+                    ),
+                },
+            },
+            "required": ["graph_path"],
+        },
+    },
 ]
 
 
@@ -289,6 +320,12 @@ def call_tool(name: str, arguments: dict[str, Any]) -> dict[str, Any]:
     if name == "fabro_to_graphify_graph":
         graph = convert_fabro_dot_to_graphify(arguments["dot_text"])
         return graph.to_dict()
+    if name == "process_graph_to_fabro_workflow":
+        dot = convert_process_graph_to_fabro_dot(
+            Path(arguments["graph_path"]),
+            workflow_filter=arguments.get("workflow_filter", ""),
+        )
+        return {"dot": dot}
     raise ValueError(f"Unknown tool: {name}")
 
 
