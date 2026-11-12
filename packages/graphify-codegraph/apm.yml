@@ -12,7 +12,7 @@
 # *******************************************************************************
 
 name: graphify-codegraph
-version: 0.2.3
+version: 0.2.8
 description: |
   MCP server + guidance for deterministic code graph queries.
   Wraps external Graphify Labs graphify for AST-based repository mapping.
@@ -20,6 +20,7 @@ description: |
   Used by context-discipline working memory for code structure queries.
 license: Apache-2.0
 targets:
+  - agent-skills
   - copilot
   - claude
   - cursor
@@ -36,5 +37,5 @@ dependencies:
       command: uvx
       args:
         - --from
-        - git+https://github.com/eclipse-score/mcp-servers@a85a027acff417ef2718c07daf62491e98cdb4fd#subdirectory=packages/graphify-codegraph # v0.2.3
+        - git+https://github.com/eclipse-score/mcp-servers@0df389d81bf6e4c0d4f532513312edfe8fb4edab#subdirectory=packages/graphify-codegraph # v0.2.8
         - graphify-codegraph

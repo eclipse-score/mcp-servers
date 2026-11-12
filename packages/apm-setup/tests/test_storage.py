@@ -107,6 +107,15 @@ def test_missing_graphify_does_not_create_outputs(
     assert not Path(result["graph_path"]).parent.exists()
 
 
+def test_verify_missing_graph_reports_user_cache(
+    setup_module: ModuleType, consumer: Path
+) -> None:
+    status = setup_module.verify_setup({"repo_path": str(consumer)})
+    assert not status["graph_exists"]
+    expected_graph = setup_module.graph_cache(consumer) / "graph.json"
+    assert status["graph_path"] == str(expected_graph)
+
+
 def test_setup_paths_match_runtime_defaults(
     setup_module: ModuleType, consumer: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

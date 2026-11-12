@@ -12,6 +12,7 @@
 # SPDX-License-Identifier: Apache-2.0
 # *******************************************************************************
 
+import asyncio
 import hashlib
 import io
 import json
@@ -330,6 +331,73 @@ def test_prepare_only_reports_failed_local_refresh(
     result = json.loads(capsys.readouterr().out)
     assert not result["ok"]
     assert (cache / "graph.json").read_bytes() == GRAPH
+
+
+@pytest.mark.parametrize("prepare_after_start", [False, True])
+def test_mcp_query_with_project_path_reads_user_cache(
+    repo: Path, prepare_after_start: bool
+) -> None:
+    import serve
+
+    pytest.importorskip("graphify")
+    mcp = pytest.importorskip("mcp")
+    stdio = pytest.importorskip("mcp.client.stdio")
+
+    cache = graph_cache.cache_dir(repo)
+    cache.mkdir(parents=True)
+    graph_content = json.dumps(
+        {
+            "directed": False,
+            "multigraph": False,
+            "graph": {},
+            "nodes": [
+                {
+                    "id": "calculate_answer",
+                    "label": "calculate_answer",
+                    "type": "function",
+                    "file": "sample.cpp",
+                }
+            ],
+            "links": [],
+        }
+    )
+    if not prepare_after_start:
+        (cache / "graph.json").write_text(graph_content, encoding="utf-8")
+    environment = os.environ.copy()
+    environment["PYTHONPATH"] = str(Path(serve.__file__).parent)
+    environment["SCORE_AGENT_OFFLINE"] = "1"
+
+    async def query() -> None:
+        launcher = [serve.__file__]
+        if prepare_after_start:
+            launcher = [
+                "-c",
+                "import serve; serve.prepare = lambda *a, **k: (None, None); "
+                "serve.main()",
+            ]
+        parameters = mcp.StdioServerParameters(
+            command=sys.executable,
+            args=[*launcher, "--repo-path", str(repo)],
+            env=environment,
+            cwd=str(repo.parent),
+        )
+        async with (
+            stdio.stdio_client(parameters) as streams,
+            mcp.ClientSession(*streams) as session,
+        ):
+            await session.initialize()
+            if prepare_after_start:
+                (cache / "graph.json").write_text(graph_content, encoding="utf-8")
+            for arguments in (
+                {"question": "calculate_answer", "project_path": str(repo)},
+                {"question": "calculate_answer"},
+            ):
+                result = await session.call_tool("query_graph", arguments)
+                assert not result.is_error, result
+                assert "calculate_answer" in str(result.content), result
+
+    asyncio.run(asyncio.wait_for(query(), timeout=30))
+    assert not (repo / "graphify-out").exists()
 
 
 def test_build_writes_only_to_cache(repo: Path, tmp_path: Path) -> None:

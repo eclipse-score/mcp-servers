@@ -5,13 +5,16 @@ set -euo pipefail
 
 command -v python3
 command -v uv
+command -v apm
 uv --version
+apm --version | grep -F 'version 0.35.0'
 test -f /usr/local/share/agent-context/register_mcp.py
+test -f /usr/local/share/agent-context/setup_apm.sh
 test -x /usr/local/bin/graphify-codegraph
 command -v graphify
 test -x /usr/local/bin/graphify
 graphify --help | grep -F 'benchmark [graph.json]'
-python3 /usr/local/share/agent-context/register_mcp.py
+/usr/local/bin/graphify-codegraph --help | grep -F -- '--prepare-only'
 python3 - <<'PY'
 import json
 import selectors
