@@ -1,0 +1,33 @@
+digraph SDLC_ISSUE_1 {
+    graph [goal="Complete SDLC lifecycle for ISSUE-1: Example requirement: replace with the requirement text", rankdir="TB", max_node_visits=5]
+
+    start [label="Start", shape=Mdiamond]
+    bootstrap [label="Bootstrap Issue", shape=box, prompt="Check if `.stage/ISSUE-1/` exists. If not, call bootstrap_sdlc_issue with issue_id=ISSUE-1, requirement=\"Example requirement: replace with the requirement text\". If the directory exists, resume work there."]
+    fill_drafts [label="Fill Draft Artifacts", shape=box, prompt="Inspect the repository using query_graph and resolve_requirements. Replace every [DRAFT] section in .stage/ISSUE-1/ with evidence-based content. Fill 02-specification.md, 03-architecture.md, 04-plan.yaml, and 05-tasks/.", fidelity="full", thread_id="sdlc", max_visits=5]
+    assess [label="Assess Issue", shape=box, prompt="Call assess_sdlc_issue for ISSUE-1. Check for unresolved [DRAFT] markers, missing dependency analysis, and missing repository evidence sections.", goal_gate=true, max_visits=5, retry_target="fill_drafts"]
+    assess_gate [label="All findings resolved?", shape=diamond, max_visits=5]
+    implement [label="Implement Changes", shape=box, prompt="Read the plan in .stage/ISSUE-1/04-plan.yaml and tasks in 05-tasks/. Implement each task in order. Run tests after each change. If implementation reveals a specification gap, stop and record a loopback.", fidelity="full", thread_id="sdlc", max_visits=5]
+    loopback_gate [label="Specification gap?", shape=diamond, max_visits=5]
+    record_loopback [label="Record Loopback", shape=box, prompt="Call record_loopback for ISSUE-1 with the trigger, the earliest invalidated stage, and the affected artifact. Update the artifact, then return to draft filling."]
+    record_evidence [label="Record Evidence", shape=box, prompt="For each completed task, call record_implementation_evidence with the task filename, requirement IDs, changed source files, test commands, test statuses, and task status. Do not mark tasks as completed if tests fail."]
+    assess_progress [label="Assess Progress", shape=box, prompt="Call assess_implementation_progress for ISSUE-1. Call write_progress_report to publish an RST report."]
+    check_complete [label="Check Completeness", shape=box, prompt="Call check_stage_completeness for ISSUE-1 at the 'review' stage. Verify all prerequisites are met.", goal_gate=true, retry_target="implement"]
+    review_gate [label="Review", shape=hexagon]
+    exit [label="Exit", shape=Msquare]
+
+    start -> bootstrap
+    bootstrap -> fill_drafts
+    fill_drafts -> assess
+    assess -> assess_gate
+    assess_gate -> implement [label="Pass", condition="outcome=succeeded"]
+    assess_gate -> fill_drafts [label="Fix drafts"]
+    implement -> loopback_gate
+    loopback_gate -> record_loopback [label="Gap found", condition="context.loopback_needed=true"]
+    loopback_gate -> record_evidence [label="No gap"]
+    record_loopback -> fill_drafts
+    record_evidence -> assess_progress
+    assess_progress -> check_complete
+    check_complete -> review_gate
+    review_gate -> exit [label="[A] Approve"]
+    review_gate -> implement [label="[R] Revise"]
+}

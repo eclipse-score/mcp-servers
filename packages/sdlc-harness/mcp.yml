@@ -15,6 +15,13 @@ name: sdlc-harness
 version: 0.2.8
 description: MCP server for SDLC lifecycle management and implementation progress reporting
 entry_point: serve
+# Fabro is not vendored: the runtime is a separate Rust binary. Install it via
+# the apm-setup MCP tool setup_fabro. Unpinned: s-core_sw_fabric has not selected
+# a runtime (upstream.lock.yaml fabro status: unresolved).
+external_dependency:
+  tool: fabro
+  install: brew tap fabro-sh/tap && brew trust --formula fabro-sh/tap/fabro-nightly && brew install fabro-sh/tap/fabro-nightly
+  docs: https://docs.fabro.sh
 tools:
   - name: record_implementation_evidence
     description: Link a task to requirement IDs, source files, and real test results.
@@ -122,3 +129,62 @@ tools:
         stage_dir:
           type: string
       required: [issue_id, stage]
+  - name: generate_sdlc_workflow
+    description: >-
+      Generate a Fabro .fabro workflow encoding the full SDLC lifecycle for
+      an issue (bootstrap, drafts, assess, implement, evidence, review).
+    input_schema:
+      type: object
+      properties:
+        issue_id:
+          type: string
+        requirement:
+          type: string
+        model:
+          type: string
+        stage_dir:
+          type: string
+          default: .stage
+      required: [issue_id]
+  - name: graphify_to_fabro_workflow
+    description: >-
+      Convert a Graphify graph.json code graph into a Fabro workflow DOT
+      file where code elements become analysis nodes.
+    input_schema:
+      type: object
+      properties:
+        graph_path:
+          type: string
+        workflow_name:
+          type: string
+          default: CodeAnalysis
+      required: [graph_path]
+  - name: fabro_to_graphify_graph
+    description: >-
+      Convert a Fabro workflow DOT string into a Graphify graph.json
+      representation for graph queries.
+    input_schema:
+      type: object
+      properties:
+        dot_text:
+          type: string
+      required: [dot_text]
+  - name: process_graph_to_fabro_workflow
+    description: >-
+      Convert a S-CORE ISO 26262 process graph (Sphinx-Needs export from
+      eclipse-score/process_description) into a Fabro workflow. Derives
+      sequencing from work product data flow, inserts human gates for
+      approval roles.
+    input_schema:
+      type: object
+      properties:
+        graph_path:
+          type: string
+          description: Path to process_graph.json
+        workflow_filter:
+          type: string
+          default: ""
+          description: >-
+            Domain tag or ID prefix filter, e.g. requirements_engineering,
+            verification, safety_analysis, change_management
+      required: [graph_path]

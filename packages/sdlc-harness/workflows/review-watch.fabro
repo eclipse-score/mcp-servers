@@ -1,0 +1,31 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright (c) 2026 Contributors to the Eclipse Foundation
+//
+// Watches a GitHub pull request until a reviewer other than its author approves
+// the current head commit. Run with (from a directory that is not a git checkout):
+//   fabro run <path>/review-watch.fabro -I repo=OWNER/REPO -I pr=NUMBER --environment local
+// The check node uses only the gh CLI and the REST reviews endpoint, which carries
+// the reviewed commit. Only the first 100 reviews of a PR are read.
+digraph ReviewWatch {
+    graph [goal="Continue only after a reviewer other than the PR author approves the current head commit", max_node_visits=300]
+
+    start [shape=Mdiamond, label="Start"]
+    check_review [shape=parallelogram, label="Check PR review", output_schema="routing", max_visits=288, goal_gate=true, retry_target="check_review", script="R=\"{{ inputs.repo }}\"; P=\"{{ inputs.pr }}\"; A=$(gh api repos/$R/pulls/$P --jq .user.login) && H=$(gh api repos/$R/pulls/$P --jq .head.sha) && U=$(gh api repos/$R/pulls/$P --jq .html_url) && gh api \"repos/$R/pulls/$P/reviews?per_page=100\" --jq 'map(select(.user.login != \"'\"$A\"'\" and (.state == \"APPROVED\" or .state == \"CHANGES_REQUESTED\"))) | group_by(.user.login) | map(max_by(.submitted_at)) as $latest | ([$latest[] | select(.state == \"CHANGES_REQUESTED\")] | length) as $changes | ([$latest[] | select(.state == \"APPROVED\" and .commit_id == \"'\"$H\"'\")] | length) as $ok | (if $changes > 0 then \"changes_requested\" elif $ok > 0 then \"approved\" else \"pending\" end) as $d | {preferred_next_label: $d, context_updates: {review_head: \"'\"$H\"'\", review_target: {label: (\"PR #\" + \"'\"$P\"'\"), url: \"'\"$U\"'\", kind: \"document\"}}}'"]
+    wait_review [shape=insulator, label="Wait 5 minutes", duration="300s"]
+    author_decision [shape=hexagon, label="Review feedback", review_target=true]
+    address_feedback [shape=box, label="Address review feedback", prompt="Read the open review comments on the pull request, make the requested changes, commit them and push to the PR branch. Do not approve, merge or dismiss reviews."]
+    record_approved [shape=parallelogram, label="Record approval", script="echo approved"]
+    exit [shape=Msquare, label="Exit"]
+
+    start -> check_review
+    check_review -> record_approved [label="approved", condition="preferred_label=approved"]
+    check_review -> wait_review [label="pending", condition="preferred_label=pending"]
+    check_review -> author_decision [label="changes requested", condition="preferred_label=changes_requested"]
+    check_review -> exit [label="check failed", condition="outcome=failed"]
+    check_review -> wait_review [label="unrecognized, treated as pending"]
+    wait_review -> check_review
+    author_decision -> address_feedback [label="[A] Address feedback"]
+    author_decision -> exit [label="[S] Stop"]
+    address_feedback -> wait_review
+    record_approved -> exit
+}

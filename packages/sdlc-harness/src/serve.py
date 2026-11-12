@@ -16,6 +16,7 @@
 
 import json
 import sys
+from pathlib import Path
 from typing import Any
 
 from artifact_writer import (
@@ -23,6 +24,12 @@ from artifact_writer import (
     bootstrap_sdlc_issue,
     check_stage_completeness,
     write_stage_artifact,
+)
+from graphify_fabro_conversion import (
+    convert_fabro_dot_to_graphify,
+    convert_graphify_to_fabro_dot,
+    convert_process_graph_to_fabro_dot,
+    convert_sdlc_to_fabro_dot,
 )
 from implementation_tracking import (
     assess_implementation_progress,
@@ -153,6 +160,82 @@ TOOLS = [
         "description": "Check SDLC stage prerequisites.",
         "inputSchema": {"type": "object", "required": ["issue_id", "stage"]},
     },
+    {
+        "name": "generate_sdlc_workflow",
+        "description": (
+            "Generate a Fabro .fabro workflow file encoding the full SDLC "
+            "lifecycle for an issue: bootstrap, fill drafts, assess, "
+            "implement, record evidence, assess progress, check completeness, "
+            "and human review."
+        ),
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "issue_id": {"type": "string"},
+                "requirement": {"type": "string", "default": ""},
+                "model": {"type": "string", "default": ""},
+                "stage_dir": {"type": "string", "default": ".stage"},
+            },
+            "required": ["issue_id"],
+        },
+    },
+    {
+        "name": "graphify_to_fabro_workflow",
+        "description": (
+            "Convert a Graphify graph.json code graph into a Fabro "
+            "workflow DOT file where code elements become analysis nodes."
+        ),
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "graph_path": {"type": "string"},
+                "workflow_name": {"type": "string", "default": "CodeAnalysis"},
+            },
+            "required": ["graph_path"],
+        },
+    },
+    {
+        "name": "fabro_to_graphify_graph",
+        "description": (
+            "Convert a Fabro workflow DOT string into a Graphify "
+            "graph.json representation."
+        ),
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "dot_text": {"type": "string"},
+            },
+            "required": ["dot_text"],
+        },
+    },
+    {
+        "name": "process_graph_to_fabro_workflow",
+        "description": (
+            "Convert a S-CORE ISO 26262 process graph (from "
+            "eclipse-score/process_description Sphinx-Needs export) into "
+            "a Fabro workflow. Workflows become agent nodes, work product "
+            "data flow becomes sequencing edges, approved_by roles become "
+            "human gates. Optionally filter by process domain."
+        ),
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "graph_path": {
+                    "type": "string",
+                    "description": "Path to process_graph.json",
+                },
+                "workflow_filter": {
+                    "type": "string",
+                    "default": "",
+                    "description": (
+                        "Domain tag or ID prefix to filter workflows, e.g. "
+                        "'requirements_engineering', 'verification', 'safety_analysis'"
+                    ),
+                },
+            },
+            "required": ["graph_path"],
+        },
+    },
 ]
 
 
@@ -213,6 +296,29 @@ def call_tool(name: str, arguments: dict[str, Any]) -> dict[str, Any]:
             arguments["stage"],
             arguments.get("stage_dir", ".stage"),
         )
+    if name == "generate_sdlc_workflow":
+        dot = convert_sdlc_to_fabro_dot(
+            arguments["issue_id"],
+            arguments.get("requirement", ""),
+            model=arguments.get("model", ""),
+            stage_dir=arguments.get("stage_dir", ".stage"),
+        )
+        return {"dot": dot, "workflow_name": f"SDLC_{arguments['issue_id']}"}
+    if name == "graphify_to_fabro_workflow":
+        dot = convert_graphify_to_fabro_dot(
+            Path(arguments["graph_path"]),
+            arguments.get("workflow_name", "CodeAnalysis"),
+        )
+        return {"dot": dot}
+    if name == "fabro_to_graphify_graph":
+        graph = convert_fabro_dot_to_graphify(arguments["dot_text"])
+        return graph.to_dict()
+    if name == "process_graph_to_fabro_workflow":
+        dot = convert_process_graph_to_fabro_dot(
+            Path(arguments["graph_path"]),
+            workflow_filter=arguments.get("workflow_filter", ""),
+        )
+        return {"dot": dot}
     raise ValueError(f"Unknown tool: {name}")
 
 

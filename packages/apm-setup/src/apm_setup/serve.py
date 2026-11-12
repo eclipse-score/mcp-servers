@@ -48,8 +48,21 @@ TOOLS = [
         },
     },
     {
+        "name": "setup_fabro",
+        "description": (
+            "Check the Fabro CLI used to run generated SDLC workflows; install_fabro "
+            "installs the nightly build via Homebrew when it is missing."
+        ),
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "install_fabro": {"type": "boolean", "default": False},
+            },
+        },
+    },
+    {
         "name": "verify_setup",
-        "description": "Check graphify and local working-memory setup state.",
+        "description": "Check graphify, Fabro, and local working-memory setup state.",
         "inputSchema": {
             "type": "object",
             "properties": {"repo_path": {"type": "string"}},
@@ -150,6 +163,70 @@ def setup_context_discipline(arguments: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+FABRO_FORMULA = "fabro-sh/tap/fabro-nightly"
+FABRO_INSTALL_COMMANDS = [
+    ["brew", "tap", "fabro-sh/tap"],
+    ["brew", "trust", "--formula", FABRO_FORMULA],
+    ["brew", "install", FABRO_FORMULA],
+]
+
+
+def fabro_status() -> dict[str, Any]:
+    executable = shutil.which("fabro")
+    if executable is None:
+        return {"fabro_installed": False, "fabro_path": None, "fabro_version": None}
+    try:
+        result = subprocess.run(
+            [executable, "--version"],
+            check=True,
+            capture_output=True,
+            text=True,
+            stdin=subprocess.DEVNULL,
+            timeout=10,
+        )
+    except (OSError, subprocess.SubprocessError) as exc:
+        return {
+            "fabro_installed": True,
+            "fabro_path": executable,
+            "fabro_version": None,
+            "fabro_error": str(exc),
+        }
+    return {
+        "fabro_installed": True,
+        "fabro_path": executable,
+        "fabro_version": result.stdout.strip() or None,
+    }
+
+
+def setup_fabro(arguments: dict[str, Any]) -> dict[str, Any]:
+    status = fabro_status()
+    installed_now = False
+    if not status["fabro_installed"] and arguments.get("install_fabro", False):
+        if shutil.which("brew") is None:
+            raise ValueError(
+                "Homebrew is required for install_fabro; install Fabro manually "
+                "from https://docs.fabro.sh/getting-started/quick-start"
+            )
+        for command in FABRO_INSTALL_COMMANDS:
+            subprocess.run(command, check=True, stdin=subprocess.DEVNULL)
+        status = fabro_status()
+        installed_now = True
+    note = (
+        "Newest published Fabro build (nightly channel), no version pin. Stable "
+        "v0.254.0 is older; s-core_sw_fabric has not selected a runtime "
+        "(upstream.lock.yaml: fabro unresolved)."
+    )
+    if not status["fabro_installed"]:
+        return {
+            "ok": False,
+            **status,
+            "installed_now": False,
+            "note": note,
+            "next": "Install Fabro or call setup_fabro with install_fabro=true.",
+        }
+    return {"ok": True, **status, "installed_now": installed_now, "note": note}
+
+
 def verify_setup(arguments: dict[str, Any]) -> dict[str, Any]:
     repo = repo_from(arguments)
     graph = graph_cache(repo) / "graph.json"
@@ -161,6 +238,7 @@ def verify_setup(arguments: dict[str, Any]) -> dict[str, Any]:
         "ok": True,
         "repo_path": str(repo),
         "graphify_installed": shutil.which("graphify") is not None,
+        **fabro_status(),
         "graph_exists": graph.exists(),
         "graph_path": str(graph),
         "context_store_exists": store.is_dir(),
@@ -173,6 +251,8 @@ def call_tool(name: str, arguments: dict[str, Any]) -> dict[str, Any]:
         return setup_graphify(arguments)
     if name == "setup_context_discipline":
         return setup_context_discipline(arguments)
+    if name == "setup_fabro":
+        return setup_fabro(arguments)
     if name == "verify_setup":
         return verify_setup(arguments)
     raise ValueError(f"Unknown tool: {name}")

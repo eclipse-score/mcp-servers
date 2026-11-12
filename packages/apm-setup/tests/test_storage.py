@@ -38,8 +38,8 @@ def test_setup_preserves_consumer_and_reports_external_outputs(
 ) -> None:
     before = sorted(consumer.iterdir())
 
-    def installed_graphify(executable: str) -> str:
-        return "/bin/graphify-codegraph"
+    def installed_graphify(executable: str) -> str | None:
+        return "/bin/graphify-codegraph" if executable == "graphify-codegraph" else None
 
     monkeypatch.setattr(setup_module.shutil, "which", installed_graphify)
     monkeypatch.setenv("GRAPHIFY_OUT", str(consumer / "unwanted-output"))
