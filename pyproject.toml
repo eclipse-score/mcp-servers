@@ -19,7 +19,7 @@ dev = [
   "pyright>=1.1.414",
   "pytest>=9.2.0",
   "ruamel-yaml==0.19.1",
-  "ruff>=0.17.3",
+  "ruff>=0.17.4",
 ]
 
 [tool.ruff]
