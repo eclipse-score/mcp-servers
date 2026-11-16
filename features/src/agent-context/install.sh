@@ -13,7 +13,7 @@
 # *******************************************************************************
 set -euo pipefail
 
-SOURCE=git+https://github.com/eclipse-score/mcp-servers@0df389d81bf6e4c0d4f532513312edfe8fb4edab#subdirectory=packages/graphify-codegraph # v0.2.8
+SOURCE=git+https://github.com/eclipse-score/mcp-servers@b0a3ba761812d0c91f74c7785315166047446fc0#subdirectory=packages/graphify-codegraph # v0.2.9
 APM_VERSION=0.35.0
 SHARE=/usr/local/share/agent-context
 

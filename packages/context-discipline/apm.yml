@@ -12,7 +12,7 @@
 # *******************************************************************************
 
 name: context-discipline
-version: 0.2.8
+version: 0.2.9
 description: Working memory management and local learning orchestration. Integrates graphify (external) for code structure queries.
 license: Apache-2.0
 targets:
@@ -33,5 +33,5 @@ dependencies:
       command: uvx
       args:
         - --from
-        - git+https://github.com/eclipse-score/mcp-servers@0df389d81bf6e4c0d4f532513312edfe8fb4edab#subdirectory=packages/context-discipline # v0.2.8
+        - git+https://github.com/eclipse-score/mcp-servers@b0a3ba761812d0c91f74c7785315166047446fc0#subdirectory=packages/context-discipline # v0.2.9
         - context-discipline
