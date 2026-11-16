@@ -165,6 +165,21 @@ class AttentionRecord:
     record_type: str = field(default="attention", init=False)
 
 
+@dataclass(frozen=True)
+class TaskClassRecord:
+    id: str = field(default_factory=lambda: _record_id("task_class"))
+    session_id: str = ""
+    task_id: str = ""
+    task_class: str = ""
+    source: str = "user"
+    timestamp: str = field(default_factory=_timestamp)
+    record_type: str = field(default="task_class", init=False)
+
+    def __post_init__(self) -> None:
+        if self.source not in {"user", "detector"}:
+            raise ValueError("source must be 'user' or 'detector'")
+
+
 type Record = (
     SessionRecord
     | TaskRecord
@@ -172,6 +187,7 @@ type Record = (
     | RetrievalRecord
     | OutcomeRecord
     | AttentionRecord
+    | TaskClassRecord
 )
 
 
@@ -201,6 +217,7 @@ def _record_from_dict(data: dict[str, Any]) -> Record:
         "retrieval": RetrievalRecord,
         "outcome": OutcomeRecord,
         "attention": AttentionRecord,
+        "task_class": TaskClassRecord,
     }
     if record_type is None:
         raise ValueError("missing session record type")

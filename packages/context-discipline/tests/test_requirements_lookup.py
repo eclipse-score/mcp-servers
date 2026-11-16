@@ -8,6 +8,8 @@ from pathlib import Path
 from typing import cast
 
 import pytest
+from context_policy import Policy, RequirementsPolicy
+from context_sources import RequirementsSource
 from requirements_lookup import MAX_REQUEST_IDS, RequirementsIndex, resolve_requirements
 
 
@@ -301,3 +303,35 @@ def test_environment_override_and_relative_path_resolution(
     assert from_argument.path == absolute_path.resolve()
     assert from_environment.loaded is True
     assert from_argument.loaded is True
+
+
+def test_policy_path_and_enablement_match_requirements_source(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.delenv("SCORE_REQUIREMENTS_GRAPH", raising=False)
+    policy_path = "custom/requirements.json"
+    payload: dict[str, object] = {
+        "schema_version": 1,
+        "source": {
+            "repo": "eclipse-score/example",
+            "commit": "abc123",
+            "digest": "sha256:digest",
+            "generated_at": "2026-01-01T00:00:00+00:00",
+        },
+        "nodes": [
+            {"id": "comp_req__x", "type": "comp_req", "title": "X", "attributes": {}}
+        ],
+        "edges": [],
+    }
+    _write_graph(tmp_path / policy_path, payload)
+    policy = Policy(requirements=RequirementsPolicy(path=policy_path))
+
+    lookup = RequirementsIndex.load(tmp_path, policy_path=policy_path)
+    source = RequirementsSource().load(tmp_path, policy)
+    disabled = RequirementsIndex.load(tmp_path, policy_path=policy_path, enabled=False)
+
+    assert lookup.loaded is True
+    assert source.loaded is True
+    assert lookup.path == (tmp_path / policy_path).resolve()
+    assert disabled.loaded is False
