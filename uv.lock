@@ -1,5 +1,5 @@
 version = 1
-revision = 3
+revision = 5
 requires-python = ">=3.12"
 
 [manifest]
@@ -13,7 +13,7 @@ dev = [
     { name = "pyright", specifier = ">=1.1.414" },
     { name = "pytest", specifier = ">=9.2.0" },
     { name = "ruamel-yaml", specifier = "==0.19.1" },
-    { name = "ruff", specifier = ">=0.17.3" },
+    { name = "ruff", specifier = ">=0.17.4" },
 ]
 
 [[package]]
@@ -245,7 +245,7 @@ requires-dist = [{ name = "pydantic", specifier = ">=2" }]
 
 [[package]]
 name = "score-sdlc-harness"
-version = "0.2.8"
+version = "0.2.11"
 source = { editable = "packages/sdlc-harness" }
 
 [[package]]
