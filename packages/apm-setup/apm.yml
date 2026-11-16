@@ -12,7 +12,7 @@
 # *******************************************************************************
 
 name: apm-setup
-version: 0.2.8
+version: 0.2.10
 description: Local setup MCP server for Eclipse S-CORE APM packages
 license: Apache-2.0
 targets:
@@ -32,5 +32,5 @@ dependencies:
       command: uvx
       args:
         - --from
-        - git+https://github.com/eclipse-score/mcp-servers@0df389d81bf6e4c0d4f532513312edfe8fb4edab#subdirectory=packages/apm-setup # v0.2.8
+        - git+https://github.com/eclipse-score/mcp-servers@634a0f129ed797402277f1cf7cc7c8f94405334e#subdirectory=packages/apm-setup # v0.2.10
         - apm-setup
