@@ -1,0 +1,78 @@
+{
+  "current_version": "0.1",
+  "project": "Process Description",
+  "versions": {
+    "0.1": {
+      "needs": {
+        "gd_req__one": {
+          "id": "gd_req__one[version==1]",
+          "type": "gd_req",
+          "title": "A development requirement",
+          "content": "This body must not be copied.",
+          "satisfies": ["wf__one[version==1]"],
+          "complies": ["std_req__one[version==1]"],
+          "status": "approved",
+          "tags": ["process", "requirement"]
+        },
+        "gd_temp__one": {
+          "id": "gd_temp__one[version==1]",
+          "type": "gd_temp",
+          "title": "A generated template",
+          "content": "A large body that belongs outside the overlay."
+        },
+        "rl__owner": {
+          "id": "rl__owner[version==1]",
+          "type": "role",
+          "title": "Owner",
+          "contains": ["rl__reviewer[version==1]"]
+        },
+        "rl__reviewer": {
+          "id": "rl__reviewer[version==1]",
+          "type": "role",
+          "title": "Reviewer"
+        },
+        "std_req__one": {
+          "id": "std_req__one[version==1]",
+          "type": "std_req",
+          "title": "A standard requirement"
+        },
+        "wf__one": {
+          "id": "wf__one[version==1]",
+          "type": "workflow",
+          "title": "Workflow\nwith\tcontrol characters and a title that is deliberately longer than two hundred characters so that the policy truncates it cleanly without carrying any body text into the durable overlay. This sentence continues to ensure the title exceeds the configured limit by a comfortable margin.",
+          "content": "Workflow body must not be copied.",
+          "responsible": ["rl__owner[version==1]"],
+          "approved_by": ["rl__reviewer[version==1]"],
+          "supported_by": ["rl__owner[version==1]", 7],
+          "input": ["wp__input[version==1]"],
+          "output": ["wp__output[version==1]"],
+          "contains": ["gd_temp__one[version==1]", "missing__target[version==1]"],
+          "status": "active",
+          "tags": ["workflow", "core"]
+        },
+        "wp__input": {
+          "id": "wp__input[version==1]",
+          "type": "workproduct",
+          "title": "Input workproduct",
+          "content": "Input body must not be copied.",
+          "complies": ["std_req__one[version==1]"]
+        },
+        "wp__output": {
+          "id": "wp__output[version==1]",
+          "type": "workproduct",
+          "title": "Output workproduct"
+        },
+        "../evil": {
+          "id": "../evil[version==1]",
+          "type": "workflow",
+          "title": "Invalid identifier"
+        },
+        "unrelated__one": {
+          "id": "unrelated__one[version==1]",
+          "type": "document",
+          "title": "Unrelated need type"
+        }
+      }
+    }
+  }
+}
