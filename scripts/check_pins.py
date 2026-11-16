@@ -33,7 +33,7 @@ GRAPHIFY_PIN_RE = re.compile(r'"graphifyy\[mcp\]==([^"]+)"')
 GRAPHIFY_RE = re.compile(r"(?<![\w.-])graphifyy(\[[\w,]+\])?(==[\w.]+)?(?![\w-])")
 INSTALL_CONTEXT_RE = re.compile(r"\b(pip|pipx|uv|uvx)\b|--from\b|--with\b")
 SCANNED_SUFFIXES = {".md", ".py", ".toml", ".yml", ".yaml", ""}
-EXCLUDED_DIRS = {".git", ".venv", "node_modules", "graphify-out"}
+EXCLUDED_DIRS = {".git", ".venv", ".pytest_cache", "node_modules", "graphify-out"}
 EXCLUDED_FILES = {Path(__file__).resolve(), ROOT / "tests" / "test_check_pins.py"}
 
 
@@ -166,6 +166,11 @@ def scanned_files(root: Path = ROOT) -> list[Path]:
 
 
 def is_install_spec(line: str, match: re.Match[str]) -> bool:
+    if re.search(
+        r"--with-executables-from[\"']?(?:\s*,\s*|\s+)[\"']?$",
+        line[: match.start()],
+    ):
+        return False
     quoted = match.start() > 0 and line[match.start() - 1] in "\"'"
     return quoted or INSTALL_CONTEXT_RE.search(line) is not None
 

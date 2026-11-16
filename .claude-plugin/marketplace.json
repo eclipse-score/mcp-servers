@@ -8,30 +8,37 @@
     {
       "name": "apm-setup",
       "description": "Central setup MCP server for local APM package state.",
-      "version": "0.1.0",
+      "version": "0.2.3",
       "category": "Productivity",
       "source": "./packages/apm-setup"
     },
     {
       "name": "context-discipline",
       "description": "Context discipline package for working memory management and local learning orchestration. Integrates graphify (external) for code structure queries.",
-      "version": "0.1.0",
+      "version": "0.2.3",
       "category": "Productivity",
       "source": "./packages/context-discipline"
     },
     {
       "name": "graphify-codegraph",
       "description": "Graphify package for code structure queries. Integrates graphify (external) for code structure queries.",
-      "version": "0.1.0",
+      "version": "0.2.3",
       "category": "Productivity",
       "source": "./packages/graphify-codegraph"
     },
     {
       "name": "sdlc-harness",
       "description": "Traceable SDLC lifecycle, implementation evidence, and progress reporting tooling for AI agents.",
-      "version": "0.1.0",
+      "version": "0.2.3",
       "category": "Productivity",
       "source": "./packages/sdlc-harness"
+    },
+    {
+      "name": "metamodel-flow",
+      "description": "Normative S-CORE artifact model guidance generated from the docs-as-code metamodel.",
+      "version": "0.2.3",
+      "category": "Productivity",
+      "source": "./packages/metamodel-flow"
     }
   ]
 }
