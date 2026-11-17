@@ -25,6 +25,17 @@ _UNAVAILABLE_NEXT = (
 )
 
 
+def requirements_graph_path(
+    repo_path: Path, *, enabled: bool = True, policy_path: str = ""
+) -> Path | None:
+    """Return the configured requirements graph path, or None when disabled."""
+    if not enabled:
+        return None
+    configured = os.environ.get(REQUIREMENTS_GRAPH_ENV) or policy_path
+    candidate = Path(configured or DEFAULT_REQUIREMENTS_GRAPH).expanduser()
+    return candidate if candidate.is_absolute() else repo_path / candidate
+
+
 @dataclass(frozen=True)
 class RequirementEntry:
     id: str
@@ -43,11 +54,24 @@ class RequirementsIndex:
     incoming: dict[str, tuple[tuple[str, str], ...]]
 
     @classmethod
-    def load(cls, repo_path: Path, path_override: str = "") -> RequirementsIndex:
+    def load(
+        cls,
+        repo_path: Path,
+        path_override: str = "",
+        *,
+        enabled: bool = True,
+        policy_path: str = "",
+    ) -> RequirementsIndex:
         repo = repo_path.expanduser().resolve()
-        configured_path = path_override or os.environ.get(REQUIREMENTS_GRAPH_ENV, "")
-        candidate = Path(configured_path or DEFAULT_REQUIREMENTS_GRAPH).expanduser()
-        path = candidate if candidate.is_absolute() else repo / candidate
+        if not enabled:
+            return cls._empty((repo / DEFAULT_REQUIREMENTS_GRAPH).resolve())
+        if path_override:
+            candidate = Path(path_override).expanduser()
+            path = candidate if candidate.is_absolute() else repo / candidate
+        else:
+            path = requirements_graph_path(repo, policy_path=policy_path) or (
+                repo / DEFAULT_REQUIREMENTS_GRAPH
+            )
         path = path.resolve()
         try:
             payload = json.loads(path.read_text(encoding="utf-8"))

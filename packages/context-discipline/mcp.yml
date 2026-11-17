@@ -20,7 +20,7 @@ depends_on:
 
 tools:
   - name: initialize_session
-    description: Initialize a working memory session
+    description: Initialize a working memory session; call this as the first action of every session. If the result contains announcement, print it verbatim to the user before any other output.
     input_schema:
       type: object
       properties:
@@ -37,7 +37,7 @@ tools:
           description: Assumptions with confidence levels (high/medium/low). Write this in English.
         task_class:
           type: string
-          description: Optional process workflow identifier for the task class, for example wf__verification_unit_test. Leave empty when unknown; an empty value disables class-based partitioning and changes nothing else.
+          description: Optional process workflow identifier, for example wf__verification_unit_test. Leave empty to detect a workflow from the process model; ambiguous or unknown matches require user selection.
         agent:
           type: string
           description: Agent identity for the session
@@ -45,6 +45,20 @@ tools:
       required:
         - goal
         - subgoals
+
+  - name: set_task_class
+    description: Record the user's selected process workflow after an ambiguous or unknown detection
+    input_schema:
+      type: object
+      properties:
+        task_class:
+          type: string
+          description: Process workflow ID, or none to continue without a process class
+        task_id:
+          type: string
+          description: Optional task ID, defaulting to the current goal task
+      required:
+        - task_class
 
   - name: query_graph
     description: Query the generated local Graphify code graph

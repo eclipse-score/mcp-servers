@@ -1,0 +1,148 @@
+# *******************************************************************************
+# Copyright (c) 2026 Contributors to the Eclipse Foundation
+#
+# See the NOTICE file(s) distributed with this work for additional
+# information regarding copyright ownership.
+#
+# This program and the accompanying materials are made available under the
+# terms of the Apache License Version 2.0 which is available at
+# https://www.apache.org/licenses/LICENSE-2.0
+#
+# SPDX-License-Identifier: Apache-2.0
+# *******************************************************************************
+
+# Refreshes packages/metamodel-flow/model from docs-as-code and process_description.
+# Opens or updates one PR when either source changed.
+name: Refresh model
+
+on:
+  schedule:
+    - cron: "0 4 * * *"
+  workflow_dispatch:
+    inputs:
+      docs_as_code_ref:
+        description: docs-as-code branch
+        required: false
+        default: main
+        type: string
+      process_description_ref:
+        description: process_description branch
+        required: false
+        default: main
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: refresh-model-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    env:
+      DOCS_REF: ${{ inputs.docs_as_code_ref || 'main' }}
+      PROCESS_REF: ${{ inputs.process_description_ref || 'main' }}
+      BOT_BRANCH: bot/model-refresh-${{ github.ref_name }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.ref_name }}
+
+      - name: Resolve upstream commits
+        run: |
+          docs_sha="$(git ls-remote https://github.com/eclipse-score/docs-as-code.git "refs/heads/${DOCS_REF}" | cut -f1)"
+          process_sha="$(git ls-remote https://github.com/eclipse-score/process_description.git "refs/heads/${PROCESS_REF}" | cut -f1)"
+          test -n "${docs_sha}" || { echo "docs-as-code branch not found: ${DOCS_REF}" >&2; exit 1; }
+          test -n "${process_sha}" || { echo "process_description branch not found: ${PROCESS_REF}" >&2; exit 1; }
+          echo "DOCS_SHA=${docs_sha}" >> "$GITHUB_ENV"
+          echo "PROCESS_SHA=${process_sha}" >> "$GITHUB_ENV"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          enable-cache: true
+
+      - name: Sync workspace
+        run: uv sync
+
+      - name: Refresh metamodel
+        run: uv run python packages/metamodel-flow/src/refresh_model.py --ref "$DOCS_SHA"
+
+      - name: Check out upstream process description
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: eclipse-score/process_description
+          ref: ${{ env.PROCESS_SHA }}
+          path: upstream
+          persist-credentials: false
+
+      - name: Build upstream needs artefact
+        working-directory: upstream
+        run: bazel build //:needs_json
+
+      - name: Refresh process graph
+        run: |
+          needs_path="upstream/bazel-bin/needs_json/_build/needs/needs.json"
+          if [ ! -f "$needs_path" ]; then
+            echo "upstream needs artefact not found: $needs_path" >&2
+            exit 1
+          fi
+          uv run python packages/metamodel-flow/src/refresh_process_graph.py \
+            --needs "$needs_path" \
+            --source-commit "$PROCESS_SHA" \
+            --repo-root "$GITHUB_WORKSPACE" \
+            --observed-at "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            --summary-out "$RUNNER_TEMP/process-summary.md"
+
+      - name: Detect changes
+        id: changes
+        run: |
+          git add packages/metamodel-flow/model packages/metamodel-flow/.apm
+          if git diff --cached --quiet; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Commit and push refresh branch
+        if: steps.changes.outputs.changed == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -C "$BOT_BRANCH" "$GITHUB_SHA"
+          git commit -s -m "refresh model from docs-as-code ${DOCS_SHA} and process_description ${PROCESS_SHA}"
+          git push --force-with-lease origin HEAD:"$BOT_BRANCH"
+
+      - name: Create or update refresh pull request
+        if: steps.changes.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          {
+            echo "Refreshes \`packages/metamodel-flow/model\`."
+            echo
+            echo "- docs-as-code: \`${DOCS_SHA}\`"
+            echo "- process_description: \`${PROCESS_SHA}\`"
+            echo
+            cat "$RUNNER_TEMP/process-summary.md"
+          } > "$RUNNER_TEMP/pr-body.md"
+          title="Refresh model from docs-as-code ${DOCS_SHA:0:12} and process_description ${PROCESS_SHA:0:12}"
+          pr_number="$(gh pr list \
+            --head "$BOT_BRANCH" \
+            --base "$GITHUB_REF_NAME" \
+            --state open \
+            --json number \
+            --jq '.[0].number // empty')"
+          if [ -n "$pr_number" ]; then
+            gh pr edit "$pr_number" --title "$title" --body-file "$RUNNER_TEMP/pr-body.md"
+          else
+            gh pr create \
+              --base "$GITHUB_REF_NAME" \
+              --head "$BOT_BRANCH" \
+              --title "$title" \
+              --body-file "$RUNNER_TEMP/pr-body.md"
+          fi

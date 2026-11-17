@@ -25,6 +25,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import re
 import subprocess
@@ -35,6 +36,11 @@ from pathlib import Path
 from typing import Any
 
 from agent_context import parse_agent_context
+from export_metamodel_data import (
+    build_metamodel_data,
+    load_metamodel_yaml_bytes,
+    render_data,
+)
 from generate_agent_context import project_metamodel, render_projection
 from render_markdown import write_output
 
@@ -47,6 +53,7 @@ TIMEOUT_SECONDS = 30
 SHA_RE = re.compile(r"[0-9a-f]{40}")
 BRANCH_RE = re.compile(r"[A-Za-z0-9][A-Za-z0-9._/-]{0,99}")
 REFRESH_COMMAND = "uv run python packages/metamodel-flow/src/refresh_model.py"
+DATA_FILE = "metamodel-data.json"
 
 Fetcher = Callable[[str], bytes]
 
@@ -87,7 +94,8 @@ def fetch_metamodel(sha: str, fetcher: Fetcher = fetch) -> bytes:
 
 def source_text(sha: str) -> str:
     return (
-        "# SPDX-License-Identifier: Apache-2.0\n"
+        "# SPDX"
+        "-License-Identifier: Apache-2.0\n"
         "# Copyright (c) 2026 Contributors to the Eclipse Foundation\n"
         "\n"
         f"source_repo_url={REPO_URL}\n"
@@ -104,6 +112,19 @@ def _content(projection: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def _data_content(data: dict[str, Any]) -> dict[str, Any]:
+    """Metamodel data without the digest and source commit, which change on any edit."""
+    return {
+        key: value
+        for key, value in data.items()
+        if key not in ("metamodel_digest", "source")
+    }
+
+
+def _load_json(path: Path) -> dict[str, Any]:
+    return json.loads(path.read_text(encoding="utf-8")) if path.is_file() else {}
+
+
 def refresh(
     sha: str,
     *,
@@ -111,23 +132,32 @@ def refresh(
     check: bool = False,
     fetcher: Fetcher = fetch,
 ) -> bool:
-    """Regenerate the model; return True if its content changed."""
-    projection = project_metamodel(fetch_metamodel(sha, fetcher))
+    """Regenerate the model files; return True if their content changed.
+
+    Files are written only when content changed, so the recorded source commit
+    always matches the content that is committed.
+    """
+    raw = fetch_metamodel(sha, fetcher)
+    projection = project_metamodel(raw)
     parse_agent_context(projection)
-    model_path = package_root / "model" / "agent_context.json"
-    current: dict[str, Any] = (
-        json.loads(model_path.read_text(encoding="utf-8"))
-        if model_path.is_file()
-        else {}
+    data = build_metamodel_data(
+        load_metamodel_yaml_bytes(raw),
+        hashlib.sha256(raw).hexdigest(),
+        sha,
+        REPO_URL,
     )
-    changed = _content(projection) != _content(current)
-    if check:
+    model_dir = package_root / "model"
+    model_path = model_dir / "agent_context.json"
+    data_path = model_dir / DATA_FILE
+    changed = _content(projection) != _content(_load_json(model_path)) or _data_content(
+        data
+    ) != _data_content(_load_json(data_path))
+    if check or not changed:
         return changed
-    model_path.parent.mkdir(parents=True, exist_ok=True)
+    model_dir.mkdir(parents=True, exist_ok=True)
     model_path.write_text(render_projection(projection), encoding="utf-8")
-    (package_root / "model" / "source.txt").write_text(
-        source_text(sha), encoding="utf-8"
-    )
+    data_path.write_text(render_data(data), encoding="utf-8")
+    (model_dir / "source.txt").write_text(source_text(sha), encoding="utf-8")
     write_output(package_root)
     return changed
 

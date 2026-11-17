@@ -168,3 +168,50 @@ def test_check_reports_drift_when_only_a_graph_check_changes(tmp_path: Path) -> 
     assert refresh_model.refresh(
         SHA, package_root=root, check=True, fetcher=_fetcher(source)
     )
+
+
+def test_refresh_writes_metamodel_data_with_source_commit(tmp_path: Path) -> None:
+    root = _package(tmp_path)
+
+    refresh_model.refresh(
+        SHA, package_root=root, fetcher=_fetcher(_valid_model(tmp_path))
+    )
+
+    data = json.loads(
+        (root / "model" / "metamodel-data.json").read_text(encoding="utf-8")
+    )
+    assert data["source"]["commit"] == SHA
+    assert data["metamodel_digest"].startswith("sha256:")
+    assert data["need_types"]
+
+
+def test_unchanged_refresh_writes_nothing(tmp_path: Path) -> None:
+    root = _package(tmp_path)
+    fetcher = _fetcher(_valid_model(tmp_path))
+    refresh_model.refresh(SHA, package_root=root, fetcher=fetcher)
+    files = [
+        root / "model" / "agent_context.json",
+        root / "model" / "metamodel-data.json",
+        root / "model" / "source.txt",
+    ]
+    before = {path: path.read_bytes() for path in files}
+
+    assert not refresh_model.refresh(
+        "b" * 40,
+        package_root=root,
+        fetcher=lambda _url: _valid_model(tmp_path).read_bytes(),
+    )
+
+    assert {path: path.read_bytes() for path in files} == before
+
+
+def test_check_reports_drift_when_only_metamodel_data_changes(tmp_path: Path) -> None:
+    root = _package(tmp_path)
+    fetcher = _fetcher(_valid_model(tmp_path))
+    refresh_model.refresh(SHA, package_root=root, fetcher=fetcher)
+    data_path = root / "model" / "metamodel-data.json"
+    data = json.loads(data_path.read_text(encoding="utf-8"))
+    data["need_types"][0]["title"] = "stale title"
+    data_path.write_text(json.dumps(data), encoding="utf-8")
+
+    assert refresh_model.refresh(SHA, package_root=root, check=True, fetcher=fetcher)

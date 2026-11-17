@@ -370,7 +370,7 @@ def test_query_graph_keeps_provenance_out_of_term_matching(tmp_path: Path) -> No
             "Projected decision",
             Provenance(
                 tmp_path.name,
-                "process_description",
+                "provenance_only_marker_9a",
                 0.9,
                 "2026-01-01T00:00:00Z",
             ),
@@ -380,10 +380,10 @@ def test_query_graph_keeps_provenance_out_of_term_matching(tmp_path: Path) -> No
 
     manager = ContextDisciplineMCP(str(tmp_path))
 
-    assert manager.query_graph("process_description")["matches"] == []
+    assert manager.query_graph("provenance_only_marker_9a")["matches"] == []
     matches = manager.query_graph("Projected decision")["matches"]
     assert [node["id"] for node in matches] == ["decision__projected"]
-    assert matches[0]["provenance"]["adapter"] == "process_description"
+    assert matches[0]["provenance"]["adapter"] == "provenance_only_marker_9a"
 
 
 def test_get_prior_context_returns_items_and_untrusted_rendered_block(

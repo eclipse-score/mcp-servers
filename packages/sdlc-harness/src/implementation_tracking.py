@@ -119,7 +119,8 @@ def write_progress_report(
     requirement_ids = progress["requirements"]["linked"]
     linked_requirements = ", ".join(requirement_ids) or "none"
     report.write_text(
-        ".. SPDX-License-Identifier: Apache-2.0\n\n"
+        ".. SPDX"
+        "-License-Identifier: Apache-2.0\n\n"
         f"{issue_id} Implementation Progress\n"
         f"{'=' * (len(issue_id) + 24)}\n\n"
         "Task completion: "
