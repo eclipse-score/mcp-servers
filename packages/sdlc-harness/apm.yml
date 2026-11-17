@@ -12,7 +12,7 @@
 # *******************************************************************************
 
 name: sdlc-harness
-version: 0.2.8
+version: 0.2.12
 description: SDLC lifecycle guidance and implementation evidence for AI agents in Eclipse S-CORE.
 license: Apache-2.0
 targets:
@@ -33,5 +33,5 @@ dependencies:
       command: uvx
       args:
         - --from
-        - git+https://github.com/eclipse-score/mcp-servers@8dd8093f36581024f2332c5920a5961aa8448bc4#subdirectory=packages/sdlc-harness # v0.2.8
+        - git+https://github.com/eclipse-score/mcp-servers@6e85e4c385e1ecf6c68caf0285f304012960b6ac#subdirectory=packages/sdlc-harness # v0.2.12
         - sdlc-harness
