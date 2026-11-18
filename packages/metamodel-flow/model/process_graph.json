@@ -2,9 +2,9 @@
   "schema_version": 1,
   "source": {
     "repo": "eclipse-score/process_description",
-    "commit": "531b538c89849af3807cfaf77a96a49a3225818a",
-    "digest": "sha256:f8a7f487f03585abac4842c1be5979da65ea44d53d6370aa54e3e15d75409261",
-    "generated_at": "2026-09-14T16:14:00+00:00"
+    "commit": "ab953d5d838d1c4be6fa3c3597f5739221e69ead",
+    "digest": "sha256:fcee71e589a10f58b29f824f8946644f08d05f1c6935be8d1614b0326902db6b",
+    "generated_at": "2026-11-18T04:09:31Z"
   },
   "nodes": [
     {
@@ -140,6 +140,15 @@
       "attributes": {
         "status": "valid",
         "tags": "tool_management,tool_management"
+      }
+    },
+    {
+      "id": "gd_guidl__ai_usage",
+      "type": "gd_guidl",
+      "title": "Usage of Generative AI",
+      "attributes": {
+        "status": "valid",
+        "tags": "process_management"
       }
     },
     {
@@ -467,6 +476,24 @@
       }
     },
     {
+      "id": "gd_meth__verification_derivation",
+      "type": "gd_method",
+      "title": "Verification Derivation Technique",
+      "attributes": {
+        "status": "valid",
+        "tags": "verification"
+      }
+    },
+    {
+      "id": "gd_meth__verification_methods",
+      "type": "gd_method",
+      "title": "Verification Methods",
+      "attributes": {
+        "status": "valid",
+        "tags": "verification"
+      }
+    },
+    {
       "id": "gd_req__arch_attr_fulfils",
       "type": "gd_req",
       "title": "Architecture attribute: fulfils",
@@ -481,7 +508,7 @@
       "title": "Architecture attribute: fulfils (AoU)",
       "attributes": {
         "status": "valid",
-        "tags": "manual_prio_1,attribute,architecture_design"
+        "tags": "manual_prio_1,attribute,optional,architecture_design"
       }
     },
     {
@@ -518,6 +545,24 @@
       "attributes": {
         "status": "valid",
         "tags": "manual_prio_1,attribute,mandatory,architecture_design"
+      }
+    },
+    {
+      "id": "gd_req__arch_attr_version",
+      "type": "gd_req",
+      "title": "Architecture attribute: version",
+      "attributes": {
+        "status": "valid",
+        "tags": "manual_prio_2,attribute,mandatory,architecture_design"
+      }
+    },
+    {
+      "id": "gd_req__arch_attr_version_hash",
+      "type": "gd_req",
+      "title": "Architecture attribute: versioning hash",
+      "attributes": {
+        "status": "valid",
+        "tags": "prio_2_automation,architecture_design"
       }
     },
     {
@@ -566,6 +611,24 @@
       }
     },
     {
+      "id": "gd_req__arch_diagram_check_id",
+      "type": "gd_req",
+      "title": "Diagram Linkage check Component ID",
+      "attributes": {
+        "status": "valid",
+        "tags": "prio_2_automation,attribute,automated,architecture_design"
+      }
+    },
+    {
+      "id": "gd_req__arch_diagram_linkage_id",
+      "type": "gd_req",
+      "title": "Diagram Linkage Component ID",
+      "attributes": {
+        "status": "valid",
+        "tags": "prio_2_automation,attribute,automated,architecture_design"
+      }
+    },
+    {
       "id": "gd_req__arch_hierarchical_structure",
       "type": "gd_req",
       "title": "Hierarchical structure of architectural elements",
@@ -590,6 +653,15 @@
       "attributes": {
         "status": "valid",
         "tags": "done_automation,attribute,check,architecture_design"
+      }
+    },
+    {
+      "id": "gd_req__arch_linkage_requirement_security",
+      "type": "gd_req",
+      "title": "Check of Architecture linkage security requirement",
+      "attributes": {
+        "status": "valid",
+        "tags": "prio_2_automation,attribute,check,architecture_design"
       }
     },
     {
@@ -761,6 +833,15 @@
       "attributes": {
         "status": "valid",
         "tags": "done_automation,attribute,mandatory,change_management"
+      }
+    },
+    {
+      "id": "gd_req__change_planning",
+      "type": "gd_req",
+      "title": "Change management planning",
+      "attributes": {
+        "status": "valid",
+        "tags": "manual_prio_1,change_management,change_management"
       }
     },
     {
@@ -944,15 +1025,6 @@
       }
     },
     {
-      "id": "gd_req__impl_diagram_check_id",
-      "type": "gd_req",
-      "title": "Diagram Linkage check Component ID",
-      "attributes": {
-        "status": "valid",
-        "tags": "prio_2_automation,attribute,automated,architecture_design"
-      }
-    },
-    {
       "id": "gd_req__impl_diagram_consistency",
       "type": "gd_req",
       "title": "Diagram mandatory consistency",
@@ -968,15 +1040,6 @@
       "attributes": {
         "status": "valid",
         "tags": "implementation,manual_prio_1,attribute,mandatory"
-      }
-    },
-    {
-      "id": "gd_req__impl_diagram_linkage_id",
-      "type": "gd_req",
-      "title": "Diagram Linkage Component ID",
-      "attributes": {
-        "status": "valid",
-        "tags": "prio_2_automation,attribute,automated,architecture_design"
       }
     },
     {
@@ -1040,6 +1103,15 @@
       "attributes": {
         "status": "valid",
         "tags": "implementation,manual_prio_1,attribute,mandatory"
+      }
+    },
+    {
+      "id": "gd_req__problem_attr_affected_versions",
+      "type": "gd_req",
+      "title": "Problem attribute: affected versions",
+      "attributes": {
+        "status": "valid",
+        "tags": "manual_prio_1,problem_resolution,attribute,mandatory,problem_resolution"
       }
     },
     {
@@ -1151,6 +1223,24 @@
       }
     },
     {
+      "id": "gd_req__problem_check_safety_closure",
+      "type": "gd_req",
+      "title": "Closure conditions for problems where safety is affected",
+      "attributes": {
+        "status": "valid",
+        "tags": "manual_prio_1,problem_resolution,check,problem_resolution"
+      }
+    },
+    {
+      "id": "gd_req__problem_check_safety_rationale",
+      "type": "gd_req",
+      "title": "Documentation and review of closure rationale where safety is affected",
+      "attributes": {
+        "status": "valid",
+        "tags": "manual_prio_1,problem_resolution,check,problem_resolution"
+      }
+    },
+    {
       "id": "gd_req__process_management_build_blocks",
       "type": "gd_req",
       "title": "Process Model Building Blocks",
@@ -1216,7 +1306,7 @@
     {
       "id": "gd_req__req_attr_impl",
       "type": "gd_req",
-      "title": "Requirement attribute: link to implementation",
+      "title": "Requirement attribute: link to source code",
       "attributes": {
         "status": "valid",
         "tags": "done_automation,attribute,requirements_engineering"
@@ -1264,7 +1354,7 @@
       "title": "Requirement attribute: complete test coverage",
       "attributes": {
         "status": "valid",
-        "tags": "manual_prio_1,attribute,requirements_engineering"
+        "tags": "manual_prio_1,attribute,optional,requirements_engineering"
       }
     },
     {
@@ -1318,7 +1408,7 @@
       "title": "Requirement attribute: valid_until",
       "attributes": {
         "status": "valid",
-        "tags": "manual_prio_2,attribute,requirements_engineering"
+        "tags": "manual_prio_2,attribute,optional,requirements_engineering"
       }
     },
     {
@@ -1349,6 +1439,15 @@
       }
     },
     {
+      "id": "gd_req__req_link_complete",
+      "type": "gd_req",
+      "title": "Requirement linkage complete",
+      "attributes": {
+        "status": "valid",
+        "tags": "prio_3_automation,monitor,requirements_engineering"
+      }
+    },
+    {
       "id": "gd_req__req_linkage",
       "type": "gd_req",
       "title": "Requirement Linkage",
@@ -1363,7 +1462,7 @@
       "title": "Requirement Linkage to AoU",
       "attributes": {
         "status": "valid",
-        "tags": "manual_prio_1,attribute,requirements_engineering"
+        "tags": "manual_prio_1,attribute,optional,requirements_engineering"
       }
     },
     {
@@ -1409,6 +1508,15 @@
       "attributes": {
         "status": "valid",
         "tags": "done_automation,check,requirements_engineering"
+      }
+    },
+    {
+      "id": "gd_req__req_linkage_security",
+      "type": "gd_req",
+      "title": "Requirements linkage security",
+      "attributes": {
+        "status": "valid",
+        "tags": "prio_2_automation,check,requirements_engineering"
       }
     },
     {
@@ -1462,7 +1570,7 @@
       "title": "Safety Analysis attribute: link to Aou",
       "attributes": {
         "status": "valid",
-        "tags": "done_automation,attribute,automated,safety_analysis"
+        "tags": "done_automation,attribute,automated,optional,safety_analysis"
       }
     },
     {
@@ -1678,7 +1786,7 @@
       "title": "Security Analysis attribute: link to Aou",
       "attributes": {
         "status": "valid",
-        "tags": "prio_1_automation,attribute,automated,security_analysis"
+        "tags": "prio_1_automation,attribute,automated,optional,security_analysis"
       }
     },
     {
@@ -1871,6 +1979,15 @@
       }
     },
     {
+      "id": "gd_req__tool_attr_need_version",
+      "type": "gd_req",
+      "title": "Tool attribute:: version",
+      "attributes": {
+        "status": "valid",
+        "tags": "prio_1_automation,tool_management,attribute,mandatory,tool_management"
+      }
+    },
+    {
       "id": "gd_req__tool_attr_safety_affected",
       "type": "gd_req",
       "title": "Tool attribute:: safety affected",
@@ -1918,7 +2035,7 @@
     {
       "id": "gd_req__tool_attr_version",
       "type": "gd_req",
-      "title": "Tool attribute:: version",
+      "title": "Tool attribute:: tool_version",
       "attributes": {
         "status": "valid",
         "tags": "manual_prio_1,tool_management,attribute,mandatory,tool_management"
@@ -1931,6 +2048,15 @@
       "attributes": {
         "status": "valid",
         "tags": "prio_1_automation,tool_management,attribute,check,tool_management"
+      }
+    },
+    {
+      "id": "gd_req__tool_version_check",
+      "type": "gd_req",
+      "title": "Tool Version Checks",
+      "attributes": {
+        "status": "valid",
+        "tags": "prio_2_automation,tool_management,check,tool_management"
       }
     },
     {
@@ -2051,6 +2177,15 @@
       }
     },
     {
+      "id": "gd_temp__ai_tool_evaluation_record",
+      "type": "gd_temp",
+      "title": "AI Development Tool Evaluation Record Template",
+      "attributes": {
+        "status": "draft",
+        "tags": "tool_management"
+      }
+    },
+    {
       "id": "gd_temp__arch_comp",
       "type": "gd_temp",
       "title": "Component Architecture Templates",
@@ -2165,6 +2300,15 @@
       "attributes": {
         "status": "valid",
         "tags": "implementation"
+      }
+    },
+    {
+      "id": "gd_temp__document_mgt_plan",
+      "type": "gd_temp",
+      "title": "Documentation Management Plan Template",
+      "attributes": {
+        "status": "valid",
+        "tags": "documentation_management"
       }
     },
     {
@@ -2486,6 +2630,15 @@
       "id": "gd_temp__rel_mod_rel_note",
       "type": "gd_temp",
       "title": "Module Release Note Template",
+      "attributes": {
+        "status": "valid",
+        "tags": "release_management"
+      }
+    },
+    {
+      "id": "gd_temp__rel_mod_user_manual",
+      "type": "gd_temp",
+      "title": "Module User Manual Template",
       "attributes": {
         "status": "valid",
         "tags": "release_management"
@@ -8822,6 +8975,15 @@
       }
     },
     {
+      "id": "wf__ai_req_safety_inspect",
+      "type": "workflow",
+      "title": "AI-Assisted Safety Requirements Inspection",
+      "attributes": {
+        "status": "draft",
+        "tags": "requirements_engineering"
+      }
+    },
+    {
       "id": "wf__analyse_comparch",
       "type": "workflow",
       "title": "Analyse Component Architecture",
@@ -9266,6 +9428,15 @@
       "id": "wf__rel_mod_rel_plan",
       "type": "workflow",
       "title": "Plan Module Release",
+      "attributes": {
+        "status": "valid",
+        "tags": "release_management"
+      }
+    },
+    {
+      "id": "wf__rel_mod_user_manual",
+      "type": "workflow",
+      "title": "Create/Maintain Module User Manual",
       "attributes": {
         "status": "valid",
         "tags": "release_management"
@@ -9734,6 +9905,15 @@
       "id": "wp__module_sw_release_plan",
       "type": "workproduct",
       "title": "Module Release Plan",
+      "attributes": {
+        "status": "valid",
+        "tags": "doc_lifecycle_model_2,release_management"
+      }
+    },
+    {
+      "id": "wp__module_user_manual",
+      "type": "workproduct",
+      "title": "Module User Manual",
       "attributes": {
         "status": "valid",
         "tags": "doc_lifecycle_model_2,release_management"
@@ -10463,57 +10643,92 @@
     {
       "source": "gd_chklst__safety_analysis",
       "relation": "complies",
-      "target": "std_req__iso26262__management_64101"
+      "target": "std_req__iso26262__analysis_741"
     },
     {
       "source": "gd_chklst__safety_analysis",
       "relation": "complies",
-      "target": "std_req__iso26262__management_64102"
+      "target": "std_req__iso26262__analysis_742"
     },
     {
       "source": "gd_chklst__safety_analysis",
       "relation": "complies",
-      "target": "std_req__iso26262__management_64103"
+      "target": "std_req__iso26262__analysis_743"
     },
     {
       "source": "gd_chklst__safety_analysis",
       "relation": "complies",
-      "target": "std_req__iso26262__management_64104"
+      "target": "std_req__iso26262__analysis_744"
     },
     {
       "source": "gd_chklst__safety_analysis",
       "relation": "complies",
-      "target": "std_req__iso26262__management_64105"
+      "target": "std_req__iso26262__analysis_745"
+    },
+    {
+      "source": "gd_chklst__safety_analysis",
+      "relation": "complies",
+      "target": "std_req__iso26262__analysis_746"
+    },
+    {
+      "source": "gd_chklst__safety_analysis",
+      "relation": "complies",
+      "target": "std_req__iso26262__analysis_747"
+    },
+    {
+      "source": "gd_chklst__safety_analysis",
+      "relation": "complies",
+      "target": "std_req__iso26262__analysis_748"
+    },
+    {
+      "source": "gd_chklst__safety_analysis",
+      "relation": "complies",
+      "target": "std_req__iso26262__analysis_841"
+    },
+    {
+      "source": "gd_chklst__safety_analysis",
+      "relation": "complies",
+      "target": "std_req__iso26262__analysis_8410"
+    },
+    {
+      "source": "gd_chklst__safety_analysis",
+      "relation": "complies",
+      "target": "std_req__iso26262__analysis_842"
+    },
+    {
+      "source": "gd_chklst__safety_analysis",
+      "relation": "complies",
+      "target": "std_req__iso26262__analysis_843"
+    },
+    {
+      "source": "gd_chklst__safety_analysis",
+      "relation": "complies",
+      "target": "std_req__iso26262__analysis_844"
+    },
+    {
+      "source": "gd_chklst__safety_analysis",
+      "relation": "complies",
+      "target": "std_req__iso26262__analysis_845"
+    },
+    {
+      "source": "gd_chklst__safety_analysis",
+      "relation": "complies",
+      "target": "std_req__iso26262__analysis_846"
+    },
+    {
+      "source": "gd_chklst__safety_analysis",
+      "relation": "complies",
+      "target": "std_req__iso26262__analysis_847"
+    },
+    {
+      "source": "gd_chklst__safety_analysis",
+      "relation": "complies",
+      "target": "std_req__iso26262__analysis_849"
     },
     {
       "source": "gd_chklst__safety_package",
       "relation": "complies",
       "target": "std_req__iso26262__management_5425"
-    },
-    {
-      "source": "gd_chklst__safety_package",
-      "relation": "complies",
-      "target": "std_req__iso26262__management_64101"
-    },
-    {
-      "source": "gd_chklst__safety_package",
-      "relation": "complies",
-      "target": "std_req__iso26262__management_64102"
-    },
-    {
-      "source": "gd_chklst__safety_package",
-      "relation": "complies",
-      "target": "std_req__iso26262__management_64103"
-    },
-    {
-      "source": "gd_chklst__safety_package",
-      "relation": "complies",
-      "target": "std_req__iso26262__management_64104"
-    },
-    {
-      "source": "gd_chklst__safety_package",
-      "relation": "complies",
-      "target": "std_req__iso26262__management_64105"
     },
     {
       "source": "gd_chklst__safety_package",
@@ -10544,31 +10759,6 @@
       "source": "gd_chklst__safety_package",
       "relation": "complies",
       "target": "std_req__iso26262__management_6493"
-    },
-    {
-      "source": "gd_chklst__safety_plan",
-      "relation": "complies",
-      "target": "std_req__iso26262__management_64101"
-    },
-    {
-      "source": "gd_chklst__safety_plan",
-      "relation": "complies",
-      "target": "std_req__iso26262__management_64102"
-    },
-    {
-      "source": "gd_chklst__safety_plan",
-      "relation": "complies",
-      "target": "std_req__iso26262__management_64103"
-    },
-    {
-      "source": "gd_chklst__safety_plan",
-      "relation": "complies",
-      "target": "std_req__iso26262__management_64104"
-    },
-    {
-      "source": "gd_chklst__safety_plan",
-      "relation": "complies",
-      "target": "std_req__iso26262__management_64105"
     },
     {
       "source": "gd_chklst__safety_plan",
@@ -11733,11 +11923,6 @@
     {
       "source": "gd_guidl__rel_management",
       "relation": "complies",
-      "target": "std_req__iso26262__management_64102"
-    },
-    {
-      "source": "gd_guidl__rel_management",
-      "relation": "complies",
       "target": "std_req__iso26262__management_64131"
     },
     {
@@ -12049,6 +12234,31 @@
       "source": "gd_guidl__saf_plan_definitions",
       "relation": "complies",
       "target": "std_req__iso26262__support_8441"
+    },
+    {
+      "source": "gd_guidl__saf_tailored",
+      "relation": "complies",
+      "target": "std_req__iso26262__management_64101"
+    },
+    {
+      "source": "gd_guidl__saf_tailored",
+      "relation": "complies",
+      "target": "std_req__iso26262__management_64102"
+    },
+    {
+      "source": "gd_guidl__saf_tailored",
+      "relation": "complies",
+      "target": "std_req__iso26262__management_64103"
+    },
+    {
+      "source": "gd_guidl__saf_tailored",
+      "relation": "complies",
+      "target": "std_req__iso26262__management_64104"
+    },
+    {
+      "source": "gd_guidl__saf_tailored",
+      "relation": "complies",
+      "target": "std_req__iso26262__management_64105"
     },
     {
       "source": "gd_guidl__saf_tailored",
@@ -12546,6 +12756,36 @@
       "target": "wf__cr_mt_featarch"
     },
     {
+      "source": "gd_req__arch_attr_version",
+      "relation": "complies",
+      "target": "std_req__iso26262__support_8453"
+    },
+    {
+      "source": "gd_req__arch_attr_version",
+      "relation": "satisfies",
+      "target": "wf__cr_mt_comparch"
+    },
+    {
+      "source": "gd_req__arch_attr_version",
+      "relation": "satisfies",
+      "target": "wf__cr_mt_featarch"
+    },
+    {
+      "source": "gd_req__arch_attr_version_hash",
+      "relation": "complies",
+      "target": "std_req__iso26262__support_8453"
+    },
+    {
+      "source": "gd_req__arch_attr_version_hash",
+      "relation": "satisfies",
+      "target": "wf__cr_mt_comparch"
+    },
+    {
+      "source": "gd_req__arch_attr_version_hash",
+      "relation": "satisfies",
+      "target": "wf__cr_mt_featarch"
+    },
+    {
       "source": "gd_req__arch_attribute_uid",
       "relation": "complies",
       "target": "std_req__iso26262__support_6425"
@@ -12636,6 +12876,46 @@
       "target": "wf__cr_mt_featarch"
     },
     {
+      "source": "gd_req__arch_diagram_check_id",
+      "relation": "complies",
+      "target": "std_req__iso26262__support_6421"
+    },
+    {
+      "source": "gd_req__arch_diagram_check_id",
+      "relation": "complies",
+      "target": "std_req__iso26262__support_6425"
+    },
+    {
+      "source": "gd_req__arch_diagram_check_id",
+      "relation": "satisfies",
+      "target": "wf__cr_mt_comparch"
+    },
+    {
+      "source": "gd_req__arch_diagram_check_id",
+      "relation": "satisfies",
+      "target": "wf__cr_mt_featarch"
+    },
+    {
+      "source": "gd_req__arch_diagram_linkage_id",
+      "relation": "complies",
+      "target": "std_req__iso26262__support_6421"
+    },
+    {
+      "source": "gd_req__arch_diagram_linkage_id",
+      "relation": "complies",
+      "target": "std_req__iso26262__support_6425"
+    },
+    {
+      "source": "gd_req__arch_diagram_linkage_id",
+      "relation": "satisfies",
+      "target": "wf__cr_mt_comparch"
+    },
+    {
+      "source": "gd_req__arch_diagram_linkage_id",
+      "relation": "satisfies",
+      "target": "wf__cr_mt_featarch"
+    },
+    {
       "source": "gd_req__arch_hierarchical_structure",
       "relation": "complies",
       "target": "std_req__iso26262__software_743"
@@ -12677,6 +12957,16 @@
     },
     {
       "source": "gd_req__arch_linkage_requirement",
+      "relation": "satisfies",
+      "target": "wf__cr_mt_featarch"
+    },
+    {
+      "source": "gd_req__arch_linkage_requirement_security",
+      "relation": "satisfies",
+      "target": "wf__cr_mt_comparch"
+    },
+    {
+      "source": "gd_req__arch_linkage_requirement_security",
       "relation": "satisfies",
       "target": "wf__cr_mt_featarch"
     },
@@ -12833,12 +13123,12 @@
     {
       "source": "gd_req__change_attr_affected_wp",
       "relation": "complies",
-      "target": "std_req__iso26262__support_8412"
+      "target": "std_req__iso26262__support_8422"
     },
     {
       "source": "gd_req__change_attr_affected_wp",
       "relation": "complies",
-      "target": "std_req__iso26262__support_8422"
+      "target": "std_req__iso26262__support_8431"
     },
     {
       "source": "gd_req__change_attr_affected_wp",
@@ -13018,7 +13308,7 @@
     {
       "source": "gd_req__change_attr_milestone",
       "relation": "complies",
-      "target": "std_req__iso26262__support_8413"
+      "target": "std_req__iso26262__support_8442"
     },
     {
       "source": "gd_req__change_attr_milestone",
@@ -13138,11 +13428,6 @@
     {
       "source": "gd_req__change_attr_tracking_wp",
       "relation": "complies",
-      "target": "std_req__iso26262__support_8412"
-    },
-    {
-      "source": "gd_req__change_attr_tracking_wp",
-      "relation": "complies",
       "target": "std_req__iso26262__support_8422"
     },
     {
@@ -13244,6 +13529,21 @@
       "source": "gd_req__change_attr_uid",
       "relation": "satisfies",
       "target": "wf__change_implement_monitor_cr"
+    },
+    {
+      "source": "gd_req__change_planning",
+      "relation": "complies",
+      "target": "std_req__iso26262__support_8412"
+    },
+    {
+      "source": "gd_req__change_planning",
+      "relation": "complies",
+      "target": "std_req__iso26262__support_8413"
+    },
+    {
+      "source": "gd_req__change_planning",
+      "relation": "satisfies",
+      "target": "wf__change_create_cr"
     },
     {
       "source": "gd_req__change_tool_impact_analysis",
@@ -13546,6 +13846,11 @@
       "target": "std_req__iso26262__software_743"
     },
     {
+      "source": "gd_req__impl_complexity_analysis",
+      "relation": "satisfies",
+      "target": "wf__sw_detailed_design"
+    },
+    {
       "source": "gd_req__impl_design_decision",
       "relation": "complies",
       "target": "std_req__aspice_40__SWE-3-BP2"
@@ -13571,21 +13876,6 @@
       "target": "wf__sw_detailed_design"
     },
     {
-      "source": "gd_req__impl_diagram_check_id",
-      "relation": "complies",
-      "target": "std_req__iso26262__support_6421"
-    },
-    {
-      "source": "gd_req__impl_diagram_check_id",
-      "relation": "complies",
-      "target": "std_req__iso26262__support_6425"
-    },
-    {
-      "source": "gd_req__impl_diagram_check_id",
-      "relation": "satisfies",
-      "target": "wf__sw_detailed_design"
-    },
-    {
       "source": "gd_req__impl_diagram_consistency",
       "relation": "complies",
       "target": "std_req__iso26262__support_6421"
@@ -13612,21 +13902,6 @@
     },
     {
       "source": "gd_req__impl_diagram_description",
-      "relation": "satisfies",
-      "target": "wf__sw_detailed_design"
-    },
-    {
-      "source": "gd_req__impl_diagram_linkage_id",
-      "relation": "complies",
-      "target": "std_req__iso26262__support_6421"
-    },
-    {
-      "source": "gd_req__impl_diagram_linkage_id",
-      "relation": "complies",
-      "target": "std_req__iso26262__support_6425"
-    },
-    {
-      "source": "gd_req__impl_diagram_linkage_id",
       "relation": "satisfies",
       "target": "wf__sw_detailed_design"
     },
@@ -13769,6 +14044,31 @@
       "source": "gd_req__impl_unit_uid",
       "relation": "satisfies",
       "target": "wf__sw_detailed_design"
+    },
+    {
+      "source": "gd_req__problem_attr_affected_versions",
+      "relation": "complies",
+      "target": "std_req__aspice_40__SUP-9-BP2"
+    },
+    {
+      "source": "gd_req__problem_attr_affected_versions",
+      "relation": "satisfies",
+      "target": "wf__problem_analyze_pr"
+    },
+    {
+      "source": "gd_req__problem_attr_affected_versions",
+      "relation": "satisfies",
+      "target": "wf__problem_close_pr"
+    },
+    {
+      "source": "gd_req__problem_attr_affected_versions",
+      "relation": "satisfies",
+      "target": "wf__problem_create_pr"
+    },
+    {
+      "source": "gd_req__problem_attr_affected_versions",
+      "relation": "satisfies",
+      "target": "wf__problem_initiate_monitor_pr"
     },
     {
       "source": "gd_req__problem_attr_analysis_results",
@@ -14089,6 +14389,26 @@
       "source": "gd_req__problem_check_mandatory",
       "relation": "satisfies",
       "target": "wf__problem_initiate_monitor_pr"
+    },
+    {
+      "source": "gd_req__problem_check_safety_closure",
+      "relation": "complies",
+      "target": "std_req__iso26262__management_5433"
+    },
+    {
+      "source": "gd_req__problem_check_safety_closure",
+      "relation": "satisfies",
+      "target": "wf__problem_close_pr"
+    },
+    {
+      "source": "gd_req__problem_check_safety_rationale",
+      "relation": "complies",
+      "target": "std_req__iso26262__management_5434"
+    },
+    {
+      "source": "gd_req__problem_check_safety_rationale",
+      "relation": "satisfies",
+      "target": "wf__problem_close_pr"
     },
     {
       "source": "gd_req__process_management_build_blocks",
@@ -14592,6 +14912,11 @@
     },
     {
       "source": "gd_req__req_attr_version",
+      "relation": "complies",
+      "target": "std_req__iso26262__support_8453"
+    },
+    {
+      "source": "gd_req__req_attr_version",
       "relation": "satisfies",
       "target": "wf__req_comp_req"
     },
@@ -14664,6 +14989,26 @@
       "source": "gd_req__req_desc_weak",
       "relation": "satisfies",
       "target": "wf__req_tool"
+    },
+    {
+      "source": "gd_req__req_link_complete",
+      "relation": "complies",
+      "target": "std_req__aspice_40__iic-13-51"
+    },
+    {
+      "source": "gd_req__req_link_complete",
+      "relation": "complies",
+      "target": "std_req__iso26262__support_6431"
+    },
+    {
+      "source": "gd_req__req_link_complete",
+      "relation": "satisfies",
+      "target": "wf__req_feat_req"
+    },
+    {
+      "source": "gd_req__req_link_complete",
+      "relation": "satisfies",
+      "target": "wf__req_stkh_req"
     },
     {
       "source": "gd_req__req_linkage",
@@ -14806,6 +15151,21 @@
       "target": "wf__req_stkh_req"
     },
     {
+      "source": "gd_req__req_linkage_security",
+      "relation": "satisfies",
+      "target": "wf__req_comp_req"
+    },
+    {
+      "source": "gd_req__req_linkage_security",
+      "relation": "satisfies",
+      "target": "wf__req_feat_req"
+    },
+    {
+      "source": "gd_req__req_linkage_security",
+      "relation": "satisfies",
+      "target": "wf__req_stkh_req"
+    },
+    {
       "source": "gd_req__req_structure",
       "relation": "complies",
       "target": "std_req__iso26262__support_6431"
@@ -14849,11 +15209,6 @@
       "source": "gd_req__req_suspicious",
       "relation": "complies",
       "target": "std_req__aspice_40__iic-13-51"
-    },
-    {
-      "source": "gd_req__req_suspicious",
-      "relation": "complies",
-      "target": "std_req__iso26262__support_6425"
     },
     {
       "source": "gd_req__req_suspicious",
@@ -16281,6 +16636,21 @@
       "target": "wf__cr_mt_security_plan"
     },
     {
+      "source": "gd_req__tool_attr_need_version",
+      "relation": "complies",
+      "target": "std_req__aspice_40__SUP-8-BP1"
+    },
+    {
+      "source": "gd_req__tool_attr_need_version",
+      "relation": "complies",
+      "target": "std_req__iso26262__support_1141"
+    },
+    {
+      "source": "gd_req__tool_attr_need_version",
+      "relation": "satisfies",
+      "target": "wf__tool_create_tool_verification_report"
+    },
+    {
       "source": "gd_req__tool_attr_safety_affected",
       "relation": "complies",
       "target": "std_req__aspice_40__SUP-8-BP1"
@@ -16379,6 +16749,16 @@
       "source": "gd_req__tool_check_mandatory",
       "relation": "satisfies",
       "target": "wf__tool_create_tool_verification_report"
+    },
+    {
+      "source": "gd_req__tool_version_check",
+      "relation": "complies",
+      "target": "std_req__iso26262__support_11441"
+    },
+    {
+      "source": "gd_req__tool_version_check",
+      "relation": "satisfies",
+      "target": "wf__tool_approve_tool_verification_report"
     },
     {
       "source": "gd_req__verification_checks",
@@ -17219,6 +17599,31 @@
       "source": "gd_temp__detailed_design",
       "relation": "complies",
       "target": "std_req__iso26262__support_6425"
+    },
+    {
+      "source": "gd_temp__document_mgt_plan",
+      "relation": "complies",
+      "target": "std_req__iso26262__support_1041"
+    },
+    {
+      "source": "gd_temp__document_mgt_plan",
+      "relation": "complies",
+      "target": "std_req__iso26262__support_1042"
+    },
+    {
+      "source": "gd_temp__document_mgt_plan",
+      "relation": "complies",
+      "target": "std_req__iso26262__support_1043"
+    },
+    {
+      "source": "gd_temp__document_mgt_plan",
+      "relation": "complies",
+      "target": "std_req__iso26262__support_1044"
+    },
+    {
+      "source": "gd_temp__document_mgt_plan",
+      "relation": "complies",
+      "target": "std_req__iso26262__support_1046"
     },
     {
       "source": "gd_temp__documentation",
@@ -18631,6 +19036,21 @@
       "target": "std_req__iso26262__support_12425"
     },
     {
+      "source": "gd_temp__rel_mod_user_manual",
+      "relation": "complies",
+      "target": "std_req__aspice_40__SPL-2-BP2"
+    },
+    {
+      "source": "gd_temp__rel_mod_user_manual",
+      "relation": "complies",
+      "target": "std_req__aspice_40__iic-11-04"
+    },
+    {
+      "source": "gd_temp__rel_mod_user_manual",
+      "relation": "complies",
+      "target": "std_req__iso26262__support_12421"
+    },
+    {
       "source": "gd_temp__rel_plat_rel_note",
       "relation": "complies",
       "target": "std_req__aspice_40__SPL-2-BP1"
@@ -19199,6 +19619,41 @@
       "source": "rl__testing_community",
       "relation": "contains",
       "target": "rl__committer"
+    },
+    {
+      "source": "wf__ai_req_safety_inspect",
+      "relation": "approved_by",
+      "target": "rl__committer"
+    },
+    {
+      "source": "wf__ai_req_safety_inspect",
+      "relation": "contains",
+      "target": "gd_chklst__req_inspection"
+    },
+    {
+      "source": "wf__ai_req_safety_inspect",
+      "relation": "input",
+      "target": "wp__requirements_comp"
+    },
+    {
+      "source": "wf__ai_req_safety_inspect",
+      "relation": "input",
+      "target": "wp__requirements_feat"
+    },
+    {
+      "source": "wf__ai_req_safety_inspect",
+      "relation": "output",
+      "target": "wp__requirements_inspect"
+    },
+    {
+      "source": "wf__ai_req_safety_inspect",
+      "relation": "responsible",
+      "target": "rl__committer"
+    },
+    {
+      "source": "wf__ai_req_safety_inspect",
+      "relation": "supported_by",
+      "target": "rl__safety_manager"
     },
     {
       "source": "wf__analyse_comparch",
@@ -20193,6 +20648,11 @@
     {
       "source": "wf__cr_mt_process_mgt_strategy",
       "relation": "contains",
+      "target": "gd_guidl__ai_usage"
+    },
+    {
+      "source": "wf__cr_mt_process_mgt_strategy",
+      "relation": "contains",
       "target": "gd_guidl__process_management"
     },
     {
@@ -20513,12 +20973,12 @@
     {
       "source": "wf__cr_mt_security_manual",
       "relation": "input",
-      "target": "wp__feature_dfa"
+      "target": "wp__feature_security_analysis"
     },
     {
       "source": "wf__cr_mt_security_manual",
       "relation": "input",
-      "target": "wp__feature_fmea"
+      "target": "wp__platform_security_analysis"
     },
     {
       "source": "wf__cr_mt_security_manual",
@@ -20543,12 +21003,7 @@
     {
       "source": "wf__cr_mt_security_manual",
       "relation": "input",
-      "target": "wp__sw_component_dfa"
-    },
-    {
-      "source": "wf__cr_mt_security_manual",
-      "relation": "input",
-      "target": "wp__sw_component_fmea"
+      "target": "wp__sw_component_security_analysis"
     },
     {
       "source": "wf__cr_mt_security_manual",
@@ -21493,12 +21948,12 @@
     {
       "source": "wf__mr_vy_security",
       "relation": "input",
-      "target": "wp__audit_report"
+      "target": "wp__audit_report_security"
     },
     {
       "source": "wf__mr_vy_security",
       "relation": "input",
-      "target": "wp__fdr_reports"
+      "target": "wp__fdr_reports_security"
     },
     {
       "source": "wf__mr_vy_security",
@@ -21783,6 +22238,11 @@
     {
       "source": "wf__platform_cr_mt_platform_mgmt_plan",
       "relation": "contains",
+      "target": "gd_temp__document_mgt_plan"
+    },
+    {
+      "source": "wf__platform_cr_mt_platform_mgmt_plan",
+      "relation": "contains",
       "target": "gd_temp__documentation"
     },
     {
@@ -21874,6 +22334,11 @@
       "source": "wf__platform_mr_im_platform_mgmt_plan",
       "relation": "contains",
       "target": "gd_guidl__platform_mgmt_plan"
+    },
+    {
+      "source": "wf__platform_mr_im_platform_mgmt_plan",
+      "relation": "contains",
+      "target": "gd_temp__document_mgt_plan"
     },
     {
       "source": "wf__platform_mr_im_platform_mgmt_plan",
@@ -22232,6 +22697,46 @@
     },
     {
       "source": "wf__rel_mod_rel_plan",
+      "relation": "responsible",
+      "target": "rl__committer"
+    },
+    {
+      "source": "wf__rel_mod_user_manual",
+      "relation": "approved_by",
+      "target": "rl__project_lead"
+    },
+    {
+      "source": "wf__rel_mod_user_manual",
+      "relation": "contains",
+      "target": "gd_guidl__rel_management"
+    },
+    {
+      "source": "wf__rel_mod_user_manual",
+      "relation": "contains",
+      "target": "gd_temp__rel_mod_user_manual"
+    },
+    {
+      "source": "wf__rel_mod_user_manual",
+      "relation": "input",
+      "target": "wp__module_safety_manual"
+    },
+    {
+      "source": "wf__rel_mod_user_manual",
+      "relation": "input",
+      "target": "wp__module_security_manual"
+    },
+    {
+      "source": "wf__rel_mod_user_manual",
+      "relation": "input",
+      "target": "wp__module_sw_release_plan"
+    },
+    {
+      "source": "wf__rel_mod_user_manual",
+      "relation": "output",
+      "target": "wp__module_user_manual"
+    },
+    {
+      "source": "wf__rel_mod_user_manual",
       "relation": "responsible",
       "target": "rl__committer"
     },
@@ -23707,6 +24212,16 @@
     },
     {
       "source": "wf__vy_ap_modrelease",
+      "relation": "input",
+      "target": "wp__qms_report"
+    },
+    {
+      "source": "wf__vy_ap_modrelease",
+      "relation": "input",
+      "target": "wp__verification_module_ver_report"
+    },
+    {
+      "source": "wf__vy_ap_modrelease",
       "relation": "output",
       "target": "wp__module_sw_release_note"
     },
@@ -23754,6 +24269,16 @@
       "source": "wf__vy_ap_pltrelease",
       "relation": "input",
       "target": "wp__qms_plan"
+    },
+    {
+      "source": "wf__vy_ap_pltrelease",
+      "relation": "input",
+      "target": "wp__qms_report"
+    },
+    {
+      "source": "wf__vy_ap_pltrelease",
+      "relation": "input",
+      "target": "wp__verification_platform_ver_report"
     },
     {
       "source": "wf__vy_ap_pltrelease",
@@ -24281,6 +24806,26 @@
       "target": "std_wp__iso26262__management_656"
     },
     {
+      "source": "wp__module_sw_release_plan",
+      "relation": "complies",
+      "target": "std_req__aspice_40__iic-08-56"
+    },
+    {
+      "source": "wp__module_sw_release_plan",
+      "relation": "complies",
+      "target": "std_req__aspice_40__iic-18-06"
+    },
+    {
+      "source": "wp__module_user_manual",
+      "relation": "complies",
+      "target": "std_req__aspice_40__iic-11-04"
+    },
+    {
+      "source": "wp__module_user_manual",
+      "relation": "complies",
+      "target": "std_wp__iso26262__support_1251"
+    },
+    {
       "source": "wp__platform_arch",
       "relation": "complies",
       "target": "std_req__aspice_40__iic-04-04"
@@ -24309,6 +24854,41 @@
       "source": "wp__platform_dfa",
       "relation": "complies",
       "target": "std_wp__isopas8926__4524"
+    },
+    {
+      "source": "wp__platform_handbook",
+      "relation": "complies",
+      "target": "std_req__aspice_40__iic-11-04"
+    },
+    {
+      "source": "wp__platform_mgmt",
+      "relation": "complies",
+      "target": "std_req__aspice_40__iic-08-53"
+    },
+    {
+      "source": "wp__platform_mgmt",
+      "relation": "complies",
+      "target": "std_req__aspice_40__iic-08-56"
+    },
+    {
+      "source": "wp__platform_mgmt",
+      "relation": "complies",
+      "target": "std_req__aspice_40__iic-08-62"
+    },
+    {
+      "source": "wp__platform_mgmt",
+      "relation": "complies",
+      "target": "std_req__aspice_40__iic-10-52"
+    },
+    {
+      "source": "wp__platform_mgmt",
+      "relation": "complies",
+      "target": "std_req__aspice_40__iic-14-10"
+    },
+    {
+      "source": "wp__platform_mgmt",
+      "relation": "complies",
+      "target": "std_req__aspice_40__iic-14-50"
     },
     {
       "source": "wp__platform_safety_manual",
@@ -24399,6 +24979,16 @@
       "source": "wp__platform_sw_release_note",
       "relation": "complies",
       "target": "std_wp__iso26262__management_656"
+    },
+    {
+      "source": "wp__platform_sw_release_plan",
+      "relation": "complies",
+      "target": "std_req__aspice_40__iic-08-56"
+    },
+    {
+      "source": "wp__platform_sw_release_plan",
+      "relation": "complies",
+      "target": "std_req__aspice_40__iic-18-06"
     },
     {
       "source": "wp__policies",
@@ -24629,6 +25219,16 @@
       "source": "wp__requirements_inspect",
       "relation": "complies",
       "target": "std_wp__iso26262__software_653"
+    },
+    {
+      "source": "wp__requirements_proc_tool",
+      "relation": "complies",
+      "target": "std_req__aspice_40__iic-17-00"
+    },
+    {
+      "source": "wp__requirements_proc_tool",
+      "relation": "complies",
+      "target": "std_req__aspice_40__iic-17-05"
     },
     {
       "source": "wp__requirements_stkh",
