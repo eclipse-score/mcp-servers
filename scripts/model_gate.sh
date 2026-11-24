@@ -12,6 +12,7 @@ cd "${root}"
 
 APM_CLI="apm-cli==0.35.1"
 
+uv lock --check
 uv run ruff check .
 uv run ruff format --check . --exclude '*.md'
 uv run pyright
