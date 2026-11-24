@@ -34,6 +34,7 @@ on:
 permissions:
   contents: write
   pull-requests: write
+  issues: write
 
 concurrency:
   group: refresh-model-${{ github.workflow }}-${{ github.ref }}
@@ -108,17 +109,24 @@ jobs:
             echo "changed=true" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Commit and push refresh branch
+      - name: Gate regenerated model
+        id: gate
         if: steps.changes.outputs.changed == 'true'
+        continue-on-error: true
+        run: scripts/model_gate.sh
+
+      - name: Commit and push refresh branch
+        if: steps.changes.outputs.changed == 'true' && steps.gate.outcome == 'success'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git fetch --no-tags origin "+refs/heads/${BOT_BRANCH}:refs/remotes/origin/${BOT_BRANCH}" 2>/dev/null || true
           git switch -C "$BOT_BRANCH" "$GITHUB_SHA"
           git commit -s -m "refresh model from docs-as-code ${DOCS_SHA} and process_description ${PROCESS_SHA}"
           git push --force-with-lease origin HEAD:"$BOT_BRANCH"
 
       - name: Create or update refresh pull request
-        if: steps.changes.outputs.changed == 'true'
+        if: steps.changes.outputs.changed == 'true' && steps.gate.outcome == 'success'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -146,3 +154,32 @@ jobs:
               --title "$title" \
               --body-file "$RUNNER_TEMP/pr-body.md"
           fi
+
+      - name: Report failed gate
+        if: steps.gate.outcome == 'failure'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TITLE: "Refresh model: regenerated model failed the gate"
+        run: |
+          run_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+          {
+            echo "The scheduled refresh regenerated the model, but the gate failed."
+            echo "No pull request was opened or updated."
+            echo
+            echo "- docs-as-code: \`${DOCS_SHA}\`"
+            echo "- process_description: \`${PROCESS_SHA}\`"
+            echo "- Run: ${run_url}"
+            echo
+            echo "Reproduce locally with \`scripts/model_gate.sh\` after running the refresh."
+          } > "$RUNNER_TEMP/gate-issue.md"
+          number="$(gh issue list --state open \
+            --search "\"${TITLE}\" in:title" --json number --jq '.[0].number // empty')"
+          if [ -n "${number}" ]; then
+            gh issue edit "${number}" --body-file "$RUNNER_TEMP/gate-issue.md"
+          else
+            gh issue create --title "${TITLE}" --body-file "$RUNNER_TEMP/gate-issue.md"
+          fi
+
+      - name: Fail run when the gate failed
+        if: steps.gate.outcome == 'failure'
+        run: exit 1

@@ -87,7 +87,7 @@ jobs:
           fi
           echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
       - name: Install APM CLI
-        run: uv tool install apm-cli
+        run: uv tool install apm-cli==0.35.1
       - name: Smoke-test shipped MCP pins
         env:
           VERSION: ${{ steps.version.outputs.version }}
