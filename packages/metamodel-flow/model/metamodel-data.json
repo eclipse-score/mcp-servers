@@ -4,7 +4,7 @@
   "metamodel_digest": "sha256:82858f9427864cb11fb6ac37d468470149ebf1a1c62bf2be62a9ae529adb4b4d",
   "source": {
     "repo_url": "https://github.com/eclipse-score/docs-as-code.git",
-    "commit": "e537c617cb1805cdef39cf5b93e9f2e8810aabcb"
+    "commit": "3161d193d80d54bd425cd522ed9efdaaed56dadd"
   },
   "base_options": {
     "mandatory": [

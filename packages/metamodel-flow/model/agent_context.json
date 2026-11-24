@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "metamodel_digest": "sha256:da3d4b180bbba2d80e54d9ee7ce7e773fdfd7c5799d664910f38df62d8622613",
+  "metamodel_digest": "sha256:82858f9427864cb11fb6ac37d468470149ebf1a1c62bf2be62a9ae529adb4b4d",
   "base_options": {
     "mandatory": [
       {
@@ -1454,8 +1454,8 @@
         },
         {
           "name": "tool_version",
-          "pattern": "^.*$",
-          "required": false,
+          "pattern": "^.+$",
+          "required": true,
           "inherited": false
         },
         {
@@ -1564,6 +1564,16 @@
       ],
       "links": [
         {
+          "name": "belongs_to",
+          "targets": [
+            "mod",
+            "comp",
+            "feat"
+          ],
+          "any_target": false,
+          "required": false
+        },
+        {
           "name": "realizes",
           "targets": [
             "workproduct"
@@ -1638,15 +1648,6 @@
         }
       ],
       "links": [
-        {
-          "name": "includes",
-          "targets": [
-            "logic_arc_int",
-            "logic_arc_int_op"
-          ],
-          "any_target": false,
-          "required": false
-        },
         {
           "name": "provides",
           "targets": [
@@ -2610,7 +2611,7 @@
             "workflow"
           ],
           "any_target": false,
-          "required": false
+          "required": true
         }
       ]
     },
@@ -2755,7 +2756,7 @@
             "feat"
           ],
           "any_target": false,
-          "required": false
+          "required": true
         }
       ]
     },
@@ -4587,21 +4588,50 @@
   ],
   "graph_rules": [
     {
+      "name": "tool_req__arch_consistency_interf",
+      "applies_to": [
+        "logic_arc_int"
+      ],
+      "condition_raw": "included_by != []",
+      "check_type": "check_one",
+      "check_raw": {
+        "implements_back": "id != \"\""
+      },
+      "explanation": "A logical interface included by a feature must be implemented by at least one component."
+    },
+    {
+      "name": "tool_req__docs_allocation_safety_to_req",
+      "applies_to": [
+        "feat",
+        "comp"
+      ],
+      "condition_raw": "safety != QM",
+      "check_type": "check_one",
+      "check_raw": {
+        "satisfied_by_back": "safety != QM"
+      },
+      "explanation": "A safety relevant feature or component must have at least one safety requirement allocated via satisfied_by."
+    },
+    {
       "name": "tool_req__docs_arch_link_qm_to_safety_req",
       "applies_to": [
+        "feat",
         "feat_arc_sta",
+        "feat_arc_dyn",
         "logic_arc_int",
         "logic_arc_int_op",
+        "comp",
         "comp_arc_sta",
+        "comp_arc_dyn",
         "real_arc_int",
         "real_arc_int_op"
       ],
       "condition_raw": "safety == QM",
       "check_type": "check_all",
       "check_raw": {
-        "fulfils": "safety != QM"
+        "fulfils": "safety == QM"
       },
-      "explanation": "An QM architecture element cannot implement ASIL requirements."
+      "explanation": "A QM architecture element cannot fulfil safety requirements."
     },
     {
       "name": "tool_req__docs_arch_link_safety_to_req",
@@ -4609,7 +4639,6 @@
         "feat_arc_sta",
         "feat_arc_dyn",
         "logic_arc_int",
-        "comp",
         "comp_arc_sta",
         "comp_arc_dyn",
         "real_arc_int"
@@ -4617,9 +4646,9 @@
       "condition_raw": "safety != QM",
       "check_type": "check_one",
       "check_raw": {
-        "fulfils": "safety == self.safety"
+        "fulfils": "safety != QM"
       },
-      "explanation": "A safety relevant architecture element must be linked to at least one requirement with the exact same safety value via fulfils."
+      "explanation": "A safety relevant architecture element must be linked to at least one safety requirement via fulfils."
     },
     {
       "name": "tool_req__docs_arch_link_security",
@@ -4654,6 +4683,19 @@
         "derived_from": "safety == QM"
       },
       "explanation": "QM requirements cannot be derived from ASIL requirements."
+    },
+    {
+      "name": "tool_req__docs_req_allocation_safety",
+      "applies_to": [
+        "feat_req",
+        "comp_req"
+      ],
+      "condition_raw": "safety != QM",
+      "check_type": "check_all",
+      "check_raw": {
+        "satisfied_by": "safety != QM"
+      },
+      "explanation": "A safety requirement cannot be allocated to a QM architecture element."
     },
     {
       "name": "tool_req__docs_req_arch_link_safety_to_arch",
@@ -4700,19 +4742,15 @@
         "feat_saf_dfa",
         "comp_saf_dfa",
         "feat_saf_fmea",
-        "comp_saf_fmea"
+        "comp_saf_fmea",
+        "plat_saf_dfa"
       ],
       "condition_raw": "status == valid",
       "check_type": "check_one",
       "check_raw": {
-        "mitigated_by": {
-          "or": [
-            "safety == ASIL_B",
-            "type == aou_req"
-          ]
-        }
+        "mitigated_by": "safety == ASIL_B"
       },
-      "explanation": "Valid safety analyses should link to at least one same-level or higher-safety requirement, or an Assumption of Use requirement."
+      "explanation": "Valid safety analyses should link to at least one same-level or higher-safety requirement."
     },
     {
       "name": "workproduct_aspice_40",

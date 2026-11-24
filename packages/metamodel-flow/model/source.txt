@@ -3,5 +3,5 @@
 
 source_repo_url=https://github.com/eclipse-score/docs-as-code.git
 source_path=src/extensions/score_metamodel/metamodel.yaml
-source_commit=ba32a15e215ff3b836fe8e13d6779fac5cdb8365
-generator_command=uv run python packages/metamodel-flow/src/refresh_model.py --ref ba32a15e215ff3b836fe8e13d6779fac5cdb8365
+source_commit=3161d193d80d54bd425cd522ed9efdaaed56dadd
+generator_command=uv run python packages/metamodel-flow/src/refresh_model.py --ref 3161d193d80d54bd425cd522ed9efdaaed56dadd
