@@ -120,10 +120,13 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git fetch --no-tags origin "+refs/heads/${BOT_BRANCH}:refs/remotes/origin/${BOT_BRANCH}" 2>/dev/null || true
           git switch -C "$BOT_BRANCH" "$GITHUB_SHA"
           git commit -s -m "refresh model from docs-as-code ${DOCS_SHA} and process_description ${PROCESS_SHA}"
-          git push --force-with-lease origin HEAD:"$BOT_BRANCH"
+          # A shallow checkout has no tracking ref for the bot branch, so the lease
+          # needs the expected remote SHA. An empty value means the branch must not exist.
+          expected="$(git ls-remote origin "refs/heads/${BOT_BRANCH}" | cut -f1)"
+          git push --force-with-lease="refs/heads/${BOT_BRANCH}:${expected}" \
+            origin "HEAD:refs/heads/${BOT_BRANCH}"
 
       - name: Create or update refresh pull request
         if: steps.changes.outputs.changed == 'true' && steps.gate.outcome == 'success'
