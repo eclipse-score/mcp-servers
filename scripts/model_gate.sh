@@ -10,8 +10,6 @@ set -euo pipefail
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
 cd "${root}"
 
-APM_CLI="apm-cli==0.35.1"
-
 uv lock --check
 uv run ruff check .
 uv run ruff format --check . --exclude '*.md'
@@ -27,7 +25,7 @@ mkdir "${scratch}/tree" "${scratch}/consumer"
 git ls-files -co --exclude-standard | tar -cf - -T - | tar -xf - -C "${scratch}/tree"
 (
     cd "${scratch}/consumer"
-    uv tool run --from "${APM_CLI}" apm install \
+    uv run --project "${root}" apm install \
         "${scratch}/tree/packages/context-discipline" \
         --target vscode --trust-transitive-mcp
     test -f .vscode/mcp.json

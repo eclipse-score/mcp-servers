@@ -16,6 +16,7 @@ members = ["libs/score-context", "packages/sdlc-harness"]
 
 [dependency-groups]
 dev = [
+  "apm-cli==0.35.1",
   "pyright>=1.1.414",
   "pytest>=9.2.0",
   "ruamel-yaml==0.19.1",

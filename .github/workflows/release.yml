@@ -86,12 +86,11 @@ jobs:
             git push origin "refs/tags/v${VERSION}"
           fi
           echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
-      - name: Install APM CLI
-        run: uv tool install apm-cli==0.35.1
       - name: Smoke-test shipped MCP pins
         env:
           VERSION: ${{ steps.version.outputs.version }}
         run: |
+          apm() { uv run --project "$GITHUB_WORKSPACE" apm "$@"; }
           smoke_dir="$(mktemp -d)"
           cd "$smoke_dir"
           apm marketplace add "https://github.com/${GITHUB_REPOSITORY}" \

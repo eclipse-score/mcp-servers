@@ -32,6 +32,12 @@ updates:
       pip:
         patterns:
           - "*"
+    ignore:
+      # apm-cli minor releases have broken the marketplace install; review them by hand.
+      - dependency-name: apm-cli
+        update-types:
+          - version-update:semver-minor
+          - version-update:semver-major
     commit-message:
       prefix: chore(pip)
 
