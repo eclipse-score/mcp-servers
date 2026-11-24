@@ -99,6 +99,7 @@ jobs:
             --target vscode --trust-transitive-mcp
           apm install sdlc-harness@eclipse-score-apm-marketplace \
             --target vscode --trust-transitive-mcp
+          python3 "$GITHUB_WORKSPACE/scripts/check_installed_graph.py" "$smoke_dir"
           uv tool install 'graphifyy[mcp]==0.9.97'
           python3 "$GITHUB_WORKSPACE/scripts/check_remote_mcp.py"
 
