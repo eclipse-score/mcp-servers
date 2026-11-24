@@ -41,7 +41,7 @@ concurrency:
 
 jobs:
   refresh:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     env:
       DOCS_REF: ${{ inputs.docs_as_code_ref || 'main' }}
       PROCESS_REF: ${{ inputs.process_description_ref || 'main' }}
