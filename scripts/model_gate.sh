@@ -30,4 +30,5 @@ git ls-files -co --exclude-standard | tar -cf - -T - | tar -xf - -C "${scratch}/
         --target vscode --trust-transitive-mcp
     test -f .vscode/mcp.json
 )
+uv run python scripts/check_installed_graph.py "${scratch}/consumer"
 echo "model gate passed"

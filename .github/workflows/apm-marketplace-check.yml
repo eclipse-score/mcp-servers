@@ -64,6 +64,7 @@ jobs:
             --target vscode --trust-transitive-mcp
           apm install sdlc-harness@eclipse-score-apm-marketplace \
             --target vscode --trust-transitive-mcp
+          python3 "$GITHUB_WORKSPACE/scripts/check_installed_graph.py" "$smoke_dir"
           python - <<'PY'
           import json
           import os
