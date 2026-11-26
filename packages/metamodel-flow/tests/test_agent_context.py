@@ -22,9 +22,9 @@ def test_committed_projection_passes_validation() -> None:
     context = load_agent_context(MODEL_PATH)
 
     assert context.schema_version == 1
-    assert len(context.need_types) == 52
-    assert len(context.link_types) == 30
-    assert len(context.graph_rules) == 7
+    assert context.need_types
+    assert context.link_types
+    assert context.graph_rules
 
 
 @pytest.mark.parametrize(

@@ -34,6 +34,7 @@ on:
 permissions:
   contents: write
   pull-requests: write
+  issues: write
 
 concurrency:
   group: refresh-model-${{ github.workflow }}-${{ github.ref }}
@@ -67,10 +68,10 @@ jobs:
           enable-cache: true
 
       - name: Sync workspace
-        run: uv sync
+        run: uv sync --locked
 
       - name: Refresh metamodel
-        run: uv run python packages/metamodel-flow/src/refresh_model.py --ref "$DOCS_SHA"
+        run: uv run --locked python packages/metamodel-flow/src/refresh_model.py --ref "$DOCS_SHA"
 
       - name: Check out upstream process description
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -91,12 +92,15 @@ jobs:
             echo "upstream needs artefact not found: $needs_path" >&2
             exit 1
           fi
-          uv run python packages/metamodel-flow/src/refresh_process_graph.py \
+          uv run --locked python packages/metamodel-flow/src/refresh_process_graph.py \
             --needs "$needs_path" \
             --source-commit "$PROCESS_SHA" \
             --repo-root "$GITHUB_WORKSPACE" \
             --observed-at "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
             --summary-out "$RUNNER_TEMP/process-summary.md"
+
+      - name: Remove upstream checkout
+        run: rm -rf upstream
 
       - name: Detect changes
         id: changes
@@ -108,17 +112,27 @@ jobs:
             echo "changed=true" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Commit and push refresh branch
+      - name: Gate regenerated model
+        id: gate
         if: steps.changes.outputs.changed == 'true'
+        continue-on-error: true
+        run: scripts/model_gate.sh
+
+      - name: Commit and push refresh branch
+        if: steps.changes.outputs.changed == 'true' && steps.gate.outcome == 'success'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git switch -C "$BOT_BRANCH" "$GITHUB_SHA"
           git commit -s -m "refresh model from docs-as-code ${DOCS_SHA} and process_description ${PROCESS_SHA}"
-          git push --force-with-lease origin HEAD:"$BOT_BRANCH"
+          # A shallow checkout has no tracking ref for the bot branch, so the lease
+          # needs the expected remote SHA. An empty value means the branch must not exist.
+          expected="$(git ls-remote origin "refs/heads/${BOT_BRANCH}" | cut -f1)"
+          git push --force-with-lease="refs/heads/${BOT_BRANCH}:${expected}" \
+            origin "HEAD:refs/heads/${BOT_BRANCH}"
 
       - name: Create or update refresh pull request
-        if: steps.changes.outputs.changed == 'true'
+        if: steps.changes.outputs.changed == 'true' && steps.gate.outcome == 'success'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -146,3 +160,32 @@ jobs:
               --title "$title" \
               --body-file "$RUNNER_TEMP/pr-body.md"
           fi
+
+      - name: Report failed gate
+        if: steps.gate.outcome == 'failure'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TITLE: "Refresh model: regenerated model failed the gate"
+        run: |
+          run_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+          {
+            echo "The scheduled refresh regenerated the model, but the gate failed."
+            echo "No pull request was opened or updated."
+            echo
+            echo "- docs-as-code: \`${DOCS_SHA}\`"
+            echo "- process_description: \`${PROCESS_SHA}\`"
+            echo "- Run: ${run_url}"
+            echo
+            echo "Reproduce locally with \`scripts/model_gate.sh\` after running the refresh."
+          } > "$RUNNER_TEMP/gate-issue.md"
+          number="$(gh issue list --state open \
+            --search "\"${TITLE}\" in:title" --json number --jq '.[0].number // empty')"
+          if [ -n "${number}" ]; then
+            gh issue edit "${number}" --body-file "$RUNNER_TEMP/gate-issue.md"
+          else
+            gh issue create --title "${TITLE}" --body-file "$RUNNER_TEMP/gate-issue.md"
+          fi
+
+      - name: Fail run when the gate failed
+        if: steps.gate.outcome == 'failure'
+        run: exit 1

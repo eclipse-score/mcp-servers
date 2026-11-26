@@ -15,6 +15,7 @@
 members = ["libs/score-context", "packages/sdlc-harness"]
 
 [dependency-groups]
+apm = ["apm-cli==0.35.1"]
 dev = [
   "pyright>=1.1.414",
   "pytest>=9.2.0",
@@ -25,6 +26,21 @@ dev = [
 [tool.ruff]
 line-length = 88
 target-version = "py312"
+extend-exclude = ["upstream"]
+
+[tool.pytest.ini_options]
+# Restrict collection to this tree's own tests so pytest never recurses into
+# git-ignored checkouts such as the temporary upstream/ clone created by the
+# refresh workflow (or another scratch directory).
+testpaths = [
+  "tests",
+  "libs/score-context/tests",
+  "packages/apm-setup/tests",
+  "packages/context-discipline/tests",
+  "packages/graphify-codegraph/tests",
+  "packages/metamodel-flow/tests",
+  "packages/sdlc-harness/tests",
+]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "SIM"]

@@ -1,0 +1,85 @@
+{
+  "schema_version": 1,
+  "source": {
+    "repo": "eclipse-score/process_description",
+    "commit": "fixture",
+    "digest": "fixture",
+    "generated_at": "2026-01-01T00:00:00+00:00"
+  },
+  "nodes": [
+    {
+      "id": "wf__analyse_comparch",
+      "type": "workflow",
+      "title": "Component Architecture Review",
+      "attributes": {"status": "valid"}
+    },
+    {
+      "id": "wf__change_analyze_cr",
+      "type": "workflow",
+      "title": "Analyze Review",
+      "attributes": {"status": "valid"}
+    },
+    {
+      "id": "wf__rel_mod_rel_note",
+      "type": "workflow",
+      "title": "Module Release Note",
+      "attributes": {"status": "valid"}
+    },
+    {
+      "id": "wf__verification_unit_test",
+      "type": "workflow",
+      "title": "Unit Test Verification",
+      "attributes": {"status": "valid"}
+    },
+    {
+      "id": "gd_req__verification_checks",
+      "type": "gd_req",
+      "title": "Verification Checks",
+      "attributes": {"status": "valid"}
+    },
+    {
+      "id": "rl__committer",
+      "type": "role",
+      "title": "Committer",
+      "attributes": {"status": "valid"}
+    },
+    {
+      "id": "rl__contributor",
+      "type": "role",
+      "title": "Contributor",
+      "attributes": {"status": "valid"}
+    }
+  ],
+  "edges": [
+    {
+      "source": "wf__analyse_comparch",
+      "relation": "responsible",
+      "target": "rl__contributor"
+    },
+    {
+      "source": "wf__change_analyze_cr",
+      "relation": "responsible",
+      "target": "rl__committer"
+    },
+    {
+      "source": "wf__rel_mod_rel_note",
+      "relation": "responsible",
+      "target": "rl__committer"
+    },
+    {
+      "source": "wf__verification_unit_test",
+      "relation": "responsible",
+      "target": "rl__contributor"
+    },
+    {
+      "source": "wf__verification_unit_test",
+      "relation": "approved_by",
+      "target": "rl__committer"
+    },
+    {
+      "source": "gd_req__verification_checks",
+      "relation": "satisfies",
+      "target": "wf__verification_unit_test"
+    }
+  ]
+}

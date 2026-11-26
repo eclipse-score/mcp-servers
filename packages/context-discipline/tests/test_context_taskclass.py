@@ -24,76 +24,30 @@ from context_taskclass import build_workflow_index, detect_task_class, process_f
 PROCESS_GRAPH = (
     Path(__file__).parents[2] / "metamodel-flow" / "model" / "process_graph.json"
 )
+FIXTURE_GRAPH = Path(__file__).parent / "fixtures" / "process_graph.json"
 
 
-def _real_graph(monkeypatch: pytest.MonkeyPatch) -> MergedGraph:
-    monkeypatch.setenv("SCORE_PROCESS_GRAPH", str(PROCESS_GRAPH))
+def _graph(monkeypatch: pytest.MonkeyPatch, path: Path) -> MergedGraph:
+    monkeypatch.setenv("SCORE_PROCESS_GRAPH", str(path))
     return MergedGraph.build(Path.cwd())
 
 
-def test_real_process_workflow_measurement_and_probes(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    graph = _real_graph(monkeypatch)
+def test_real_process_graph_is_indexed(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Invariants only: the committed graph changes on every refresh, so exact
+    workflow counts and probe outcomes are asserted against the fixture graph."""
+    graph = _graph(monkeypatch, PROCESS_GRAPH)
     index = build_workflow_index(graph)
-    assert len(index.workflows) == 79
-    signatures = index.signatures()
-    assert len(set(signatures.values())) == 76
-    assert {
-        frozenset(
-            {
-                "wf__problem_analyze_pr",
-                "wf__problem_create_pr",
-                "wf__problem_initiate_monitor_pr",
-            }
-        ),
-        frozenset({"wf__change_close_cr", "wf__change_implement_monitor_cr"}),
-    } == {
-        frozenset(
-            workflow_id
-            for workflow_id in signatures
-            if signatures[workflow_id] == signature
-        )
-        for signature in set(signatures.values())
-        if sum(value == signature for value in signatures.values()) > 1
-    }
 
-    probes = (
-        (
-            "Build unit tests for the mw/log error domain",
-            "confident",
-            "wf__verification_unit_test",
-        ),
-        (
-            "Add a unit test for score::os::Fcntl",
-            "confident",
-            "wf__verification_unit_test",
-        ),
-        (
-            "Write the module release note for the 0.7 release",
-            None,
-            "wf__rel_mod_rel_note",
-        ),
-        ("Fix bug 1234 in lib score/result", "unknown", "wf__analyse_comparch"),
-        ("Refactor the CMake build files", "unknown", "wf__analyse_comparch"),
-        (
-            "Perform a code review on pull request 42",
-            "ambiguous",
-            "wf__change_analyze_cr",
-        ),
-        (
-            "Review the component architecture of score/mw/log",
-            "ambiguous",
-            "wf__analyse_comparch",
-        ),
+    # The committed process layer is nonempty: a projection that drops workflows
+    # would silently pass every exact-outcome check and must fail here.
+    assert {workflow.id for workflow in index.workflows}
+
+    detection = detect_task_class(
+        "Build unit tests for the mw/log error domain", graph, Policy()
     )
-    for text, status, top_id in probes:
-        detection = detect_task_class(text, graph, Policy())
-        assert detection.candidates[0].id == top_id
-        if status is not None:
-            assert detection.status == status
-        if status in {"unknown", "ambiguous"}:
-            assert detection.task_class == ""
+    # Only the structural contract is checked against the real committed graph;
+    # exact probe outcomes are asserted in test_workflow_probes_on_fixture_graph.
+    assert detection.status in {"unknown", "ambiguous", "confident"}
 
 
 def test_same_signature_tie_selects_lexicographically_smallest_workflow() -> None:
@@ -120,22 +74,64 @@ def test_same_signature_tie_selects_lexicographically_smallest_workflow() -> Non
     assert detection.task_class == "wf__a"
 
 
-def test_process_facts_do_not_expand_roles(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    graph = _real_graph(monkeypatch)
+def test_workflow_probes_on_fixture_graph(monkeypatch: pytest.MonkeyPatch) -> None:
+    graph = _graph(monkeypatch, FIXTURE_GRAPH)
+    index = build_workflow_index(graph)
+    signatures = index.signatures()
+    probes = (
+        (
+            "Build unit tests for the mw/log error domain",
+            "confident",
+            "wf__verification_unit_test",
+        ),
+        (
+            "Add a unit test for score::os::Fcntl",
+            "confident",
+            "wf__verification_unit_test",
+        ),
+        (
+            "Write the module release note for the 0.7 release",
+            "confident",
+            "wf__rel_mod_rel_note",
+        ),
+        ("Fix bug 1234 in lib score/result", "unknown", "wf__analyse_comparch"),
+        ("Refactor the CMake build files", "unknown", "wf__analyse_comparch"),
+        (
+            "Perform a code review on pull request 42",
+            "ambiguous",
+            "wf__change_analyze_cr",
+        ),
+        (
+            "Review the component architecture of score/mw/log",
+            "confident",
+            "wf__analyse_comparch",
+        ),
+    )
+    for text, status, top_id in probes:
+        detection = detect_task_class(text, graph, Policy())
+        assert detection.candidates[0].id == top_id
+        assert detection.status == status
+        if status in {"unknown", "ambiguous"}:
+            assert detection.task_class == ""
+
+    assert signatures["wf__change_analyze_cr"] == signatures["wf__rel_mod_rel_note"]
+    assert signatures["wf__analyse_comparch"] != signatures["wf__change_analyze_cr"]
+
+
+def test_process_facts_do_not_expand_roles(monkeypatch: pytest.MonkeyPatch) -> None:
+    graph = _graph(monkeypatch, FIXTURE_GRAPH)
 
     facts = process_facts(graph, "wf__verification_unit_test")
 
     assert facts["responsible"] == ["rl__contributor"]
     assert facts["approved_by"] == ["rl__committer"]
-    assert "rl__committer" not in facts["satisfied_by"]
+    assert facts["satisfied_by"] == ["gd_req__verification_checks"]
 
 
 def test_initialize_detection_and_set_task_class(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    monkeypatch.setenv("SCORE_PROCESS_GRAPH", str(PROCESS_GRAPH))
+    monkeypatch.setenv("SCORE_PROCESS_GRAPH", str(FIXTURE_GRAPH))
     manager = ContextDisciplineMCP(str(tmp_path))
     result = manager.initialize_session(
         "Build unit tests for the mw/log error domain",
@@ -179,7 +175,7 @@ def test_missing_process_layer_omits_detection(
 def test_ambiguous_and_unknown_detections_ask_before_continuing(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    monkeypatch.setenv("SCORE_PROCESS_GRAPH", str(PROCESS_GRAPH))
+    monkeypatch.setenv("SCORE_PROCESS_GRAPH", str(FIXTURE_GRAPH))
     manager = ContextDisciplineMCP(str(tmp_path))
 
     ambiguous = manager.initialize_session(
@@ -190,12 +186,14 @@ def test_ambiguous_and_unknown_detections_ask_before_continuing(
     ambiguous_detection = ambiguous["detection"]
     ambiguous_options = ambiguous_detection["question"]["options"]
     assert ambiguous_detection["announcement"].startswith("Repository ")
-    assert "task class ambiguous:" in ambiguous_detection["announcement"]
-    assert all(
-        option["id"] in ambiguous_detection["announcement"]
-        for option in ambiguous_options
-        if option["id"] != "none"
+    assert ambiguous_detection["announcement"].endswith(
+        "task class ambiguous: Analyze Review (wf__change_analyze_cr), "
+        "Component Architecture Review (wf__analyse_comparch)"
     )
+    assert {option["id"] for option in ambiguous_options} >= {
+        "wf__change_analyze_cr",
+        "wf__analyse_comparch",
+    }
     assert ambiguous_detection["question"]["text"] == (
         "Which process workflow applies to this task?"
     )
@@ -216,7 +214,7 @@ def test_ambiguous_and_unknown_detections_ask_before_continuing(
 def test_initialize_loads_only_process_source(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    monkeypatch.setenv("SCORE_PROCESS_GRAPH", str(PROCESS_GRAPH))
+    monkeypatch.setenv("SCORE_PROCESS_GRAPH", str(FIXTURE_GRAPH))
     graphify_dir = tmp_path / "graphify-out"
     graphify_dir.mkdir()
     (graphify_dir / "graph.json").write_text("{not-json", encoding="utf-8")
