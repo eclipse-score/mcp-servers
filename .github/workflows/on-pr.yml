@@ -39,27 +39,9 @@ jobs:
         uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
         with:
           enable-cache: true
-      - name: Sync workspace
-        run: uv sync
-      - name: Ruff lint
-        run: uv run ruff check .
-      - name: Ruff format
-        run: uv run ruff format --check . --exclude '*.md'
-      - name: Pyright
-        run: uv run pyright
-      - name: Pytest
-        run: uv run pytest
-      - name: Check version pins
-        run: uv run python scripts/check_pins.py
-      - name: Dry-run release check
-        run: |
-          version="$(uv run python scripts/prepare_release.py --plan | jq -r '.version')"
-          uv run python scripts/prepare_release.py "$version"
-          uv lock
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git add -u
-          git commit --allow-empty -m "Dry-run release metadata"
-          uv run python scripts/check_pins.py --release
-      - name: Validate overlay
-        run: uv run python scripts/validate_overlay.py --base origin/${{ github.base_ref }}
+      # The model gate runs all checks shared with the refresh workflow, plus
+      # PR-context-only checks (the release dry run and the overlay delta budget).
+      - name: Model gate
+        env:
+          GITHUB_BASE_REF: ${{ github.base_ref }}
+        run: scripts/model_gate.sh

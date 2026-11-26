@@ -68,10 +68,10 @@ jobs:
           enable-cache: true
 
       - name: Sync workspace
-        run: uv sync
+        run: uv sync --locked
 
       - name: Refresh metamodel
-        run: uv run python packages/metamodel-flow/src/refresh_model.py --ref "$DOCS_SHA"
+        run: uv run --locked python packages/metamodel-flow/src/refresh_model.py --ref "$DOCS_SHA"
 
       - name: Check out upstream process description
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -92,12 +92,15 @@ jobs:
             echo "upstream needs artefact not found: $needs_path" >&2
             exit 1
           fi
-          uv run python packages/metamodel-flow/src/refresh_process_graph.py \
+          uv run --locked python packages/metamodel-flow/src/refresh_process_graph.py \
             --needs "$needs_path" \
             --source-commit "$PROCESS_SHA" \
             --repo-root "$GITHUB_WORKSPACE" \
             --observed-at "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
             --summary-out "$RUNNER_TEMP/process-summary.md"
+
+      - name: Remove upstream checkout
+        run: rm -rf upstream
 
       - name: Detect changes
         id: changes

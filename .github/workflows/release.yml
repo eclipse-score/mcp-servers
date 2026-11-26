@@ -90,7 +90,7 @@ jobs:
         env:
           VERSION: ${{ steps.version.outputs.version }}
         run: |
-          apm() { uv run --project "$GITHUB_WORKSPACE" apm "$@"; }
+          apm() { uv run --project "$GITHUB_WORKSPACE" --group apm apm "$@"; }
           smoke_dir="$(mktemp -d)"
           cd "$smoke_dir"
           apm marketplace add "https://github.com/${GITHUB_REPOSITORY}" \

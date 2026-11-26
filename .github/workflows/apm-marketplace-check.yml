@@ -45,17 +45,17 @@ jobs:
         run: uv sync
 
       - name: Generate marketplace artifact
-        run: uv run apm pack
+        run: uv run --group apm apm pack
 
       - name: Check marketplace packages
-        run: uv run apm marketplace check
+        run: uv run --group apm apm marketplace check
 
       - name: Test remote marketplace MCP servers
         env:
           MCP_REPO: ${{ github.event.pull_request.head.repo.full_name || github.repository }}
           MCP_REF: ${{ github.event.pull_request.head.sha || github.sha }}
         run: |
-          apm() { uv run --project "$GITHUB_WORKSPACE" apm "$@"; }
+          apm() { uv run --project "$GITHUB_WORKSPACE" --group apm apm "$@"; }
           smoke_dir="$(mktemp -d)"
           cd "$smoke_dir"
           apm marketplace add "https://github.com/${MCP_REPO}" \
